@@ -321,8 +321,8 @@ onUserReaction(session, reaction)        → 更新 profile（M1 仅记显式修
 - **目的**：M1 不做平台数据抓取，但提供**手动回填**，让爆款特征库与验收标准从第一条笔记开始攒——这是平台不替你做、越用越准的飞轮。
 - 入口：历史/配方详情/发布后提醒——对一条已生成内容标注「已发布」+ 表现（点赞/收藏/涨粉，粗粒度区间即可）+ 可选一句复盘。
 - 回流：表现数据 → 更新该 intentType 的「爆款特征」与验收侧重 → 影响下次生成的默认假设与配方推荐（M1 影响"推荐哪个配方/默认风格"，不做复杂模型训练）。
-- 数据：写 `performance` 字段（见 §11 sessions 扩展）。
-- AC：① 用户可对一条内容标注已发布+表现 ② 标注后该数据可在该 session/配方上看到 ③ 同 intentType 下被标"高表现"的配方在库中可被优先识别（标记/排序）④ 未回填不影响其它功能。
+- 数据：写 sessions 的 `published_at / like_range / favorite_range / comment_range / follower_gain_range / performance_note` 字段（range 枚举见 DATA-SCHEMA §2.6；M1 不做 perf_score，见 DECISIONS D-02）。
+- AC：① 用户可对一条内容标注已发布+表现 ② 标注后该数据可在该 session/配方上看到 ③ M1 仅展示回填数据，不做"高表现配方优先识别/排序"——该项依赖 perf_score，随之延后到 M2（见 DECISIONS D-05）④ 未回填不影响其它功能。
 
 ---
 
@@ -400,14 +400,16 @@ sessions {
   raw_input text not null, intent_type text not null,
   assumptions jsonb, outcome jsonb, recipe_snapshot jsonb, verification jsonb,
   source_recipe_id uuid null, status text,
-  published boolean default false, performance jsonb,   -- P5 回填(F-16)
+  error_code text, error_message text,
+  published_at timestamp, like_range text, favorite_range text,   -- F-16 手动回填(range 枚举见 DATA-SCHEMA §2.6)
+  comment_range text, follower_gain_range text, performance_note text,   -- M1 不做 perf_score(M2)
   created_at timestamp, updated_at timestamp }
 
 recipes {
   id uuid pk, user_id uuid not null, name text not null, intent_type text not null,
   schema jsonb not null, fields jsonb not null, acceptance jsonb,
   variables jsonb, negative_rules jsonb, source_session_id uuid,
-  usage_count int default 0, perf_score numeric null,   -- 由 F-16 表现回流聚合
+  usage_count int default 0,   -- perf_score 延后到 M2(M1 不做表现聚合，见 DECISIONS D-02)
   created_at timestamp, updated_at timestamp }
 
 profile_preferences {
@@ -465,7 +467,7 @@ POST /api/sessions/:id/performance   表现回填(F-16)  { published, performanc
 3. **配方重跑**：原"独居手册式卡片配方" + 新输入"退租拍照清单" → 沿用视觉风格、主题替换、新 Session、原配方不覆盖。
 4. **偏好记忆**：语气 轻松种草→成熟不焦虑 → 下次同类默认该语气、偏好页可见、删除后不带出。
 5. **验收失败修正**：缺话题标签 → 验收显 ✗、点"按未通过项修正"补话题、仍可忽略并复制。
-6. **表现回填（P5）**：对样例1的内容标注"已发布·高收藏" → 该配方 perf_score 提升、库中可优先识别。
+6. **表现回填（P5）**：对样例1的内容标注"已发布·高收藏" → 回填数据写入该 session、并可在来源配方详情查看（M1 不计算 perf_score、不做库内优先识别/排序，延后 M2）。
 
 ---
 
@@ -516,10 +518,10 @@ I-01 Next+TS+Tailwind · I-02 shadcn · I-03 Supabase Auth · I-04 建表+RLS ·
 M1 完成，当且仅当：① 能登录 ② 能输入想法 ③ 识别内容类型 ④ 生成假设条（含三级判定，提问 ≤3）⑤ 编辑/删除/恢复假设 ⑥ 生成完整内容包（含每张卡片 Prompt）⑦ 含正文/标题/卡片 Prompt/话题 ⑧ 复制全文或分区 ⑨ 保存配方 ⑩ 配方库可查 ⑪ 换输入重跑 ⑫ 显式偏好下次带出 ⑬ 基础验收 + 合规检查可见 ⑭ **可手动回填表现（F-16）且能更新配方表现标记** ⑮ 失败/空输入有明确提示 ⑯ 只能访问自己数据（RLS）⑰ 20 条真实样例过 eval 门禁 ⑱ Vercel 生产可访问、PostHog 见关键事件、Sentry 捕获错误。
 
 ## 17. 待决问题（开工前拍板）
-1. `card_count` 默认与上限是否随 output_type 变（仅卡片 vs 包）？
-2. F-16 表现"高/中/低"的区间阈值（点赞/收藏/涨粉）由谁定、是否随粉丝量归一化？
-3. 合规禁用词表来源（自维护初版 + 后续可配）。
-4. 降级/失败时是否允许"无配方"草稿态保存。
+1. `card_count` 默认与上限是否随 output_type 变（仅卡片 vs 包）？（**待定**）
+2. ~~F-16 表现区间阈值~~ → **已定（Day 0 / D-02）**：统一 range 枚举 `0 / 1-10 / 11-50 / 51-100 / 101-500 / 500+ / unknown`，M1 仅手动回填、不随粉丝量归一化。见 [DECISIONS](DECISIONS.md)。
+3. 合规禁用词表来源（自维护初版 + 后续可配）。（**待定**）
+4. ~~降级/失败时是否允许草稿态保存~~ → **已定（Day 0 / D-04）**：允许，`status=draft`、`outcome=null`、`error_code=GENERATION_FAILED`、可重试。见 [DECISIONS](DECISIONS.md)。
 
 ---
 

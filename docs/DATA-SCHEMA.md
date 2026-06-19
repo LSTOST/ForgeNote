@@ -15,11 +15,13 @@
 ### 2.1 intent_type
 
 ```text
-xiaohongshu_note
-xiaohongshu_card_prompt
 content_package
+xiaohongshu_note
+card_prompt
 generic_content
 ```
+
+> M1 主线只围绕 content_package；其余三个为兜底，不做复杂优化。不使用 xiaohongshu_card_prompt（见 DECISIONS D-01）。
 
 ### 2.2 assumption_source
 
@@ -61,6 +63,21 @@ recipe_saved
 recipe_rerun
 preference_saved
 verification_failed
+performance_filled
+```
+
+### 2.6 performance_range
+
+F-16 表现回填的所有 range 字段统一使用此枚举（见 DECISIONS D-02）。
+
+```text
+0
+1-10
+11-50
+51-100
+101-500
+500+
+unknown
 ```
 
 ## 3. 表结构
@@ -95,7 +112,15 @@ create table sessions (
   verification jsonb,
   source_recipe_id uuid null,
   status text not null default 'draft',
+  error_code text,
   error_message text,
+  -- F-16 表现回填 lite（手动；range 枚举见 §2.6；M1 不做 perf_score）
+  published_at timestamptz,
+  like_range text,
+  favorite_range text,
+  comment_range text,
+  follower_gain_range text,
+  performance_note text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -115,7 +140,14 @@ create table sessions (
 | verification | 验收检查结果 |
 | source_recipe_id | 如果来自配方重跑，记录配方 ID |
 | status | draft / generating / completed / failed |
+| error_code | 失败错误码，如 GENERATION_FAILED（见 DECISIONS D-04） |
 | error_message | 失败原因 |
+| published_at | F-16 用户标注的发布时间 |
+| like_range | 点赞区间（枚举见 §2.6） |
+| favorite_range | 收藏区间 |
+| comment_range | 评论区间 |
+| follower_gain_range | 涨粉区间 |
+| performance_note | 一句话复盘，可选 |
 
 ## 3.3 recipes
 

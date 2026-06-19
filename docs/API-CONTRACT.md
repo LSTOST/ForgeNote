@@ -55,6 +55,7 @@
 | POST /api/forge | 必须 | 创建自己的 session |
 | POST /api/forge/regenerate | 必须 | 只能重生成自己的 session |
 | GET /api/sessions/:id | 必须 | 只能读自己的 session |
+| POST /api/sessions/:id/performance | 必须 | 只能回填自己的 session 表现 |
 | GET /api/recipes | 必须 | 只能读自己的 recipes |
 | POST /api/recipes | 必须 | 只能保存自己的 recipe |
 | GET /api/recipes/:id | 必须 | 只能读自己的 recipe |
@@ -143,6 +144,8 @@
 - INPUT_EMPTY
 - INPUT_TOO_LONG
 - GENERATION_FAILED
+
+> 降级规则（Day 0 / DECISIONS D-04）：返回 GENERATION_FAILED 时仍持久化 Session 草稿（`status=draft`、`outcome=null`、`error_code=GENERATION_FAILED`），输入与假设保留，用户可稍后重试。
 
 ## 5.2 POST /api/forge/regenerate
 
@@ -377,6 +380,60 @@
   "confirm": true
 }
 ```
+
+## 5.13 POST /api/sessions/:id/performance
+
+F-16 表现回填 lite（手动）。用户对一条已生成内容标注发布表现（见 DECISIONS D-02）。
+
+### Request
+
+range 字段枚举：`0 / 1-10 / 11-50 / 51-100 / 101-500 / 500+ / unknown`。
+
+```json
+{
+  "publishedAt": "2026-06-19T00:00:00Z",
+  "likeRange": "11-50",
+  "favoriteRange": "51-100",
+  "commentRange": "1-10",
+  "followerGainRange": "0",
+  "performanceNote": "收藏比点赞高，干货向有效"
+}
+```
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| publishedAt | 否 | 发布时间 |
+| likeRange | 否 | 点赞区间 |
+| favoriteRange | 否 | 收藏区间 |
+| commentRange | 否 | 评论区间 |
+| followerGainRange | 否 | 涨粉区间 |
+| performanceNote | 否 | 一句话复盘 |
+
+### Response
+
+```json
+{
+  "ok": true,
+  "data": {
+    "sessionId": "uuid",
+    "published": true
+  }
+}
+```
+
+### 规则
+
+- session 必须属于当前用户。
+- M1 仅手动回填，不抓取平台数据、不自动分析。
+- M1 不计算 perf_score（M2）。
+- 写入后记录事件 performance_filled。
+
+### 错误
+
+- AUTH_REQUIRED
+- SESSION_NOT_FOUND
+- PERMISSION_DENIED
+- VALIDATION_FAILED
 
 ## 6. 内部 forge-engine 契约
 
