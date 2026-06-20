@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookMarked, Check, CircleAlert, CircleCheck, Copy } from "lucide-react";
+import { BookMarked, Check, CircleAlert, CircleCheck, Copy, Save } from "lucide-react";
 
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ interface RecipePanelProps {
   status: ForgeStatus;
   recipe: RecipeDraft | null;
   verification: Verification | null;
+  // 来源 session（Batch A 成功生成后非空）；保存配方写入 recipes 时引用（I-08）。
+  sessionId: string | null;
 }
 
 /** 将配方拼为可复制的纯文本摘要。 */
@@ -31,10 +33,24 @@ function buildRecipeSummary(r: RecipeDraft): string {
   return lines.join("\n");
 }
 
-// 内容配方区（UIUX §8）。I-02B 渲染真实配方 + 验收结果；Batch C 加复制摘要 + 占位「保存配方」。
-export function RecipePanel({ status, recipe, verification }: RecipePanelProps) {
+/** 保存配方的本地状态机（I-08）。 */
+type SaveState = "idle" | "naming" | "saving" | "saved" | "error";
+
+// 内容配方区（UIUX §8 / §9）。I-02B 渲染真实配方 + 验收结果；Batch C 加复制摘要；I-08 加保存配方闭环。
+export function RecipePanel({
+  status,
+  recipe,
+  verification,
+  sessionId,
+}: RecipePanelProps) {
   // 轻量复制反馈，与 OutcomePanel 一致，不引 toast 库。
   const [copied, setCopied] = useState(false);
+  // 保存配方状态（I-08，UIUX §9.2）。
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [recipeName, setRecipeName] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // 切换 session（新生成 / 新建）时由父组件以 key 重挂本组件来重置上述状态，
+  // 避免沿用上一条的保存反馈（见 ForgeWorkbench 的 key={sessionId}）。
 
   async function copySummary(text: string) {
     try {
@@ -43,6 +59,40 @@ export function RecipePanel({ status, recipe, verification }: RecipePanelProps) 
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
       // 复制失败静默忽略。
+    }
+  }
+
+  // 打开命名 UI，默认值用配方名（UIUX §9.1）。
+  function startNaming(defaultName: string) {
+    setRecipeName(defaultName);
+    setSaveError(null);
+    setSaveState("naming");
+  }
+
+  async function saveRecipe() {
+    if (!sessionId) return;
+    const trimmed = recipeName.trim();
+    if (trimmed.length === 0) return;
+
+    setSaveState("saving");
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, name: trimmed }),
+      });
+      const json = await res.json().catch(() => null);
+      if (json?.ok) {
+        setSaveState("saved");
+      } else {
+        // 失败：保留命名 UI 与已生成结果，显示 inline error，可重试（UIUX §9.2）。
+        setSaveError(json?.error?.message ?? "保存失败，请重试");
+        setSaveState("error");
+      }
+    } catch {
+      setSaveError("网络异常，请稍后重试");
+      setSaveState("error");
     }
   }
   if (status === "loading") {
@@ -62,30 +112,87 @@ export function RecipePanel({ status, recipe, verification }: RecipePanelProps) 
   if (status === "success" && recipe) {
     return (
       <Card className="min-h-72 space-y-5 p-6">
-        {/* 操作区（UIUX §8.3）。保存配方在下一批开放，本批占位禁用。 */}
-        <div className="flex flex-wrap gap-2 border-b pb-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => copySummary(buildRecipeSummary(recipe))}
-          >
-            {copied ? (
-              <Check className="size-3.5" aria-hidden />
-            ) : (
-              <Copy className="size-3.5" aria-hidden />
+        {/* 操作区（UIUX §8.3 / §9）。复制摘要 + 保存配方闭环（I-08）。 */}
+        <div className="space-y-3 border-b pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => copySummary(buildRecipeSummary(recipe))}
+            >
+              {copied ? (
+                <Check className="size-3.5" aria-hidden />
+              ) : (
+                <Copy className="size-3.5" aria-hidden />
+              )}
+              {copied ? "已复制" : "复制配方摘要"}
+            </Button>
+
+            {/* 命名态以外：展示「保存配方」入口（saved 后可再次保存为新配方）。 */}
+            {saveState !== "naming" && saveState !== "saving" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => startNaming(recipe.name)}
+                disabled={!sessionId}
+                title={!sessionId ? "需要先成功生成内容" : undefined}
+              >
+                <Save className="size-3.5" aria-hidden />
+                保存配方
+              </Button>
             )}
-            {copied ? "已复制" : "复制配方摘要"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled
-            title="保存配方将在下一批开放"
-          >
-            保存配方（下一批开放）
-          </Button>
+
+            {saveState === "saved" && (
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
+                <CircleCheck className="size-4" aria-hidden />
+                已保存到配方库
+              </span>
+            )}
+          </div>
+
+          {/* 命名 UI（UIUX §9.1）：默认值为配方名，名称为空禁用保存，保存中 loading。 */}
+          {(saveState === "naming" ||
+            saveState === "saving" ||
+            saveState === "error") && (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={recipeName}
+                  onChange={(e) => setRecipeName(e.target.value)}
+                  placeholder="给这个配方起个名字"
+                  aria-label="配方名称"
+                  disabled={saveState === "saving"}
+                  className="h-9 min-w-56 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={saveRecipe}
+                  disabled={recipeName.trim().length === 0 || saveState === "saving"}
+                >
+                  {saveState === "saving" ? "保存中…" : "保存"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSaveState("idle")}
+                  disabled={saveState === "saving"}
+                >
+                  取消
+                </Button>
+              </div>
+              {saveState === "error" && saveError && (
+                <p className="flex items-center gap-1.5 text-sm text-destructive">
+                  <CircleAlert className="size-4 shrink-0" aria-hidden />
+                  {saveError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <Field label="配方名称" value={recipe.name} />

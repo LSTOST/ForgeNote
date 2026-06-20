@@ -34,12 +34,17 @@
 | Batch C | Done | 假设条编辑器 + 结果操作区（复制 / 重生成 / 新建） | `docs/acceptance/Batch-C.md` |
 | QA-01 | Done | 工具链与流程文档现代化恢复（doctor / smoke / RLS 检查 / RUNBOOK / DEPLOYMENT / PR 模板） | `docs/acceptance/Batch-C.md` |
 
+## 待复验
+
+| 票号 | 状态 | 目标 | 验收文档 | 阻塞 |
+|---|---|---|---|---|
+| I-08 | Review | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈）；已实现 + 自动验证通过，登录态保存落库待复验 | `docs/acceptance/I-08.md` | 需 Supabase 登录态手测 |
+
 ## M1 剩余执行队列
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-08 | Ready | 保存配方 API（`POST /api/recipes`）+ 保存弹窗 | 配方重命名 / 删除 | Batch A schema |
-| I-09 | Backlog | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | 高表现排序（依赖 perf_score） | I-08 |
+| I-09 | Ready | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | 高表现排序（依赖 perf_score） | I-08 |
 | I-10 | Backlog | 配方详情 `/recipes/[id]` + 换输入重跑 | 多版本 diff | I-09 |
 | I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2） | Batch A / Batch C |
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |

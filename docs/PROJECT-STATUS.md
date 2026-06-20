@@ -27,8 +27,17 @@ PR #1（待 GitHub 确认）
 - I-02A 契约修正补丁：Assumption source/state/valueType 对齐 DATA-SCHEMA；Verification 改为 overallPassed + checks；Outcome 命名对齐（titles/cardStructure/cardPrompts 等）；失败草稿补 intentType/assumptions/errorCode（D-04）
 - QA-01：现代化恢复工程工具链（基于当前 HEAD，不回滚 I-02B）——`scripts/doctor.mjs`（只查存在性、不打印 secret）、`scripts/smoke-forge-api.mjs`（匿名期待 AUTH_REQUIRED）、`scripts/test-rls.mjs`、`scripts/eval-forge.mjs` + `eval/cases/content-package.json`（I-13 种子，未纳入 npm/CI）；`docs/RUNBOOK.md`、`docs/DEPLOYMENT.md`、`docs/TICKETS.md`、`docs/acceptance/Batch-C.md`、`.github/pull_request_template.md`；package.json 增 `doctor`/`smoke:api`/`db:test-rls`；CI 增 Doctor step
 
+## 进行中（I-08 — 保存配方最小闭环，Review / 待登录态复验）
+- 已实现，**尚未判定完成**：自动验证通过、匿名 API 边界通过，登录态保存落库待复验。
+- 新增 `POST /api/recipes`（必须登录；`{ sessionId, name }`）：name trim 非空、RLS 校验 session 归属、要求 recipe_snapshot、写入 recipes（fields=快照、acceptance/variables/negative_rules 拆出、source_session_id 关联），同名允许不覆盖
+- `RecipePanel` 成功态启用「保存配方」：命名 UI（默认值=配方名）/ 名称空禁用 / 保存中 loading / 「已保存到配方库」/ 失败 inline error 不清空结果
+- `ForgeWorkbench` 透传 `sessionId` 给 `RecipePanel`，并以 `key={sessionId}` 重挂重置保存态
+- 边界：不做 /recipes 列表、详情、重跑、偏好记忆、F-16，不改模型 prompt
+- 自动验证：lint/typecheck/build/doctor/smoke:api 通过；匿名 `POST /api/recipes` → 401 AUTH_REQUIRED 实测通过
+- **待复验（登录态）**：保存成功落库（source_session_id/user_id/fields 正确）、同名两条不覆盖、draft 无快照不可保存、SESSION_NOT_FOUND（见 docs/acceptance/I-08.md）
+
 ## 进行中
-- `/recipes` 与 `/profile` 仍是占位链接，尚未交付配方库 / Profile
+- `/recipes` 与 `/profile` 仍是占位链接，尚未交付配方库 / Profile（保存入口已实现待复验，列表/详情为 I-09/I-10）
 
 ## 已通过验收
 - Batch C：Codex 验收通过；登录态真实浏览器验收通过

@@ -177,9 +177,12 @@ export function ForgeWorkbench() {
           onNew={handleNew}
         />
         <RecipePanel
+          // 切换 session 时重挂以重置保存态（成功保存反馈不跨 session 残留）。
+          key={sessionId ?? "idle"}
           status={status}
           recipe={data?.recipe ?? null}
           verification={data?.verification ?? null}
+          sessionId={sessionId}
         />
       </section>
     </div>
