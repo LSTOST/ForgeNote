@@ -465,3 +465,16 @@ verifyOutcome(input: VerifyOutcomeInput): Verification
 M1 要求模型返回 JSON。生成失败时，API 返回 GENERATION_FAILED。
 
 模型调用不得在前端执行，必须放在 server route handler 或 server action。
+
+## 8. Auth 流程路由（Batch B）
+
+非 `/api/*` 业务接口，而是 Supabase Auth 登录闭环所需的 route handler。均不返回 JSON，统一以 HTTP 重定向驱动浏览器。anon key + Auth cookie 识别用户，不使用 service role，不绕过 RLS。
+
+| 路由 | 方法 | 行为 |
+|---|---|---|
+| `/auth/callback` | GET | PKCE `code` → `exchangeCodeForSession` 写入 Auth cookie。成功 302 跳 `/forge`；缺配置 / 缺 code / provider 回带 error / 交换失败 → 跳 `/login?error=...` |
+| `/auth/signout` | POST | `signOut()` 清除 Auth cookie，303 跳 `/login`（POST→GET）。前端以原生 `<form method="post">` 提交，无需客户端 JS |
+
+登录入口（Google OAuth / 邮箱 Magic Link）由客户端 `/login` 页用 anon key 直接发起，`redirectTo` / `emailRedirectTo` 均指向 `/auth/callback`。
+
+受保护页面：`/forge` 为 Server Component，渲染前校验登录态，未登录（或 Supabase 未配置）→ 重定向 `/login`。这是贴近数据源的鉴权，与 `/api/forge` 的 RLS 共同构成纵深防护。`/login` 在已登录时反向重定向 `/forge`。

@@ -11,6 +11,8 @@
 
 import "server-only";
 
+import { cache } from "react";
+
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
@@ -27,6 +29,11 @@ function readPublicConfig(): { url: string; anonKey: string } | null {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!url || !anonKey) return null;
   return { url, anonKey };
+}
+
+/** 服务端是否具备 Supabase 公开配置（用于页面在缺失时给出明确提示，而非白屏）。 */
+export function isSupabaseConfigured(): boolean {
+  return readPublicConfig() !== null;
 }
 
 /**
@@ -76,3 +83,13 @@ export async function getAuthenticatedContext(): Promise<AuthenticatedContext | 
   if (error || !user) return null;
   return { supabase, user };
 }
+
+/**
+ * 当前登录用户（未配置 / 未登录 → null）。
+ * 用 React cache 在同一次请求渲染内去重：受保护页面与 TopNav 可各自调用而只查一次。
+ * 用于 Server Component 的访问保护与导航栏展示，不用于写入路径。
+ */
+export const getCurrentUser = cache(async (): Promise<User | null> => {
+  const context = await getAuthenticatedContext();
+  return context?.user ?? null;
+});

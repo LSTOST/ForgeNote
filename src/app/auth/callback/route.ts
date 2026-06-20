@@ -1,0 +1,47 @@
+// ForgeNote M1 — GET /auth/callback（Batch B）。
+// Supabase Auth 回调：用 PKCE code 换取 session 并写入 Auth cookie，成功跳 /forge。
+// 失败（缺配置 / 缺 code / 交换失败）跳 /login?error=...，不白屏。
+// 依据：@supabase/ssr exchangeCodeForSession（code verifier 存于 cookie）、
+//       docs/UIUX-M1.md（§4.2 登录成功跳 /forge）、Next.js 16 Route Handlers。
+
+import { NextResponse } from "next/server";
+
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  // Supabase 在用户拒绝授权或 provider 未配置时会带 error 回跳。
+  const providerError =
+    url.searchParams.get("error_description") ??
+    url.searchParams.get("error");
+
+  const loginUrl = new URL("/login", url.origin);
+
+  if (providerError) {
+    loginUrl.searchParams.set("error", providerError);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!code) {
+    loginUrl.searchParams.set("error", "登录回调缺少授权码，请重试。");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    loginUrl.searchParams.set("error", "Supabase 未配置，无法完成登录。");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) {
+    loginUrl.searchParams.set("error", "登录失败，请重新发起登录。");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.redirect(new URL("/forge", url.origin));
+}

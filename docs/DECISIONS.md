@@ -153,6 +153,20 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 ---
 
+## Auth 登录闭环决策（2026-06-20，Batch B）
+
+实现 Supabase Auth 登录闭环时确立，作为后续受保护页面与登录流程的权威依据。只规范实现方式，不扩产品范围。
+
+- 登录方式：Google OAuth + 邮箱 Magic Link（Supabase OTP），均经 `/auth/callback` 用 PKCE `exchangeCodeForSession` 落 Auth cookie。
+- 页面保护放在 Server Component（Next.js 16 认证指南的 DAL 模式：贴近数据源鉴权），**不引入 `proxy.ts`（旧 middleware）**。理由：Next.js 16 文档明确 proxy 不应作为唯一鉴权防线；`/api/forge` 的 RLS 才是写入路径的最终防线，页面级重定向只负责体验（未登录不进工作台）。
+- 浏览器端仅用 anon key（`NEXT_PUBLIC_*`）发起登录；service role 绝不进客户端，请求路径不使用 service role。
+- env 缺失（缺 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`）时 UI 显示明确「未配置」提示，不白屏；`lint/typecheck/build` 不依赖 env。
+- 退出登录用 POST `/auth/signout`（原生表单），避免被链接预取误触发。
+
+影响文件：`src/lib/supabase/client.ts`（新增）、`src/lib/supabase/server.ts`（新增 `getCurrentUser` / `isSupabaseConfigured`）、`src/app/login/page.tsx`、`src/components/auth/LoginForm.tsx`、`src/app/auth/callback/route.ts`、`src/app/auth/signout/route.ts`、`src/app/forge/page.tsx`、`src/components/layout/TopNav.tsx`、`API-CONTRACT.md`（§8）。
+
+---
+
 ## 仍待拍板（未纳入 Day 0）
 
 - `card_count` 默认与上限是否随 output_type 变（仅卡片 vs 完整包）。（PRD §17-1）
