@@ -38,7 +38,9 @@
 
 | 票号 | 状态 | 目标 | 验收文档 | 阻塞 |
 |---|---|---|---|---|
-| I-08 | Review | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈）；已实现 + 自动验证通过，登录态保存落库待复验 | `docs/acceptance/I-08.md` | 需 Supabase 登录态手测 |
+| I-08 | Review（Blocked for acceptance） | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈）；已实现 + 自动验证通过，登录态保存落库待复验 | `docs/acceptance/I-08.md` | **Blocked**：自动环境无真实 Supabase 登录态（缺 service role / 无已确认测试用户 / 不能交互式登录）。解除条件见验收文档 |
+
+> **下一张唯一任务**：等待 I-08 登录态验收凭据（service role key / 已确认测试用户 / 人工浏览器登录手测）。在 I-08 判定 Done 前，不推进新功能（I-09 等剩余队列暂不开工）。
 
 ## M1 剩余执行队列
 
