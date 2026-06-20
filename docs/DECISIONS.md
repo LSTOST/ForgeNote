@@ -97,6 +97,61 @@ F-16 AC③「同 intentType 下高表现配方在库中优先识别/排序」依
 
 ---
 
+## UI 实现与设计交付流程（2026-06-20）
+
+明确 v0 / Claude Code / Codex / Copilot 的分工与边界，作为 M1 页面设计与落地的权威依据。本节只规范交付流程，不改产品功能、不改页面代码。
+
+### 工具分工
+
+| 工具 | 职责 | 边界 |
+|---|---|---|
+| v0 | 生成核心页面的视觉首稿、布局方向、组件组合 | 不直接接管整个代码仓库；不接后端、认证、数据库或业务逻辑 |
+| Claude Code | 将确认后的 v0 设计落地到真实 Next.js 项目，并补齐状态、交互、响应式与可访问性 | 必须遵守 `UIUX-M1.md`、`DATA-SCHEMA.md`、`API-CONTRACT.md` |
+| Codex | 在复杂功能前做实现方案审查；在 PR 后按 PRD/UIUX 验收 | 不负责主力页面开发 |
+| GitHub Copilot | 自动 PR 基础代码审查 | 不作为产品验收依据 |
+
+### 页面设计策略
+
+M1 页面分两类：
+
+1. 核心体验页面：先用 v0 出视觉首稿，再由 Claude Code 接入项目
+   - `/forge`
+   - `/recipes/[id]`（后续配方详情页）
+
+2. 工具型页面：直接由 Claude Code 按 `UIUX-M1.md` 实现
+   - `/login`
+   - `/recipes`
+   - `/profile`
+   - `/history`
+
+### v0 使用规则
+
+1. v0 仅生成单页视觉方案，不生成完整产品。
+2. 每次只设计一个页面或一个关键组件。
+3. v0 输出不得直接覆盖现有仓库。
+4. 设计确认后，Claude Code 参考 v0 输出重写为项目内组件。
+5. 所有业务状态、按钮行为、错误态、加载态，以 `UIUX-M1.md` 为唯一准则。
+6. v0 生成的文案、假数据、API、认证逻辑均不作为实现依据。
+
+影响文件：无（仅规范交付流程，不改动接口、数据模型或页面代码）。
+
+---
+
+## 模型网关决策（2026-06-20）
+
+I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依据。本节只新增决策，不改既有决策语义。
+
+- ForgeNote M1 使用 OpenRouter 作为唯一模型网关。
+- M1 使用单模型，不做模型路由。
+- 业务代码不绑定模型厂商。
+- 后续以 OpenAI SDK 作为兼容客户端接入 OpenRouter。
+- 模型名与 API Key 只通过 `OPENROUTER_MODEL` 和 `OPENROUTER_API_KEY` 环境变量控制。
+- 本次 I-02A 只建立类型、mock 和接入规则，不调用真实模型。
+
+影响文件：`MODEL-INTEGRATION.md`（新增）、`.env.example`（新增）、`src/lib/ai/types.ts`（新增）、`src/lib/ai/mock-generator.ts`（新增）。
+
+---
+
 ## 仍待拍板（未纳入 Day 0）
 
 - `card_count` 默认与上限是否随 output_type 变（仅卡片 vs 完整包）。（PRD §17-1）
