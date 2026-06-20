@@ -1,28 +1,31 @@
 // ForgeNote M1 — AI 生成契约类型（I-02A）。
 // 仅定义类型，不实现任何请求逻辑。
 // 不引用 OpenAI / OpenRouter / Supabase 或浏览器 API。
-// 依据：docs/API-CONTRACT.md §6、docs/DATA-SCHEMA.md §4、docs/DECISIONS.md（D-01 / D-04 / 模型网关决策）。
+// 依据：docs/API-CONTRACT.md §5.1 / §6、docs/DATA-SCHEMA.md §2 / §4、docs/DECISIONS.md（D-01 / D-04 / 模型网关决策）。
 
-/** 内容意图类型。D-01：禁止使用 xiaohongshu_card_prompt。 */
+/** 内容意图类型。对齐 DATA-SCHEMA §2.1；D-01：禁止使用 xiaohongshu_card_prompt。 */
 export type IntentType =
   | "content_package"
   | "xiaohongshu_note"
   | "card_prompt"
   | "generic_content";
 
-/** 假设条状态。 */
-export type AssumptionState =
-  | "default"
-  | "edited"
-  | "dismissed"
-  | "profile";
+/** 假设条来源。对齐 DATA-SCHEMA §2.2。 */
+export type AssumptionSource = "inferred" | "profile" | "manual" | "recipe";
+
+/** 假设条状态。对齐 DATA-SCHEMA §2.3（profile 是 source，不是 state）。 */
+export type AssumptionState = "default" | "edited" | "dismissed";
+
+/** 假设条值类型。对齐 DATA-SCHEMA §4.1（扩展 bool / list）。 */
+export type AssumptionValueType = "text" | "number" | "enum" | "bool" | "list";
 
 /** 单条假设。 */
 export interface Assumption {
   key: string;
   label: string;
   value: string;
-  source: "inferred" | "profile" | "user";
+  valueType: AssumptionValueType;
+  source: AssumptionSource;
   state: AssumptionState;
   editable: boolean;
   highlight?: boolean;
@@ -45,25 +48,34 @@ export interface ForgeGenerationRequest {
   sourceRecipeId?: string | null;
 }
 
-/** 生成结果中的一个展示区块。 */
-export interface OutcomeSection {
-  key: string;
-  label: string;
-  content: string;
+/** 卡片结构条目。对齐 DATA-SCHEMA §4.2 cardStructure。 */
+export interface CardStructureItem {
+  index: number;
+  type: string;
+  title: string;
 }
 
-/** 完整内容包（content_package 主线）。 */
+/** 单张卡片的生成 Prompt。对齐 DATA-SCHEMA §4.2 cardPrompts。 */
+export interface CardPromptItem {
+  index: number;
+  prompt: string;
+}
+
+/**
+ * 完整内容包（content_package 主线）。
+ * 字段命名与结构对齐 DATA-SCHEMA §4.2 / API-CONTRACT §5.1。
+ */
 export interface ContentPackage {
-  positioning: OutcomeSection;
-  titleOptions: OutcomeSection;
-  body: OutcomeSection;
-  cardStructure: OutcomeSection;
-  cardPrompts: OutcomeSection;
-  hashtags: OutcomeSection;
-  commentGuide: OutcomeSection;
+  positioning: string;
+  titles: string[];
+  body: string;
+  cardStructure: CardStructureItem[];
+  cardPrompts: CardPromptItem[];
+  hashtags: string[];
+  commentGuide: string;
 }
 
-/** 内容配方草稿。 */
+/** 内容配方草稿。对齐 DATA-SCHEMA §4.3。 */
 export interface RecipeDraft {
   name: string;
   intentType: IntentType;
@@ -77,17 +89,30 @@ export interface RecipeDraft {
   acceptance: string[];
 }
 
-/** 单项验收检查。 */
+/** 单项验收检查。对齐 DATA-SCHEMA §4.4 checks[]。 */
 export interface VerificationCheck {
   key: string;
   label: string;
   passed: boolean;
-  note?: string;
+  message?: string;
 }
+
+/** 验收结果。对齐 DATA-SCHEMA §4.4：overallPassed + checks，不再使用裸数组。 */
+export interface Verification {
+  overallPassed: boolean;
+  checks: VerificationCheck[];
+}
+
+/** 生成错误码。对齐 API-CONTRACT §3 + MODEL-INTEGRATION §3 / §5。 */
+export type GenerationErrorCode =
+  | "GENERATION_FAILED"
+  | "MODEL_NOT_CONFIGURED"
+  | "INPUT_EMPTY"
+  | "INPUT_TOO_LONG";
 
 /** 生成错误。 */
 export interface GenerationError {
-  code: "GENERATION_FAILED" | "MODEL_NOT_CONFIGURED" | "INVALID_INPUT";
+  code: GenerationErrorCode;
   message: string;
   retryable: boolean;
 }
@@ -100,18 +125,27 @@ export interface ForgeGenerationSuccess {
   questions: Question[];
   outcome: ContentPackage;
   recipe: RecipeDraft;
-  verification: VerificationCheck[];
+  verification: Verification;
+}
+
+/**
+ * 失败时保留的 Session 草稿（D-04）。
+ * 输入与假设不丢失，status=draft、outcome=null、errorCode 为明确错误码。
+ */
+export interface ForgeGenerationDraft {
+  rawInput: string;
+  intentType: IntentType;
+  assumptions: Assumption[];
+  status: "draft";
+  outcome: null;
+  errorCode: GenerationErrorCode;
 }
 
 /** 生成失败结果。失败时保留草稿（D-04）。 */
 export interface ForgeGenerationFailure {
   ok: false;
   error: GenerationError;
-  draft: {
-    rawInput: string;
-    status: "draft";
-    outcome: null;
-  };
+  draft: ForgeGenerationDraft;
 }
 
 /** 生成响应：成功 / 失败可区分联合类型。 */

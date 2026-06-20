@@ -1,6 +1,6 @@
 "use client";
 
-import { Hammer } from "lucide-react";
+import { Hammer, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,13 +11,15 @@ interface IdeaInputProps {
   value: string;
   onChange: (value: string) => void;
   onForge: () => void;
+  /** 生成中：按钮禁用并显示加载态（UIUX §5.3）。 */
+  pending?: boolean;
 }
 
-export function IdeaInput({ value, onChange, onForge }: IdeaInputProps) {
+export function IdeaInput({ value, onChange, onForge, pending = false }: IdeaInputProps) {
   const charCount = value.length;
   const isEmpty = value.trim().length === 0;
   const isTooLong = charCount > MAX_INPUT_CHARS;
-  const canForge = !isEmpty && !isTooLong;
+  const canForge = !isEmpty && !isTooLong && !pending;
 
   return (
     <div className="space-y-3">
@@ -28,6 +30,7 @@ export function IdeaInput({ value, onChange, onForge }: IdeaInputProps) {
         rows={6}
         aria-label="想法输入"
         aria-invalid={isTooLong}
+        disabled={pending}
         className="resize-y text-base"
       />
 
@@ -44,8 +47,12 @@ export function IdeaInput({ value, onChange, onForge }: IdeaInputProps) {
         </p>
 
         <Button type="button" disabled={!canForge} onClick={onForge}>
-          <Hammer className="size-4" aria-hidden />
-          开始锻造
+          {pending ? (
+            <LoaderCircle className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Hammer className="size-4" aria-hidden />
+          )}
+          {pending ? "锻造中…" : "开始锻造"}
         </Button>
       </div>
     </div>
