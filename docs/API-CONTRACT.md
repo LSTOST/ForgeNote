@@ -45,6 +45,7 @@
 | SESSION_NOT_FOUND | 404 | Session 不存在 |
 | RECIPE_NOT_FOUND | 404 | 配方不存在 |
 | GENERATION_FAILED | 500 | AI 生成失败 |
+| MODEL_NOT_CONFIGURED | 503 | 模型未配置（缺 `OPENROUTER_API_KEY` / `OPENROUTER_MODEL`），见 MODEL-INTEGRATION §5 |
 | DATABASE_ERROR | 500 | 数据库错误 |
 | UNKNOWN_ERROR | 500 | 未知错误 |
 
@@ -144,8 +145,14 @@
 - INPUT_EMPTY
 - INPUT_TOO_LONG
 - GENERATION_FAILED
+- MODEL_NOT_CONFIGURED
+- DATABASE_ERROR
 
-> 降级规则（Day 0 / DECISIONS D-04）：返回 GENERATION_FAILED 时仍持久化 Session 草稿（`status=draft`、`outcome=null`、`error_code=GENERATION_FAILED`），输入与假设保留，用户可稍后重试。
+> sessionId 阶段性说明：I-02B 阶段为「真实生成只返回前端、不落库」，故**不返回** `sessionId`（阶段性行为）。Batch A 起 `POST /api/forge` 必须登录并将结果持久化为 session，成功响应**返回** `data.sessionId`。
+
+> 鉴权（API-CONTRACT §4）：`POST /api/forge` 必须登录。无可识别用户 → 返回 `AUTH_REQUIRED`，**不调用模型、不落库**（不创建假 user、不绕过 RLS）。
+
+> 降级规则（Day 0 / DECISIONS D-04）：生成失败（`GENERATION_FAILED` / `MODEL_NOT_CONFIGURED`）时仍持久化 Session 草稿（`status=draft`、`outcome=null`、`error_code` 为对应错误码），输入与假设保留，响应 `error.draft` 含落库后的 `sessionId`，用户可稍后重试。若草稿/结果写库失败 → 返回 `DATABASE_ERROR`，输入不丢。
 
 ## 5.2 POST /api/forge/regenerate
 

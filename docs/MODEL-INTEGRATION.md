@@ -10,6 +10,10 @@
 - 后续通过 OpenAI SDK 的兼容客户端接入 OpenRouter。
 - 本票（I-02A）仅定义接入契约，不安装 SDK、不发起真实请求。
 
+> 实现现状（I-02B 起）：真实调用以原生 `fetch` 直连 OpenRouter 的 OpenAI 兼容
+> `chat/completions` 端点（`src/lib/ai/openrouter-client.ts`，`import "server-only"` 硬保护），
+> 不安装 SDK。端点与报文与 OpenAI 兼容，后续如需可平替为 OpenAI SDK 客户端，不影响契约。
+
 ## 2. 环境变量
 
 ```

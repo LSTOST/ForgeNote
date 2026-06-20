@@ -147,8 +147,9 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 - 后续以 OpenAI SDK 作为兼容客户端接入 OpenRouter。
 - 模型名与 API Key 只通过 `OPENROUTER_MODEL` 和 `OPENROUTER_API_KEY` 环境变量控制。
 - 本次 I-02A 只建立类型、mock 和接入规则，不调用真实模型。
+- I-02B 实现取舍：以原生 `fetch` 直连 OpenRouter 的 OpenAI 兼容 `chat/completions` 端点，M1 不安装 SDK；端点/报文与 OpenAI 兼容，后续可平替为 OpenAI SDK 客户端而不影响契约。调用层 `import "server-only"` 硬保护，杜绝 Key 经客户端 bundle 泄露。
 
-影响文件：`MODEL-INTEGRATION.md`（新增）、`.env.example`（新增）、`src/lib/ai/types.ts`（新增）、`src/lib/ai/mock-generator.ts`（新增）。
+影响文件：`MODEL-INTEGRATION.md`（新增）、`.env.example`（新增）、`src/lib/ai/types.ts`（新增）、`src/lib/ai/mock-generator.ts`（新增）、`src/lib/ai/openrouter-client.ts`（I-02B / Batch A）。
 
 ---
 

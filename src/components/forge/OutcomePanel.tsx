@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, RotateCw, Sparkles } from "lucide-react";
+import { CircleAlert, LogIn, RotateCw, Sparkles } from "lucide-react";
 
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,20 @@ interface OutcomePanelProps {
   status: ForgeStatus;
   outcome: ContentPackage | null;
   errorMessage: string | null;
+  /** AUTH_REQUIRED：展示「需要登录」态，不跳转登录页（登录页未实现）。 */
+  authRequired?: boolean;
+  /** 成功落库后的 sessionId（Batch A）。 */
+  sessionId?: string | null;
   onRetry: () => void;
 }
 
-// 生成结果区（UIUX §7）。I-02B 接入真实生成结果渲染。
+// 生成结果区（UIUX §7）。I-02B 接入真实生成结果渲染；Batch A 增加登录态与 sessionId。
 export function OutcomePanel({
   status,
   outcome,
   errorMessage,
+  authRequired = false,
+  sessionId = null,
   onRetry,
 }: OutcomePanelProps) {
   if (status === "loading") {
@@ -32,6 +38,19 @@ export function OutcomePanel({
           <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
           <div className="h-24 w-full animate-pulse rounded bg-muted" />
         </div>
+      </Card>
+    );
+  }
+
+  if (status === "error" && authRequired) {
+    // 需要登录态：不跳转登录页（登录页未实现），仅提示。
+    return (
+      <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
+        <LogIn className="size-8 text-muted-foreground/70" aria-hidden />
+        <h2 className="text-base font-medium">需要登录后才能生成</h2>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {errorMessage ?? "请登录后再开始锻造。"}
+        </p>
       </Card>
     );
   }
@@ -55,6 +74,12 @@ export function OutcomePanel({
   if (status === "success" && outcome) {
     return (
       <Card className="min-h-72 space-y-6 p-6">
+        {sessionId && (
+          <p className="text-xs text-muted-foreground/70">
+            session：<span className="font-mono">{sessionId}</span>
+          </p>
+        )}
+
         <Section title="内容定位">
           <p className="text-sm leading-relaxed text-foreground">
             {outcome.positioning}

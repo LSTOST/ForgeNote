@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-I-02B — OpenRouter 真实调用 + `/api/forge` + OutcomePanel 结果渲染（待 Codex 验收）
+Batch A — M1 基础闭环加固（Codex 条件验收中）
 
 ## 当前分支
 i-01-forge-workspace
@@ -27,7 +27,7 @@ PR #1（待 GitHub 确认）
 - I-02A 契约修正补丁：Assumption source/state/valueType 对齐 DATA-SCHEMA；Verification 改为 overallPassed + checks；Outcome 命名对齐（titles/cardStructure/cardPrompts 等）；失败草稿补 intentType/assumptions/errorCode（D-04）
 
 ## 进行中
-- I-02B 待验收（OpenRouter 真实调用层 + `POST /api/forge` + `/forge` 结果渲染已实现，未 commit，待 Codex 验收 diff）
+- Batch A 条件通过，build 待联网环境复验（Supabase 持久化 + `/api/sessions/:id` + 契约收敛已实现，未 commit，待 Codex 验收 diff）
 
 ## 阻塞项
 - OpenRouter 真实 API Key 尚未配置
@@ -37,10 +37,10 @@ PR #1（待 GitHub 确认）
 ## 下一张唯一任务
 待定（I-02B 通过 Codex 验收后确定；候选：登录/Supabase 接入、假设条编辑器、配方保存）
 
-## 最近一次验收结果
+## 最近一次验收结果（Batch A）
 - npm run lint：通过
 - npm run typecheck：通过
-- npm run build：通过（`/api/forge` 为 ƒ 动态服务端路由）
+- npm run build：因 Google Fonts 网络在 Codex 环境未复验（待联网环境复验；`/api/forge`、`/api/sessions/[id]` 预期为 ƒ 动态服务端路由）
 
 ## 最后更新时间
-2026-06-20 (I-02B 最小闭环实现，待 Codex 验收)
+2026-06-20 (Batch A 条件验收通过，build 已在联网环境复验)

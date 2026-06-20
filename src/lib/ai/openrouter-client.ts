@@ -7,6 +7,10 @@
 // chat/completions 端点（DECISIONS 提到“后续以 OpenAI SDK 兼容客户端接入”——
 // 端点与报文一致，后续换 SDK 不影响契约）。不做 streaming、不做多模型路由、不做自动重试。
 
+// server-only 硬保护：任何客户端组件误 import 本模块都会在构建期报错，
+// 杜绝 OPENROUTER_API_KEY 经客户端 bundle 泄露。
+import "server-only";
+
 /** OpenRouter OpenAI 兼容端点（chat/completions）。 */
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
