@@ -1,0 +1,108 @@
+# ForgeNote Runbook
+
+> 日常开发、排障、验收的执行手册。别把命令记在脑子里。
+> 基线：当前 HEAD（Batch A/B/C 后）。`/api/forge` 已必须登录；Supabase 登录闭环已上线。
+
+## 常用命令
+
+```bash
+npm run doctor      # 工程环境自检（只查存在性，不打印任何 secret）
+npm run dev
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## 本地启动
+
+1. 安装依赖：
+
+```bash
+npm install
+```
+
+2. 创建 `.env.local`：
+
+```bash
+cp .env.example .env.local
+```
+
+3. 填入（值不要提交、不要打印到日志）：
+
+```text
+OPENROUTER_API_KEY=          # 模型网关，仅服务端读取
+OPENROUTER_MODEL=
+NEXT_PUBLIC_SUPABASE_URL=    # 公开配置，受 RLS 保护
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+4. 启动：
+
+```bash
+npm run dev
+```
+
+5. 打开（建议用 `localhost` 而非 `127.0.0.1`，避免 Next 16 `allowedDevOrigins` 警告）：
+
+```text
+http://localhost:3000/forge
+```
+
+> 未登录访问 `/forge` 会重定向到 `/login`；缺 Supabase env 时 `/login` 显示「未配置」提示，不白屏。
+
+## 每票开发前
+
+1. 看 `docs/DECISIONS.md`（冲突时它是权威）。
+2. 看当前票对应的 `docs/acceptance/*.md`。
+3. 涉及 Next.js API、路由、缓存或运行时，先读 `node_modules/next/dist/docs/` 对应文档（本仓库 Next 与训练数据有出入）。
+4. 确认 `docs/TICKETS.md` 中当前票状态。
+
+## 每票提交前
+
+```bash
+npm run doctor
+npm run lint
+npm run typecheck
+npm run build
+```
+
+涉及 `/api/forge` 时（先 `npm run dev` 起本地 server）：
+
+```bash
+npm run smoke:api      # 匿名冒烟：合法 body → AUTH_REQUIRED；非法 JSON → VALIDATION_FAILED
+```
+
+涉及数据库 / RLS 时（需 `DATABASE_URL` 为 Postgres 连接串 + 本机 psql）：
+
+```bash
+DATABASE_URL='postgres://...' npm run db:test-rls
+```
+
+涉及模型 prompt、输出结构、验收逻辑时（eval，尚未纳入 npm/CI，见 `docs/TICKETS.md` I-13）：
+
+```bash
+# 需登录态：从已登录浏览器复制整段 Cookie 头
+FORGENOTE_AUTH_COOKIE='sb-...=...; ...' node scripts/eval-forge.mjs --base-url http://localhost:3000
+```
+
+## 排障
+
+| 问题 | 先查 |
+|---|---|
+| `/forge` 一直跳 `/login` | 是否登录、Supabase env 是否配置、Auth cookie 是否有效 |
+| `/api/forge` 401 `AUTH_REQUIRED` | 当前请求是否带登录 cookie（匿名调用本就返回 401，符合预期） |
+| `/api/forge` 503 `MODEL_NOT_CONFIGURED` | `.env.local` 是否有 `OPENROUTER_API_KEY` 和 `OPENROUTER_MODEL` |
+| `/api/forge` 500 `GENERATION_FAILED` | OpenRouter 状态、模型是否支持 JSON 输出、响应是否可解析（失败仍落 D-04 草稿） |
+| `npm run db:test-rls` 报缺连接串 | `NEXT_PUBLIC_SUPABASE_URL` 是 REST 端点，不是 psql 连接串；需用 Postgres 连接串 |
+| build 失败 | Next 16 文档、server/client 边界、类型契约 |
+| 数据看不到 | RLS policy、当前 user_id、表是否启用 RLS（`npm run db:test-rls`） |
+| Preview 不一致 | Vercel env 是否配置到对应环境（Preview / Production 分开） |
+
+## 状态同步
+
+完成任何一张票后，必须同步：
+
+- `docs/PROJECT-STATUS.md`
+- `docs/TICKETS.md`
+- 对应 `docs/acceptance/*.md`
+- 必要时同步 `docs/DECISIONS.md`

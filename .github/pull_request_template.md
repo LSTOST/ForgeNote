@@ -1,0 +1,41 @@
+## Ticket
+
+- Ticket:
+- Acceptance doc:
+
+## What Changed
+
+-
+
+## Out Of Scope
+
+-
+
+## Verification
+
+- [ ] `npm run doctor`
+- [ ] `npm run lint`
+- [ ] `npm run typecheck`
+- [ ] `npm run build`
+- [ ] `npm run smoke:api` — 改动 `/api/forge` 行为时（匿名冒烟：合法 body → `AUTH_REQUIRED`）
+- [ ] `npm run db:test-rls` — 改动数据库 / RLS 时（需 `DATABASE_URL` + psql）
+- [ ] eval（`node scripts/eval-forge.mjs`）— 改动模型 prompt / 输出结构 / 验收逻辑时；需登录态，详见脚本头注释（I-13 正式接入）
+
+## Manual Acceptance
+
+-
+
+## Screenshots / Recording
+
+-
+
+## Risks
+
+-
+
+## Docs Updated
+
+- [ ] `docs/PROJECT-STATUS.md`
+- [ ] `docs/TICKETS.md`
+- [ ] `docs/acceptance/*.md`
+- [ ] `docs/DECISIONS.md`（若决策变更）

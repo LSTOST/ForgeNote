@@ -25,6 +25,7 @@ PR #1（待 GitHub 确认）
 - I-02A：AI 生成类型契约（src/lib/ai/types.ts）
 - I-02A：mock generator（src/lib/ai/mock-generator.ts）
 - I-02A 契约修正补丁：Assumption source/state/valueType 对齐 DATA-SCHEMA；Verification 改为 overallPassed + checks；Outcome 命名对齐（titles/cardStructure/cardPrompts 等）；失败草稿补 intentType/assumptions/errorCode（D-04）
+- QA-01：现代化恢复工程工具链（基于当前 HEAD，不回滚 I-02B）——`scripts/doctor.mjs`（只查存在性、不打印 secret）、`scripts/smoke-forge-api.mjs`（匿名期待 AUTH_REQUIRED）、`scripts/test-rls.mjs`、`scripts/eval-forge.mjs` + `eval/cases/content-package.json`（I-13 种子，未纳入 npm/CI）；`docs/RUNBOOK.md`、`docs/DEPLOYMENT.md`、`docs/TICKETS.md`、`docs/acceptance/Batch-C.md`、`.github/pull_request_template.md`；package.json 增 `doctor`/`smoke:api`/`db:test-rls`；CI 增 Doctor step
 
 ## 进行中
 - `/recipes` 与 `/profile` 仍是占位链接，尚未交付配方库 / Profile
@@ -73,4 +74,4 @@ PR #1（待 GitHub 确认）
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
-2026-06-20 (Batch C 通过 Codex 验收 + 登录态真实浏览器验收，待提交)
+2026-06-20 (Batch C 通过验收 + QA-01 工具链现代化恢复：doctor/smoke/RLS 检查 + RUNBOOK/DEPLOYMENT/TICKETS/PR 模板 + CI Doctor step；lint/typecheck/build/doctor/smoke:api 通过)
