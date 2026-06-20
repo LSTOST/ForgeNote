@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { AssumptionPanel } from "@/components/forge/AssumptionPanel";
 import { ExampleIdeas } from "@/components/forge/ExampleIdeas";
 import { IdeaInput } from "@/components/forge/IdeaInput";
 import { OutcomePanel } from "@/components/forge/OutcomePanel";
@@ -28,6 +29,19 @@ export interface ForgeData {
 
 export type ForgeStatus = "idle" | "loading" | "success" | "error";
 
+/**
+ * 默认假设种子（UIUX §6.1 示例维度）。Batch C 最小实现：
+ * 引擎（I-02B 边界）不做智能推断、只回传输入假设，故首次成功后在客户端注入这组可编辑默认假设，
+ * 供用户编辑 / 删除 / 恢复，并在重新生成时提交。source=inferred、state=default、editable=true。
+ * 不接 profile_preferences、不做偏好记忆、不发起新的模型推断调用。
+ */
+const DEFAULT_ASSUMPTIONS: Assumption[] = [
+  { key: "platform", label: "平台", value: "小红书", valueType: "text", source: "inferred", state: "default", editable: true },
+  { key: "output_form", label: "内容形式", value: "7 张卡片", valueType: "text", source: "inferred", state: "default", editable: true },
+  { key: "audience", label: "受众", value: "第一次独居的人", valueType: "text", source: "inferred", state: "default", editable: true },
+  { key: "tone", label: "语气", value: "成熟、清楚、不焦虑", valueType: "text", source: "inferred", state: "default", editable: true },
+];
+
 export function ForgeWorkbench() {
   const [idea, setIdea] = useState("");
   const [status, setStatus] = useState<ForgeStatus>("idle");
@@ -37,23 +51,32 @@ export function ForgeWorkbench() {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   // 成功后保存 sessionId（Batch A）。
   const [sessionId, setSessionId] = useState<string | null>(null);
+  // 假设条工作集（Batch C）：客户端为唯一真相，保留 dismissed 以便恢复。
+  const [assumptions, setAssumptions] = useState<Assumption[]>([]);
 
   async function runForge() {
     setStatus("loading");
     setErrorMessage(null);
     setErrorCode(null);
 
+    // 只提交未删除的假设；dismissed 不参与生成请求（UIUX §6.4）。
+    const submitAssumptions = assumptions.filter((a) => a.state !== "dismissed");
+
     try {
       const res = await fetch("/api/forge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawInput: idea }),
+        body: JSON.stringify({ rawInput: idea, assumptions: submitAssumptions }),
       });
       const json = await res.json();
 
       if (json?.ok) {
         setData(json.data as ForgeData);
         setSessionId(json.data?.sessionId ?? null);
+        // 首次成功且尚无假设时注入默认种子，供用户编辑后再次生成。
+        setAssumptions((prev) =>
+          prev.length > 0 ? prev : DEFAULT_ASSUMPTIONS.map((a) => ({ ...a })),
+        );
         setStatus("success");
       } else {
         // 失败时保留用户输入（idea 不清空），展示错误并允许重试（UIUX §7.4 / D-04）。
@@ -66,6 +89,53 @@ export function ForgeWorkbench() {
       setErrorCode(null);
       setStatus("error");
     }
+  }
+
+  // 「新建」：清空当前 session 回到空态（UIUX §7.5）。
+  function handleNew() {
+    setIdea("");
+    setData(null);
+    setStatus("idle");
+    setErrorMessage(null);
+    setErrorCode(null);
+    setSessionId(null);
+    setAssumptions([]);
+  }
+
+  // 假设条状态机：编辑 / 删除 / 恢复 / 全部恢复（UIUX §6.3 / §6.4）。
+  function editAssumption(key: string, value: string) {
+    setAssumptions((prev) =>
+      prev.map((a) =>
+        a.key === key ? { ...a, value, state: "edited", highlight: true } : a,
+      ),
+    );
+  }
+
+  function dismissAssumption(key: string) {
+    setAssumptions((prev) =>
+      prev.map((a) => (a.key === key ? { ...a, state: "dismissed" } : a)),
+    );
+  }
+
+  function restoreAssumption(key: string) {
+    // 恢复到删除前的状态：编辑过的回到 edited，否则 default（highlight 记录是否编辑过）。
+    setAssumptions((prev) =>
+      prev.map((a) =>
+        a.key === key
+          ? { ...a, state: a.highlight ? "edited" : "default" }
+          : a,
+      ),
+    );
+  }
+
+  function restoreAllAssumptions() {
+    setAssumptions((prev) =>
+      prev.map((a) =>
+        a.state === "dismissed"
+          ? { ...a, state: a.highlight ? "edited" : "default" }
+          : a,
+      ),
+    );
   }
 
   const authRequired = status === "error" && errorCode === "AUTH_REQUIRED";
@@ -82,6 +152,19 @@ export function ForgeWorkbench() {
         {status !== "loading" && <ExampleIdeas onPick={setIdea} />}
       </section>
 
+      {/* 假设条区域（UIUX §5.1：输入区与结果区之间）。首次生成后出现。 */}
+      {assumptions.length > 0 && (
+        <AssumptionPanel
+          assumptions={assumptions}
+          onEdit={editAssumption}
+          onDismiss={dismissAssumption}
+          onRestore={restoreAssumption}
+          onRestoreAll={restoreAllAssumptions}
+          onRegenerate={runForge}
+          pending={status === "loading"}
+        />
+      )}
+
       {/* 桌面端左右布局，移动端上下堆叠（UIUX §5.1 / §5.2）。 */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <OutcomePanel
@@ -91,6 +174,7 @@ export function ForgeWorkbench() {
           authRequired={authRequired}
           sessionId={sessionId}
           onRetry={runForge}
+          onNew={handleNew}
         />
         <RecipePanel
           status={status}

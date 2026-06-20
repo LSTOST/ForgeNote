@@ -1,6 +1,15 @@
 "use client";
 
-import { CircleAlert, LogIn, RotateCw, Sparkles } from "lucide-react";
+import { useState } from "react";
+import {
+  Check,
+  CircleAlert,
+  Copy,
+  FilePlus2,
+  LogIn,
+  RotateCw,
+  Sparkles,
+} from "lucide-react";
 
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { Button } from "@/components/ui/button";
@@ -16,9 +25,32 @@ interface OutcomePanelProps {
   /** 成功落库后的 sessionId（Batch A）。 */
   sessionId?: string | null;
   onRetry: () => void;
+  /** 新建：清空当前 session 回到空态（UIUX §7.5）。 */
+  onNew: () => void;
 }
 
-// 生成结果区（UIUX §7）。I-02B 接入真实生成结果渲染；Batch A 增加登录态与 sessionId。
+/** 将整包内容拼为 UIUX §7.3 的全文（复制全文用）。 */
+function buildFullText(o: ContentPackage): string {
+  const lines: string[] = [];
+  lines.push("# 内容定位", o.positioning, "");
+  lines.push("# 标题备选", ...o.titles.map((t) => `- ${t}`), "");
+  lines.push("# 小红书正文", o.body, "");
+  lines.push(
+    "# 卡片结构",
+    ...o.cardStructure.map((c) => `${c.index}. [${c.type}] ${c.title}`),
+    "",
+  );
+  lines.push(
+    "# 卡片 Prompt",
+    ...o.cardPrompts.map((c) => `【第 ${c.index} 张】\n${c.prompt}`),
+    "",
+  );
+  lines.push("# 发布话题", o.hashtags.map((t) => `#${t}`).join(" "), "");
+  lines.push("# 评论区引导", o.commentGuide);
+  return lines.join("\n");
+}
+
+// 生成结果区（UIUX §7）。I-02B 接入真实结果渲染；Batch A 加登录态/sessionId；Batch C 加复制操作区与新建。
 export function OutcomePanel({
   status,
   outcome,
@@ -26,7 +58,20 @@ export function OutcomePanel({
   authRequired = false,
   sessionId = null,
   onRetry,
+  onNew,
 }: OutcomePanelProps) {
+  // 轻量复制反馈（不引 toast 库）：记录最近复制的按钮 key，短暂显示「已复制」。
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  async function copy(key: string, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      window.setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500);
+    } catch {
+      // 复制失败（如无剪贴板权限）静默忽略，不打断主流程。
+    }
+  }
   if (status === "loading") {
     return (
       <Card className="min-h-72 p-6">
@@ -72,6 +117,15 @@ export function OutcomePanel({
   }
 
   if (status === "success" && outcome) {
+    const copyLabel = (key: string, base: string) =>
+      copiedKey === key ? "已复制" : base;
+    const copyIcon = (key: string) =>
+      copiedKey === key ? (
+        <Check className="size-3.5" aria-hidden />
+      ) : (
+        <Copy className="size-3.5" aria-hidden />
+      );
+
     return (
       <Card className="min-h-72 space-y-6 p-6">
         {sessionId && (
@@ -79,6 +133,63 @@ export function OutcomePanel({
             session：<span className="font-mono">{sessionId}</span>
           </p>
         )}
+
+        {/* 操作区（UIUX §7.5）。 */}
+        <div className="flex flex-wrap gap-2 border-b pb-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => copy("all", buildFullText(outcome))}
+          >
+            {copyIcon("all")}
+            {copyLabel("all", "复制全文")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => copy("body", outcome.body)}
+          >
+            {copyIcon("body")}
+            {copyLabel("body", "复制正文")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              copy(
+                "prompts",
+                outcome.cardPrompts
+                  .map((c) => `【第 ${c.index} 张】\n${c.prompt}`)
+                  .join("\n\n"),
+              )
+            }
+          >
+            {copyIcon("prompts")}
+            {copyLabel("prompts", "复制卡片 Prompt")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              copy("tags", outcome.hashtags.map((t) => `#${t}`).join(" "))
+            }
+          >
+            {copyIcon("tags")}
+            {copyLabel("tags", "复制话题")}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <RotateCw className="size-3.5" aria-hidden />
+            重新生成
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onNew}>
+            <FilePlus2 className="size-3.5" aria-hidden />
+            新建
+          </Button>
+        </div>
 
         <Section title="内容定位">
           <p className="text-sm leading-relaxed text-foreground">

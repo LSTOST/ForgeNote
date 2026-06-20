@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-Batch B — Supabase Auth 登录闭环（Codex 验收通过）
+Batch C — 假设条编辑器 + 结果操作区最小闭环（Codex 验收通过）
 
 ## 当前分支
 i-01-forge-workspace
@@ -27,9 +27,23 @@ PR #1（待 GitHub 确认）
 - I-02A 契约修正补丁：Assumption source/state/valueType 对齐 DATA-SCHEMA；Verification 改为 overallPassed + checks；Outcome 命名对齐（titles/cardStructure/cardPrompts 等）；失败草稿补 intentType/assumptions/errorCode（D-04）
 
 ## 进行中
-- Batch B Codex 验收通过，待 Supabase env 可用环境复验真实登录：Supabase Auth 登录闭环（Magic Link + Google OAuth）+ 受保护 `/forge`
-- 真实登录路径（真实 OAuth / Magic Link / callback 写 cookie / 登录后写库）仍待 Supabase env + provider 复验
-- `/recipes` 与 `/profile` 仍是占位链接，本批未交付配方库 / Profile
+- `/recipes` 与 `/profile` 仍是占位链接，尚未交付配方库 / Profile
+
+## 已通过验收
+- Batch C：Codex 验收通过；登录态真实浏览器验收通过
+- Batch B：Codex 验收通过
+- B-Verify：登录闭环 + RLS + draft 落库，真实 Supabase env 下通过
+- G-Verify：OpenRouter 真实生成 `status=completed` 落库通过（真实 session 示例：`bd456b28-2ebd-46ad-ad6c-594f64335dba`）
+
+## 已完成（Batch C — 假设条编辑器 + 结果操作区）
+- 新增 `src/components/forge/AssumptionPanel.tsx`：假设条显示 / 行内编辑 value / dismiss / restore / 全部恢复 / 应用并重新生成（UIUX §6）
+- `ForgeWorkbench`：假设条客户端状态机（首次成功后注入 UIUX §6.1 默认种子；客户端为唯一真相，保留 dismissed 以便恢复）；重新生成只提交 state != dismissed 的假设
+- `OutcomePanel`：操作区 — 复制全文 / 复制正文 / 复制卡片 Prompt / 复制话题 / 重新生成 / 新建（轻量「已复制」反馈，不引 toast 库）
+- `RecipePanel`：复制配方摘要 + 「保存配方（下一批开放）」禁用占位
+- 边界：不接 profile_preferences、不做偏好记忆、不做 question 流程、不新增 API / migration / 依赖、不真正保存 recipes
+
+## 文档/契约冲突（仅记录，不自行扩范围）
+- UIUX §6.2 将 `source` 列为 `inferred / profile / edited`，但 `AssumptionSource` 类型为 `inferred / profile / manual / recipe`（无 `edited`）；`edited` 实为 `state`。本批以类型/DATA-SCHEMA 为准：编辑时设 `state="edited"`、`source` 不变。待后续统一文档措辞。
 
 ## 已完成（Batch B）
 - 浏览器端 Supabase 客户端 helper（`src/lib/supabase/client.ts`，anon key，不含 service role）
@@ -41,21 +55,22 @@ PR #1（待 GitHub 确认）
 - `/api/forge` 仍必须登录（未改动，AUTH_REQUIRED 兜底保留）
 
 ## 阻塞项
-- OpenRouter 真实 API Key 尚未配置
-- Supabase env（NEXT_PUBLIC_SUPABASE_URL / ANON_KEY）+ Google provider 待配置后做真实登录复验
+- Google provider 是否已配置未确认（Magic Link 已通；Google OAuth 待 Owner 确认）
 - Vercel Preview 未确认
 - Codex GitHub App 未确认
 
 ## 下一张唯一任务
-待定（Batch B 已通过 Codex 验收；候选：假设条编辑器、配方保存/配方库、Profile/偏好）
+待定（候选：配方保存/配方库、Profile/偏好）
 
-## 最近一次验收结果（Batch B）
+## 最近一次验收结果（Batch C）
 - npm run lint：通过
 - npm run typecheck：通过
-- npm run build：通过（路由：`/forge`、`/login`、`/auth/callback`、`/auth/signout` 均为 ƒ 动态；`/api/forge`、`/api/sessions/[id]` 为 ƒ 动态）
-- Codex 验收：通过，已复验 lint / typecheck / build 通过；build 在联网环境通过
-- 仍待 Supabase env + provider 复验：真实 OAuth / Magic Link / callback 写 cookie / 登录后写库
-- 范围说明：`/recipes`、`/profile` 仍为占位链接，本批未交付配方库 / Profile
+- npm run build：通过（路由表不变：`/`、`/_not-found` 静态；`/api/forge`、`/api/sessions/[id]`、`/auth/callback`、`/auth/signout`、`/forge`、`/login` 均为 ƒ 动态）
+- 登录态真实浏览器验收：通过
+- edited assumption 落库：通过
+- dismissed assumption 不提交：通过
+- restore 后重新提交：通过
+- 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
-2026-06-20 (Batch B 通过 Codex 验收，自动校验通过，待 Supabase env 复验真实登录)
+2026-06-20 (Batch C 通过 Codex 验收 + 登录态真实浏览器验收，待提交)
