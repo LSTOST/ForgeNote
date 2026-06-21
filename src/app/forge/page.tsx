@@ -7,7 +7,7 @@ import {
 } from "@/components/forge/ForgeWorkbench";
 import { TopNav } from "@/components/layout/TopNav";
 import type { Assumption } from "@/lib/ai/types";
-import { PRODUCT_NAME, SLOGAN } from "@/lib/constants";
+import { POSITIONING, PRODUCT_NAME, SLOGAN } from "@/lib/constants";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 // 受保护页面：未登录（或未配置 Supabase）→ 跳 /login。
@@ -95,6 +95,9 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
             {PRODUCT_NAME}
           </h1>
           <p className="text-muted-foreground">{SLOGAN}</p>
+          <p className="max-w-2xl text-sm text-muted-foreground/80">
+            {POSITIONING}
+          </p>
         </header>
 
         <ForgeWorkbench

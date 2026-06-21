@@ -34,7 +34,7 @@ function buildFullText(o: ContentPackage): string {
   const lines: string[] = [];
   lines.push("# 内容定位", o.positioning, "");
   lines.push("# 标题备选", ...o.titles.map((t) => `- ${t}`), "");
-  lines.push("# 小红书正文", o.body, "");
+  lines.push("# 发布正文", o.body, "");
   lines.push(
     "# 卡片结构",
     ...o.cardStructure.map((c) => `${c.index}. [${c.type}] ${c.title}`),
@@ -205,7 +205,7 @@ export function OutcomePanel({
           </ul>
         </Section>
 
-        <Section title="小红书正文">
+        <Section title="发布正文">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {outcome.body}
           </p>

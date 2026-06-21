@@ -36,15 +36,16 @@
 | I-08 | Done | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈） | `docs/acceptance/I-08.md` |
 | I-09 | Done | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | `docs/acceptance/I-09.md` |
 | I-10 | Done | 配方详情 `/recipes/[id]` + 换输入重跑（`POST /api/recipes/:id/rerun`） | `docs/acceptance/I-10.md` |
+| I-15 | Done | v5 选择性折叠文案 / 产品表述收敛（图文卡片 / carousel 方向，additive） | `docs/acceptance/I-15.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-15 | Backlog | i18n 文案外化（UI 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | Batch C；DECISIONS D-07(a) |
+| I-16 | Backlog | output_locale 字段与假设维度（sessions/recipes 增 nullable 列 + assumption 维度，additive） | perf 排序、繁简内容调优、按 locale 禁用词表 | Batch A；DATA-SCHEMA；DECISIONS D-07(b) |
 
-> **下一张唯一任务**：I-15（v5 选择性折叠 additive）。只做 i18n 文案外化脚手架，不抢做 I-16 `output_locale`、不做 I-11 偏好页。
-> 注：I-15 / I-16 的票面定义随「v5 选择性折叠」战略文档（DECISIONS D-06/07/08、PRD §2/§4.3、本文件 M1 队列 I-15/I-16）一同维护，该批战略文档改动为既有未提交工作树状态，未纳入 I-10 功能提交，待技术负责人处理。
+> **下一张唯一任务**：I-16（`output_locale`，v5 选择性折叠 additive）。additive nullable 列，不 default / 不 enum / 不 backfill、不改 RLS、不改 `content_package`，不抢做 I-11 偏好页。
+> 注（I-15 范围澄清）：本轮 I-15 按执行指令聚焦**产品文案 / UI 表述 / 文档表述的 v5 收敛**（图文卡片 / carousel 方向，in-place 文案，不改行为）。原 D-07(a) 设想的「i18n 文案抽资源文件 + en/zh-Hans 脚手架」属更重的工程化外化，**未在本轮做**；若仍需要可作为后续 i18n 工程化票另立，不阻断 I-16。
 
 ## M1 剩余执行队列
 
@@ -54,11 +55,9 @@
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
-| I-15 | Backlog | i18n 文案外化（UI 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | Batch C；DECISIONS D-07(a) |
-| I-16 | Backlog | output_locale 字段与假设维度（sessions/recipes 增 nullable 列 + assumption 维度，additive） | perf 排序、繁简内容调优、按 locale 禁用词表 | Batch A；DATA-SCHEMA；DECISIONS D-07(b) |
 
-> 说明：`/recipes` 列表与 `/recipes/[id]` 详情 + 换输入重跑均已交付；`/profile` 仍未交付。
-> I-15 / I-16 为 v5 选择性折叠（DECISIONS「v5 选择性折叠」）的 additive 票，**不抢占当前唯一任务 I-10**，按队列推进。
+> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`/profile` 仍未交付。
+> I-16 为 v5 选择性折叠（DECISIONS「v5 选择性折叠」D-07(b)）的 additive 票，现为下一张唯一任务，排在 I-11 之前。
 
 ## 每票模板
 

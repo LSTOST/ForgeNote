@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ForgeNote 内容锻造台",
-  description: "把模糊想法，锻造成可发布内容",
+  title: "ForgeNote 图文卡片内容工作台",
+  description: "把模糊想法，锻造成可发布的图文卡片内容包",
 };
 
 export default function RootLayout({
