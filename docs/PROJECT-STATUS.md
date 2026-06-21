@@ -155,7 +155,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 
 ## 阻塞项
 - Google provider 是否已配置未确认（Magic Link 已通；Google OAuth 待 Owner 确认；Preview 上受保护未验）
-- **Vercel Preview 验收 Blocked**（见 docs/acceptance/Preview-M1.md）：集成在跑、HEAD `3e5a012` Preview 构建 success，但 Preview 受 **Deployment Protection** 保护——未认证 curl 401(SSO)、本机浏览器过 SSO 后 404(未授权)，本环境无 Vercel CLI/token/bypass，**无法访问 app 路由完成 Preview 功能验收**（未绕过）。Vercel env 存在性亦无法核验。解除方式见该文档。
+- **Vercel Preview 验收 Blocked**（见 docs/acceptance/Preview-M1.md）：集成在跑，HEAD `6bbbb3b` Preview READY，但 Vercel project `framework: null`，最新部署 `/`、`/login`、`/forge` 均为 Vercel 级 404；已新增 `vercel.json` 指定 `framework: "nextjs"`，待新 Preview 部署验证。Preview 仍受 **Deployment Protection** 保护，Vercel env 存在性亦无法核验。解除方式见该文档。
 - **GitHub Actions CI（npm ci）红 → 已修**：根因为 **npm 大版本不一致**——本机 node25/npm11 vs CI node20/npm10，lockfile 缺 npm10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退嵌套 optional 依赖）。本机 npm11 重生成无效（CI 仍红）；改用 `npx npm@10 install --package-lock-only` 重生成（匹配 CI），`npx npm@10 ci --dry-run` exit 0；lockfileVersion 仍 3、root deps 未变、无源码改动。初判 flake 有误，已更正。
 - Codex GitHub App 未确认
 
@@ -173,6 +173,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-21 (Preview 修复进行中：CI 已绿；Vercel 最新部署 6bbbb3b READY 但 project framework=null，导致 /、/login、/forge 全部 Vercel 级 404。新增 vercel.json 指定 framework=nextjs，待推送触发新 Preview 后复测；Deployment Protection/env/OAuth 仍未最终验收，不转 Ready)
 2026-06-21 (CI 修复 v2：真因为 npm 版本不一致（本机 npm11 vs CI npm10），lockfile 缺 npm10 期望的 @emnapi/*@1.11.1 顶层节点；本机 npm11 重生成无效，改用 npx npm@10 install --package-lock-only 重生成、npm@10 ci --dry-run exit 0。Preview 仍受 Deployment Protection（401 SSO），验收维持 Blocked、不转 Ready)
 2026-06-21 (M1 Preview/部署验收：Vercel 集成在跑、HEAD 3e5a012 Preview 构建 success，但 Preview 受 Deployment Protection → 未认证 401(SSO)/浏览器 404，无 Vercel CLI/token，app 路由不可达 → 验收 Blocked、不转 Ready；CI 本次红为 npm ci 瞬时失败（本地 npm ci exit 0，建议重跑）；本地 lint/typecheck/build/doctor/smoke/eval 全绿。详见 docs/acceptance/Preview-M1.md)
 2026-06-21 (I-17 完成：src/lib/copy en+zh-Hans 资源 scaffold + typed helper（Copy=typeof zhHans，en:Copy 编译期保证 key 不漂移）；接线 TopNav / /recipes / /profile 页头；默认 zh-Hans 行为不变；不引 i18n 依赖、不做运行时切换；lint/typecheck/build/doctor/smoke + Chrome smoke 通过。M1 计划票 I-08~I-17 全部交付)
