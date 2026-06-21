@@ -7,6 +7,7 @@ import {
 } from "@/components/profile/ProfilePreferences";
 import { Card } from "@/components/ui/card";
 import { TopNav } from "@/components/layout/TopNav";
+import { copy } from "@/lib/copy";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 // 受保护页面：未登录（或未配置 Supabase）→ `/login`（与 /forge、/recipes 一致的 DAL 鉴权）。
@@ -39,10 +40,11 @@ export default async function ProfilePage() {
       <TopNav />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <header className="mb-6 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">偏好</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {copy.profile.title}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            记住你常用的内容假设（受众、语气、视觉风格等）。下次在 Forge
-            生成时会自动作为假设带出，可随时编辑或删除。
+            {copy.profile.description}
           </p>
         </header>
 

@@ -9,6 +9,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TopNav } from "@/components/layout/TopNav";
+import { copy } from "@/lib/copy";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -121,14 +122,16 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">配方库</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {copy.recipes.title}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              查看、搜索、筛选和删除已保存的内容配方。
+              {copy.recipes.description}
             </p>
           </div>
           <Link href="/forge" className={buttonVariants()}>
             <Plus className="size-4" aria-hidden />
-            新建配方
+            {copy.recipes.newRecipe}
           </Link>
         </header>
 

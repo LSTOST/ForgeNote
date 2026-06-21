@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-Batch D（I-12 表现回填 / I-13 eval 门禁 / I-14 观测 scaffold）均 Done
+I-17 — UI copy resource extraction scaffold（Done）。M1 主线 + Batch D + I-17 已全部交付。
 
 ## 当前分支
 i-01-forge-workspace
@@ -19,7 +19,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 **权威记录**：`DECISIONS.md`「v5 选择性折叠」D-06 / D-07 / D-08；`TICKETS.md` I-15 / I-16；`PRD-M1.md` §2、§4.3。
 
 **边界（review / 验收须守住）**
-- I-12 / I-13 / I-14（Batch D）已完成；剩余 Backlog 仅 **I-17**（i18n 资源外化）。
+- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）已完成；M1 计划票全部交付。
 - login / forge / recipes 已建代码不动。
 - **D-01 不变**：`content_package` 冻结，M1 不改名 `carousel_package`。
 - M1 不收费；Stripe / 去小红书化 / taxonomy 改名延后（D-08）。
@@ -110,10 +110,18 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - I-14：`src/lib/observability.ts` 零依赖 no-op 观测 scaffold（`captureServerError` / `trackClientEvent`，未配 env 全 no-op、不引 SDK、不硬连、不采集输入全文）；`.env.example` 增可选 `SENTRY_DSN` / `NEXT_PUBLIC_POSTHOG_KEY` / `_HOST`；doctor 以 `info` 级别提示可选观测 env（不计 fail/warn）；DEPLOYMENT 增启用说明与安全约束。无 key 时 build / 运行不受影响。（见 docs/acceptance/I-14.md）
 - 自动验证：lint/typecheck/build（新增 `ƒ /api/sessions/[id]/performance`，其余路由不变）/doctor（0 failed / 0 warnings）/smoke:api 全通过；`eval:forge` 无 cookie SKIP exit 0。
 
+## 已完成（I-17 — UI copy resource extraction scaffold）
+- 新增 `src/lib/copy/`：`zh-Hans`（规范源，current 文案逐字迁移）+ `en`（scaffold）+ `index`（`copy` 默认 zh-Hans / `dictionaries` / `getCopy(locale)`）；`Copy = typeof zhHans` + `en: Copy` 编译期保证 en/zh **key 不漂移**
+- 代表性接线（live）：`TopNav`（导航标签 + 退出）、`/recipes` 页头（标题/描述/新建配方）、`/profile` 页头（标题/描述）；默认 zh-Hans，UI 文案逐字一致、行为不变
+- 资源覆盖分组：nav / login / forge / recipes / recipeDetail / profile / outcome / recipePanel / assumptions；其余为 scaffold-only（增量采纳）
+- 边界：不引入 i18n 依赖、不做运行时语言切换 / locale 路由 / 偏好持久化 / output_locale 联动 / 自动翻译；不改 prompt/DB/RLS/API；不改 Batch D / I-11；不重构组件结构；`constants.ts` 产品级文案不重复纳入
+- 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor/smoke:api 全通过；Chrome smoke：`/recipes`、`/profile`、`/forge` 文案正确、无 raw key / undefined / [object Object]（见 docs/acceptance/I-17.md）
+
 ## 进行中
-- M1 主线票（I-08~I-16）+ Batch D（I-12/I-13/I-14）已交付；剩余 Backlog 仅 I-17（i18n 资源文件外化）
+- M1 计划票全部交付（I-08~I-17，含 Batch D）。后续：真正多语言运行时切换 / scaffold-only 文案逐组接线（需另立票）；部署 / 观测 SDK 接入（I-14 后续）按技术负责人排期
 
 ## 已通过验收
+- I-17：UI copy 资源 scaffold（en/zh key parity 编译期保证 + 代表性接线 + Chrome smoke）通过，进入 Done
 - Batch D：I-12 表现回填（含真实 Chrome 登录态回填/读回）、I-13 eval 门禁（safe-mode 实测）、I-14 观测 scaffold（no-op / build 不破）均通过自动验证，进入 Done
 - I-11：偏好页 `/profile` CRUD + `/forge` 偏好带出 + edited assumptions「记住为偏好」通过自动验证、匿名边界与真实 Chrome 登录态验收，进入 Done
 - I-16：output_locale 数据与生成链路通过自动验证、匿名边界与真实 Chrome 登录态验收；migration 0002 已应用，带 locale 生成 / `/forge?session=` 回填 / rerun 带 locale / `usage_count` 增量均通过，进入 Done
@@ -151,7 +159,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - Codex GitHub App 未确认
 
 ## 下一张唯一任务
-I-17 — UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为）。M1 主线 + Batch D 已交付，I-17 为剩余唯一 Backlog；是否启动由技术负责人定。
+（待技术负责人定）M1 计划票 I-08~I-17 已全部交付。候选后续：① 真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；② I-14 观测真实 SDK 接入；③ 部署 / Preview 验收（DEPLOYMENT 清单）。均需另立票。
 
 ## 最近一次验收结果（Batch C）
 - npm run lint：通过
@@ -164,6 +172,7 @@ I-17 — UI copy resource extraction scaffold（i18n 文案抽资源文件，en 
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-21 (I-17 完成：src/lib/copy en+zh-Hans 资源 scaffold + typed helper（Copy=typeof zhHans，en:Copy 编译期保证 key 不漂移）；接线 TopNav / /recipes / /profile 页头；默认 zh-Hans 行为不变；不引 i18n 依赖、不做运行时切换；lint/typecheck/build/doctor/smoke + Chrome smoke 通过。M1 计划票 I-08~I-17 全部交付)
 2026-06-21 (Batch D 完成：I-12 表现回填 lite（POST /api/sessions/:id/performance + GET 读回 + OutcomePanel 入口，无 migration，真实 Chrome 回填/读回通过）、I-13 eval 门禁（eval:forge npm + safe-mode SKIP，不进 PR CI）、I-14 观测 scaffold（零依赖 no-op + 可选 env + doctor info）；lint/typecheck/build/doctor/smoke 全通过；下一张唯一任务 I-17)
 2026-06-21 (I-11 偏好页 /profile 完成：profile_preferences CRUD API（GET/POST upsert/PUT/DELETE）+ 受保护 /profile 页 + /forge 按 RLS 带出 source=profile 偏好假设 + AssumptionPanel「记住为偏好」写入；无 migration（表/RLS 已存在）；back-compat 无偏好不变；自动验证、匿名边界与真实 Chrome 登录态验收通过；下一张唯一任务 I-12)
 2026-06-21 (I-16 output_locale 完成：migration 0002 已应用到 Supabase；sessions.output_locale=text nullable/default NULL；forge/rerun/session API 串通、生成链路最小约束、UI 自由文本输入；带 locale 生成、/forge?session= 回填、rerun 带 locale、usage_count 1→2 通过；下一张唯一任务 I-11)

@@ -179,9 +179,19 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 ### D-07 现在折叠（additive，低重做）
 
-- **(a) i18n 文案外化**：UI 文案抽成资源文件（en + zh-Hans 脚手架），不改行为。理由：文案外化成本随页面增长上升，越晚越贵。→ 票 I-15。
+- **(a) i18n 文案外化**：UI 文案抽成资源文件（en + zh-Hans 脚手架），不改行为。理由：文案外化成本随页面增长上升，越晚越贵。→ 实际拆分：I-15 先做产品**表述收敛**（in-place）；**资源文件外化脚手架**另立 **I-17**。
 - **(b) output_locale 预留**：`sessions` / `recipes` 增 `output_locale`（nullable）；assumption 增 `output_locale` 维度（由 audience 决定，impact=High，可问）。仿 D-02 预留 F-16 字段的方式，additive 不破坏现状。→ 票 I-16。
 - **(c) 商业化定位**：freemium 订阅假设写入 PRD（M1 不收费，但验证可收费性：保存率/重跑率/留存即付费意愿先行指标）。纯文档。→ `PRD-M1.md` §4.3。
+
+#### D-07(a) 实现结果（I-17，2026-06-21）
+
+i18n 文案外化按 **scaffold** 落地，严格不改行为：
+
+- 新增 `src/lib/copy/`（`zh-Hans` 规范源 + `en` scaffold + `index` typed helper）；`Copy = typeof zhHans` + `en: Copy` 在编译期保证两套 key 不漂移。
+- 默认 `copy` = zh-Hans，UI 文案逐字一致、行为不变。代表性接线：TopNav、`/recipes` 与 `/profile` 页头；其余为 scaffold-only（增量采纳）。
+- 不引入 i18n 依赖、不做运行时语言切换 / locale 路由 / 偏好持久化 / 与 `output_locale` 联动。
+- `constants.ts` 已集中的产品级文案不重复纳入（避免双源漂移）。
+- 真正的多语言运行时切换留作后续票（本票仅脚手架）。
 
 #### D-07(b) 实现结果（I-16，2026-06-21）
 

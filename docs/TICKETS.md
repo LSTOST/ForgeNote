@@ -42,25 +42,22 @@
 | I-12 | Done | F-16 表现回填 lite（`POST /api/sessions/:id/performance` + GET 读回 + OutcomePanel 入口，无 migration） | `docs/acceptance/I-12.md` |
 | I-13 | Done | eval 门禁接入（`eval:forge` npm + safe-mode SKIP；手动/本地，不进 PR CI） | `docs/acceptance/I-13.md` |
 | I-14 | Done | PostHog / Sentry 基础观测（零依赖 no-op scaffold + 可选 env + 文档） | `docs/acceptance/I-14.md` |
+| I-17 | Done | UI copy resource extraction scaffold（src/lib/copy en+zh-Hans + typed helper，代表性接线，不改行为） | `docs/acceptance/I-17.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-17 | Backlog | UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | I-15；DECISIONS D-07(a) |
+| —（待技术负责人定） | — | M1 计划票 I-08~I-17 已全部交付 | — | — |
 
-> **下一张唯一任务**：I-17（i18n 资源文件外化，原 D-07(a)）。M1 主线 + Batch D 已全部交付，I-17 为剩余唯一 Backlog；是否启动由技术负责人定。
+> **状态**：M1 计划票全部 Done。候选后续票（均需另立）：真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；I-14 观测真实 SDK 接入；部署 / Preview 验收（见 `docs/DEPLOYMENT.md`）。
 > 注（I-13 决策）：eval 为**手动 / 本地门禁**，**不进 PR CI**（真实模型调用 + 需登录态，进 CI 会因缺 key/登录态无意义失败）；CI 仍只跑 doctor / lint / typecheck / build。`npm run eval:forge` 无 cookie 时 SKIP exit 0。
 > 注（I-14 决策）：观测为**零依赖 no-op scaffold**，未配 env 不影响 build / 运行；真实 SDK 接入留作后续票（`observability.ts` TODO）。
+> 注（I-17 决策）：i18n 仅 **scaffold**（en/zh 资源 + typed helper + 代表性接线），默认 zh-Hans 行为不变；运行时切换 / 偏好持久化 / output_locale 联动留作后续票。
 
 ## M1 剩余执行队列
 
-| 票号 | 状态 | 目标 | 范围外 | 依赖 |
-|---|---|---|---|---|
-| I-17 | Backlog | UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | I-15；DECISIONS D-07(a) |
-
-> 说明：M1 主线票 I-08~I-16 + Batch D（I-12 / I-13 / I-14）均已交付。剩余 Backlog 仅 I-17。
-> I-17（i18n 资源文件外化，原 D-07(a)）为后续 Backlog。
+> M1 计划票（I-08~I-17）已全部交付，执行队列清空。后续票按上「下一张唯一任务」候选另立。
 
 ## 每票模板
 

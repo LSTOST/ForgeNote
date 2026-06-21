@@ -2,14 +2,15 @@ import Link from "next/link";
 import { Flame, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { copy } from "@/lib/copy";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { getCurrentUser } from "@/lib/supabase/server";
 
-// 顶部导航（UIUX §3.1）。Forge 与配方库为实页；偏好页仍在后续票实现。
+// 顶部导航（UIUX §3.1）。文案经 I-17 copy 资源（默认 zh-Hans，行为不变）。
 const NAV_ITEMS = [
-  { label: "Forge", href: "/forge" },
-  { label: "配方库", href: "/recipes" },
-  { label: "偏好", href: "/profile" },
+  { label: copy.nav.forge, href: "/forge" },
+  { label: copy.nav.recipes, href: "/recipes" },
+  { label: copy.nav.profile, href: "/profile" },
 ] as const;
 
 // Server Component：渲染当前用户 email + 退出入口（Batch B）。getCurrentUser 经 React cache
@@ -51,9 +52,14 @@ export async function TopNav() {
               )}
               {/* 原生表单 POST 到 /auth/signout：无需客户端 JS，清 cookie 后回 /login。 */}
               <form action="/auth/signout" method="post">
-                <Button type="submit" variant="ghost" size="sm" title="退出登录">
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  title={copy.nav.signOutTitle}
+                >
                   <LogOut className="size-4" aria-hidden />
-                  退出
+                  {copy.nav.signOut}
                 </Button>
               </form>
             </div>
