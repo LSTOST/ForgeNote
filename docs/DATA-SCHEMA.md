@@ -145,12 +145,14 @@ create table sessions (
 | status | draft / generating / completed / failed |
 | error_code | 失败错误码，如 GENERATION_FAILED（见 DECISIONS D-04） |
 | error_message | 失败原因 |
-| published_at | F-16 用户标注的发布时间 |
-| like_range | 点赞区间（枚举见 §2.6） |
+| published_at | F-16 用户标注的发布时间（I-12 手动回填） |
+| like_range | 点赞区间（枚举见 §2.6；I-12 手动回填） |
 | favorite_range | 收藏区间 |
 | comment_range | 评论区间 |
 | follower_gain_range | 涨粉区间 |
 | performance_note | 一句话复盘，可选 |
+
+> I-12 落地：F-16 列在 0001_init.sql 已存在，**无需 migration**。`POST /api/sessions/:id/performance` 手动回填（partial 更新，只写提供字段），区间值须为 §2.6 枚举；M1 不算 perf_score、不自动抓取。
 
 ## 3.3 recipes
 

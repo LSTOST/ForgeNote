@@ -496,8 +496,13 @@ range 字段枚举：`0 / 1-10 / 11-50 / 51-100 / 101-500 / 500+ / unknown`。
 
 - AUTH_REQUIRED
 - SESSION_NOT_FOUND
-- PERMISSION_DENIED
 - VALIDATION_FAILED
+
+> 实现说明（I-12）：已实现。鉴权顺序：解析 body → schema 校验 → 鉴权 → 路径 UUID → 至少一项表现字段 → RLS 更新。
+> 他人 / 不存在 / 非法 id 一律 `SESSION_NOT_FOUND`（依赖 RLS + `user_id` 条件，**不泄露存在性**，因此不返回 `PERMISSION_DENIED`）。
+> range 字段非枚举值 → `VALIDATION_FAILED`；`publishedAt` 须为 ISO 8601；`performanceNote` ≤500 字（trim，空串视为清空）。
+> 仅更新显式提供的字段（partial）；成功后 best-effort 记录 `usage_events.performance_filled`（仅记字段名，不存复盘正文）。
+> 读回：`GET /api/sessions/:id` 响应新增 `performance`（`publishedAt` / `likeRange` / `favoriteRange` / `commentRange` / `followerGainRange` / `performanceNote`），供刷新确认与 UI 预填。
 
 ## 6. 内部 forge-engine 契约
 

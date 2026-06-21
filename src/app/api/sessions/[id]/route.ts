@@ -55,7 +55,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, output_locale, status, created_at",
+      "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, output_locale, status, created_at, published_at, like_range, favorite_range, comment_range, follower_gain_range, performance_note",
     )
     .eq("id", parsedId.data)
     .maybeSingle();
@@ -81,6 +81,15 @@ export async function GET(
       outputLocale: data.output_locale ?? null,
       status: data.status,
       createdAt: data.created_at,
+      // I-12：F-16 表现回填 lite（读回以便 UI 确认/预填；M1 不算 perf_score）。
+      performance: {
+        publishedAt: data.published_at ?? null,
+        likeRange: data.like_range ?? null,
+        favoriteRange: data.favorite_range ?? null,
+        commentRange: data.comment_range ?? null,
+        followerGainRange: data.follower_gain_range ?? null,
+        performanceNote: data.performance_note ?? null,
+      },
     },
   });
 }

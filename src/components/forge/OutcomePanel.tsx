@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
+import { PerformancePanel } from "@/components/forge/PerformancePanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { ContentPackage } from "@/lib/ai/types";
@@ -264,6 +265,9 @@ export function OutcomePanel({
             {outcome.commentGuide}
           </p>
         </Section>
+
+        {/* I-12：F-16 表现回填 lite（仅成功且已落库 session 时可记录）。 */}
+        {sessionId && <PerformancePanel sessionId={sessionId} />}
       </Card>
     );
   }
