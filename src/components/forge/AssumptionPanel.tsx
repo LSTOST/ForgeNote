@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, RotateCcw, RotateCw, Undo2, X } from "lucide-react";
+import { Check, Pencil, RotateCcw, RotateCw, Star, Undo2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { Assumption } from "@/lib/ai/types";
@@ -19,6 +19,10 @@ interface AssumptionPanelProps {
   onRestoreAll: () => void;
   /** 应用当前假设并重新生成（M1 无自动防抖，必须用户点击，UIUX §6.4）。 */
   onRegenerate: () => void;
+  /** I-11：把一条假设「记住为偏好」（upsert profile_preferences）。可选；不传则不显示记住按钮。 */
+  onRemember?: (a: Assumption) => void;
+  /** I-11：已成功记住的假设 key 集合（短暂显示「已记住」反馈）。 */
+  rememberedKeys?: string[];
   pending: boolean;
 }
 
@@ -31,6 +35,8 @@ export function AssumptionPanel({
   onRestore,
   onRestoreAll,
   onRegenerate,
+  onRemember,
+  rememberedKeys = [],
   pending,
 }: AssumptionPanelProps) {
   // 当前正在编辑的 chip key 与草稿值（仅面板内交互态）。
@@ -137,6 +143,24 @@ export function AssumptionPanel({
                     来自偏好
                   </span>
                 )}
+                {onRemember &&
+                  (rememberedKeys.includes(a.key) ? (
+                    <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1 text-[10px] font-medium text-emerald-600">
+                      <Check className="size-3" aria-hidden />
+                      已记住
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onRemember(a)}
+                      disabled={pending}
+                      aria-label={`把「${a.label}」记住为偏好`}
+                      title="记住为偏好，下次自动带出"
+                      className="ml-0.5 rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:opacity-50"
+                    >
+                      <Star className="size-3" aria-hidden />
+                    </button>
+                  ))}
                 <button
                   type="button"
                   onClick={() => onDismiss(a.key)}

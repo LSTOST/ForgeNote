@@ -36,6 +36,27 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
   }
   const { supabase } = auth;
 
+  // I-11：加载当前用户偏好（profile_preferences），映射成 source="profile" 假设，作为初始种子带出。
+  //   仅 content_package 主线（/forge 缺省 intent）；按 RLS 只读自己的；读失败静默退化为空（不破坏生成）。
+  //   仅在不预载 session 时使用（预载 session 用其自身假设，避免混入）。
+  let initialProfileAssumptions: Assumption[] = [];
+  const { data: prefRows } = await supabase
+    .from("profile_preferences")
+    .select("dimension_key, dimension_label, value")
+    .eq("intent_type", "content_package")
+    .order("updated_at", { ascending: false });
+  if (Array.isArray(prefRows)) {
+    initialProfileAssumptions = prefRows.map((row) => ({
+      key: row.dimension_key,
+      label: row.dimension_label,
+      value: row.value,
+      valueType: "text" as const,
+      source: "profile" as const,
+      state: "default" as const,
+      editable: true,
+    }));
+  }
+
   // 可选：预载一个属于当前用户的 session（RLS 保证只读自己的；非法/他人 id 静默忽略）。
   let initialSession: InitialSession | null = null;
   const sessionId = firstParam((await searchParams).session).trim();
@@ -106,6 +127,7 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
           // 切换预载 session 时重挂以重置内部状态（避免沿用上一条 session）。
           key={initialSession?.sessionId ?? "fresh"}
           initialSession={initialSession}
+          initialProfileAssumptions={initialProfileAssumptions}
         />
       </main>
     </>

@@ -38,14 +38,15 @@
 | I-10 | Done | 配方详情 `/recipes/[id]` + 换输入重跑（`POST /api/recipes/:id/rerun`） | `docs/acceptance/I-10.md` |
 | I-15 | Done | v5 选择性折叠文案 / 产品表述收敛（图文卡片 / carousel 方向，additive） | `docs/acceptance/I-15.md` |
 | I-16 | Done | output_locale 数据与生成链路（sessions 增 nullable text 列 + forge/rerun/session API + 生成约束 + UI 自由文本输入，additive） | `docs/acceptance/I-16.md` |
+| I-11 | Done | 偏好页 `/profile`：edited assumptions 写入并下次带出（profile_preferences CRUD + /forge 带出 + 「记住为偏好」，无 migration） | `docs/acceptance/I-11.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2）；F-16（I-12） | Batch A / Batch C |
+| I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`，手动区间回填） | perf_score、自动抓取、自动分析 | I-09 |
 
-> **下一张唯一任务**：I-11（偏好页 `/profile`）。只做 edited assumptions 持久化 + 下次带出，不做自动学习、不做 F-16、不抢做观测 / eval。
+> **下一张唯一任务**：I-12（F-16 表现回填 lite）。只做手动区间回填 + 事件记录，不做 perf_score、不做自动抓取 / 分析。
 > 注（I-16 落地说明）：migration `0002_output_locale.sql` 仅 `sessions` 增 nullable text 列（additive，不 default / 不 enum / 不 backfill / 不改 RLS）；`recipes` 与 assumption 维度本票未做（见 DECISIONS D-07(b) 实现结果）。该 migration 已应用到 Supabase，带 locale 的 forge / rerun 写入、`/forge?session=` 回填与 recipe `usage_count` 增量已通过登录态复测。
 > 注（I-15/I-17 范围澄清）：I-15 已交付产品表述收敛；原 D-07(a) 的「i18n 文案抽资源文件 + en/zh-Hans 脚手架」工程化外化未做，另立 Backlog 票 I-17，不阻塞 I-11。
 
@@ -53,14 +54,14 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2） | Batch A / Batch C |
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
 | I-17 | Backlog | UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | I-15；DECISIONS D-07(a) |
 
-> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`output_locale` 数据/生成链路已交付且 migration 已应用（I-16 Done）；`/profile` 仍未交付。
-> I-17（i18n 资源文件外化，原 D-07(a)）为后续 Backlog，不抢占 I-11。
+> 说明：M1 主线票 I-08~I-11 + I-15 + I-16 均已交付（`/forge`、`/recipes`、`/recipes/[id]`、`/profile`、output_locale、v5 文案收敛）。剩余 Backlog：I-12 / I-13 / I-14 / I-17。
+> I-11 偏好：profile_preferences 表与 RLS 在 0001 已存在，本票无需 migration；偏好以 `source="profile"` 假设在 `/forge` 带出，无偏好时行为不变。
+> I-17（i18n 资源文件外化，原 D-07(a)）为后续 Backlog，不抢占 I-12。
 
 ## 每票模板
 

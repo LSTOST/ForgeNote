@@ -44,6 +44,7 @@
 | VALIDATION_FAILED | 400 | 参数不合法 |
 | SESSION_NOT_FOUND | 404 | Session 不存在 |
 | RECIPE_NOT_FOUND | 404 | 配方不存在 |
+| PREFERENCE_NOT_FOUND | 404 | 偏好不存在（I-11；他人/不存在/非法 id 统一返回，不泄露存在性） |
 | GENERATION_FAILED | 500 | AI 生成失败 |
 | MODEL_NOT_CONFIGURED | 503 | 模型未配置（缺 `OPENROUTER_API_KEY` / `OPENROUTER_MODEL`），见 MODEL-INTEGRATION §5 |
 | DATABASE_ERROR | 500 | 数据库错误 |
@@ -373,9 +374,34 @@
 }
 ```
 
+> 偏好注入（I-11）：`/forge` 页面（Server Component）按 RLS 读取当前用户偏好，映射为 `source="profile"` 的假设并作为初始假设带入生成（用户可在 Forge 内编辑 / 删除该会话的偏好假设）。**无偏好时 `/api/forge` 行为完全不变**（不强依赖偏好，旧请求兼容）。
+
+## 5.9b POST /api/profile/preferences （I-11，新增）
+
+创建 / 更新一条偏好（按唯一键 `(user_id, intent_type, dimension_key)` upsert，便于在 Forge 内「记住已改的假设」覆盖旧值）。
+
+### Request
+
+```json
+{
+  "intentType": "content_package",
+  "dimensionKey": "tone",
+  "dimensionLabel": "语气",
+  "value": "成熟、克制、不焦虑"
+}
+```
+
+字段：`intentType` 必填且为 M1 canonical intent；`dimensionKey` / `dimensionLabel` / `value` trim 后非空（≤80/80/500 字），否则 `VALIDATION_FAILED`。`source` 固定 `manual`。
+
+### Response
+
+```json
+{ "ok": true, "data": { "id": "uuid" } }
+```
+
 ## 5.10 PUT /api/profile/preferences/:id
 
-修改偏好。
+修改偏好 `value`（trim 非空）。
 
 ### Request
 
@@ -385,9 +411,25 @@
 }
 ```
 
+### Response
+
+```json
+{ "ok": true, "data": { "updated": true } }
+```
+
+他人 / 不存在 / 非法 id → `PREFERENCE_NOT_FOUND`。
+
 ## 5.11 DELETE /api/profile/preferences/:id
 
-删除单条偏好。
+删除单条偏好（硬删除，偏好无软删除列）。
+
+### Response
+
+```json
+{ "ok": true, "data": { "deleted": true } }
+```
+
+他人 / 不存在 / 非法 id → `PREFERENCE_NOT_FOUND`。
 
 ## 5.12 DELETE /api/profile/preferences
 
@@ -400,6 +442,8 @@
   "confirm": true
 }
 ```
+
+> 实现状态（I-11）：已实现 §5.9 GET / §5.9b POST(upsert) / §5.10 PUT / §5.11 DELETE。§5.12 清空全部本票未实现（最小闭环不需要），保留契约位待后续。
 
 ## 5.13 POST /api/sessions/:id/performance
 

@@ -47,6 +47,12 @@ export interface InitialSession {
 
 interface ForgeWorkbenchProps {
   initialSession?: InitialSession | null;
+  /**
+   * I-11：当前用户偏好（profile_preferences）映射成的 source="profile" 假设。
+   * 由 /forge Server Component 按 RLS 读取后注入；无 session 预载时作为初始假设种子带出。
+   * 空数组 = 无偏好 → 行为与之前完全一致。
+   */
+  initialProfileAssumptions?: Assumption[];
 }
 
 /**
@@ -62,7 +68,10 @@ const DEFAULT_ASSUMPTIONS: Assumption[] = [
   { key: "tone", label: "语气", value: "成熟、清楚、不焦虑", valueType: "text", source: "inferred", state: "default", editable: true },
 ];
 
-export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
+export function ForgeWorkbench({
+  initialSession = null,
+  initialProfileAssumptions = [],
+}: ForgeWorkbenchProps) {
   const [idea, setIdea] = useState(initialSession?.rawInput ?? "");
   const [status, setStatus] = useState<ForgeStatus>(
     initialSession?.status ?? "idle",
@@ -80,13 +89,16 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
     initialSession?.sessionId ?? null,
   );
   // 假设条工作集（Batch C）：客户端为唯一真相，保留 dismissed 以便恢复。
+  // I-11：无 session 预载时，用偏好（source="profile"）作为初始假设种子带出；预载 session 用其自身假设。
   const [assumptions, setAssumptions] = useState<Assumption[]>(
-    initialSession?.assumptions ?? [],
+    initialSession?.assumptions ?? initialProfileAssumptions.map((a) => ({ ...a })),
   );
   // I-16：目标输出语言 / 表达偏好（自由文本，可选）。空串提交时归一化为 null。
   const [outputLocale, setOutputLocale] = useState(
     initialSession?.outputLocale ?? "",
   );
+  // I-11：「记住为偏好」反馈——已成功保存的假设 key 集合（短暂显示「已记住」）。
+  const [rememberedKeys, setRememberedKeys] = useState<string[]>([]);
 
   async function runForge() {
     setStatus("loading");
@@ -138,8 +150,36 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
     setErrorMessage(null);
     setErrorCode(null);
     setSessionId(null);
-    setAssumptions([]);
+    // 「新建」回到偏好种子（与首次进入一致）；无偏好则空。
+    setAssumptions(initialProfileAssumptions.map((a) => ({ ...a })));
     setOutputLocale("");
+    setRememberedKeys([]);
+  }
+
+  // I-11：把一条假设「记住为偏好」——upsert 到 profile_preferences，下次 /forge 自动带出。
+  //   intentType 取本次结果（缺省 content_package）。仅写入，不改当前假设工作集。
+  async function rememberAssumption(a: Assumption) {
+    const intentType = data?.intentType ?? "content_package";
+    try {
+      const res = await fetch("/api/profile/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intentType,
+          dimensionKey: a.key,
+          dimensionLabel: a.label,
+          value: a.value,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (json?.ok) {
+        setRememberedKeys((prev) =>
+          prev.includes(a.key) ? prev : [...prev, a.key],
+        );
+      }
+    } catch {
+      // 记住偏好失败不打断主流程（无 toast 库）；用户可在 /profile 手动添加。
+    }
   }
 
   // 假设条状态机：编辑 / 删除 / 恢复 / 全部恢复（UIUX §6.3 / §6.4）。
@@ -223,6 +263,8 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
           onRestore={restoreAssumption}
           onRestoreAll={restoreAllAssumptions}
           onRegenerate={runForge}
+          onRemember={rememberAssumption}
+          rememberedKeys={rememberedKeys}
           pending={status === "loading"}
         />
       )}
