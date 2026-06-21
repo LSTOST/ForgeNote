@@ -44,10 +44,13 @@
 ### 3. Google OAuth provider / callback（Preview）→ 未确认
 - 受 1 影响，无法在 Preview 上验证 Google 登录与 `/auth/callback`。本地此前 Magic Link 通、Google 待 Owner 确认（PROJECT-STATUS 阻塞项既有项）。
 
-### 4. GitHub Actions CI 本次 red → 经核实为「npm ci」瞬时失败
-- HEAD `3e5a012` 的 CI（`Doctor / Lint / Typecheck / Build`）**failure**，失败步骤为 **Install dependencies（`npm ci`）**，非 lint/typecheck/build。
-- 本地以同一 lockfile 跑 `npm ci` → **exit 0**（617 包，lockfile 健康）；同 commit 的 Vercel 构建也成功安装依赖。
-- 判定：**transient 网络/registry flake**，非代码/lockfile 问题。**建议重跑该 CI job** 即可转绿。
+### 4. GitHub Actions CI red → 实为 lockfile 不同步（已修）
+- CI（`Doctor / Lint / Typecheck / Build`）失败步骤为 **Install dependencies（`npm ci`）**，非 lint/typecheck/build。
+- **重跑 attempt 2 仍 red**（非 flake）。读取 CI 日志，真因：
+  - `npm error EUSAGE … package.json and package-lock.json … not in sync`
+  - `Missing: @emnapi/runtime@1.11.1 from lock file` / `Missing: @emnapi/core@1.11.1 from lock file`
+- 根因：`@tailwindcss/oxide-wasm32-wasi` 的 wasm 回退所需嵌套 optional 依赖（`@emnapi/*`、`@napi-rs/wasm-runtime`、`@tybys/wasm-util`、`tslib`）在 `package-lock.json` 缺失。本机（darwin/arm64）`npm ci` 恰好可满足、Vercel 安装也过，故只在 CI 的 linux runner 暴露——**初判「瞬时 flake」有误**。
+- 修复：`npm install --package-lock-only` 补齐缺失条目（**仅 +45 行 lockfile 元数据，无应用源码 / 无版本 churn**），与历史 `b9b77b8`（“complete lockfile for npm ci”）同类。已随本次提交合入并重跑 CI。
 
 ## 解除 Blocked 的可选方式（Owner 任选其一）
 
@@ -55,10 +58,10 @@
 2. 提供 Vercel **Protection Bypass for Automation** token（我用 `x-vercel-protection-bypass` 头做 Preview 验收，不打印 token）。
 3. 在本机 Chrome **以项目所属 Vercel 账号登录**，使浏览器会话能过 SSO，我再用浏览器跑 Preview 验收。
 4. Owner 本人按 `docs/DEPLOYMENT.md`「Preview 验收」清单手测。
-5. 重跑失败的 GitHub Actions CI（解决本次 `npm ci` 瞬时红）。
+5. （CI）已修：本次提交补齐 lockfile 的 wasm optional 依赖，重跑 CI 转绿后即解除 CI red。
 
 ## 结论
 
-- Preview / 部署环境验收：**Blocked**（Deployment Protection + 无 Vercel 访问凭据；CI 为瞬时 `npm ci` 失败，建议重跑）。
+- Preview / 部署环境验收：**Blocked**（Deployment Protection + 无 Vercel 访问凭据）。CI 的 `npm ci` red 已定位为 lockfile 不同步并修复（非 flake）。
 - **不建议转 Ready**：Preview 关键路径（未登录重定向、登录态生成、API 边界）未能在 Preview 上验证。
 - 代码侧 M1（I-08~I-17）本地验收全绿；Preview 验收是唯一未决项。
