@@ -33,20 +33,20 @@
 | Batch B | Done | Supabase 登录闭环（`/login`、`/auth/callback`、`/auth/signout`、受保护 `/forge`） | `docs/acceptance/Batch-C.md` |
 | Batch C | Done | 假设条编辑器 + 结果操作区（复制 / 重生成 / 新建） | `docs/acceptance/Batch-C.md` |
 | QA-01 | Done | 工具链与流程文档现代化恢复（doctor / smoke / RLS 检查 / RUNBOOK / DEPLOYMENT / PR 模板） | `docs/acceptance/Batch-C.md` |
+| I-08 | Done | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈） | `docs/acceptance/I-08.md` |
 
-## 待复验
+## 下一张唯一任务
 
-| 票号 | 状态 | 目标 | 验收文档 | 阻塞 |
+| 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-08 | Review（Blocked for acceptance） | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈）；已实现 + 自动验证通过，登录态保存落库待复验 | `docs/acceptance/I-08.md` | **Blocked**：自动环境无真实 Supabase 登录态（缺 service role / 无已确认测试用户 / 不能交互式登录）。解除条件见验收文档 |
+| I-09 | Ready | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | 配方详情、换输入重跑、高表现排序（依赖 perf_score） | I-08 |
 
-> **下一张唯一任务**：等待 I-08 登录态验收凭据（service role key / 已确认测试用户 / 人工浏览器登录手测）。在 I-08 判定 Done 前，不推进新功能（I-09 等剩余队列暂不开工）。
+> **下一张唯一任务**：I-09。只做配方库列表/搜索/筛选/删除，不做详情、不做重跑、不做偏好记忆、不做 F-16。
 
 ## M1 剩余执行队列
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-09 | Ready | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | 高表现排序（依赖 perf_score） | I-08 |
 | I-10 | Backlog | 配方详情 `/recipes/[id]` + 换输入重跑 | 多版本 diff | I-09 |
 | I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2） | Batch A / Batch C |
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
