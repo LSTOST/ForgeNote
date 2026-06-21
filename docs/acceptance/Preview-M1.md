@@ -49,8 +49,9 @@
 - **重跑 attempt 2 仍 red**（非 flake）。读取 CI 日志，真因：
   - `npm error EUSAGE … package.json and package-lock.json … not in sync`
   - `Missing: @emnapi/runtime@1.11.1 from lock file` / `Missing: @emnapi/core@1.11.1 from lock file`
-- 根因：`@tailwindcss/oxide-wasm32-wasi` 的 wasm 回退所需嵌套 optional 依赖（`@emnapi/*`、`@napi-rs/wasm-runtime`、`@tybys/wasm-util`、`tslib`）在 `package-lock.json` 缺失。本机（darwin/arm64）`npm ci` 恰好可满足、Vercel 安装也过，故只在 CI 的 linux runner 暴露——**初判「瞬时 flake」有误**。
-- 修复：`npm install --package-lock-only` 补齐缺失条目（**仅 +45 行 lockfile 元数据，无应用源码 / 无版本 churn**），与历史 `b9b77b8`（“complete lockfile for npm ci”）同类。已随本次提交合入并重跑 CI。
+- 根因：**npm 大版本不一致**导致 lockfile 解析差异。本机 node 25 / **npm 11**；CI（setup-node `node-version: 20`）/ **npm 10**。npm 11 生成的 lock 缺少 npm 10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退的嵌套 optional 依赖）顶层节点。本机 `npm ci`（npm 11）与 Vercel 安装恰好可过，只在 CI 的 npm 10 暴露——**初判「瞬时 flake」有误**。
+- 第一次尝试用本机 **npm 11** `npm install --package-lock-only` 修复 → CI 仍红（同样 Missing）。
+- 实修：用 **npm 10**（匹配 CI）重生成 lockfile：`npx npm@10 install --package-lock-only`，lockfile 现含 `@emnapi/core@1.11.1` / `@emnapi/runtime@1.11.1` 顶层节点；`npx npm@10 ci --dry-run` → **exit 0**（同步通过）。lockfileVersion 仍为 3，root deps/devDeps 未变，无应用源码改动。与历史 `b9b77b8`（“complete lockfile for npm ci”）同类。
 
 ## 解除 Blocked 的可选方式（Owner 任选其一）
 
