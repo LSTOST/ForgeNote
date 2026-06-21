@@ -54,8 +54,11 @@
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
+| I-15 | Backlog | i18n 文案外化（UI 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | Batch C；DECISIONS D-07(a) |
+| I-16 | Backlog | output_locale 字段与假设维度（sessions/recipes 增 nullable 列 + assumption 维度，additive） | perf 排序、繁简内容调优、按 locale 禁用词表 | Batch A；DATA-SCHEMA；DECISIONS D-07(b) |
 
 > 说明：`/recipes` 列表与 `/recipes/[id]` 详情 + 换输入重跑均已交付；`/profile` 仍未交付。
+> I-15 / I-16 为 v5 选择性折叠（DECISIONS「v5 选择性折叠」）的 additive 票，**不抢占当前唯一任务 I-10**，按队列推进。
 
 ## 每票模板
 

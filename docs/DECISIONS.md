@@ -167,6 +167,31 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 ---
 
+## v5 选择性折叠（2026-06-21）
+
+承接产品定位讨论：战略方向调整为**国际市场 + 图文卡片/carousel 格式 + 多语言**（放弃大陆，规避备案/网信办与 OpenAI/Anthropic 不可直连）。但 M1 代码已建在 v4 小红书线（login / forge / recipes 已交付并验收）。决定：**保留已建代码，选择性折叠 v5**——只折叠"便宜且重要、对现有代码增量"的部分，推迟"贵且会推翻代码"的部分。本节只定折叠边界，不改既有功能语义。
+
+### D-06 战略方向记录（不立即落地）
+
+- 方向 = 国际 + carousel + 多语言；M1 **不为此推翻**已建的 v4 小红书代码。
+- `content_package` 已是卡片式（`cardStructure` / `cardPrompts`），本身与 carousel 兼容，无需改输出结构。
+- 影响文件：本记录为方向锚点，不直接改代码。
+
+### D-07 现在折叠（additive，低重做）
+
+- **(a) i18n 文案外化**：UI 文案抽成资源文件（en + zh-Hans 脚手架），不改行为。理由：文案外化成本随页面增长上升，越晚越贵。→ 票 I-15。
+- **(b) output_locale 预留**：`sessions` / `recipes` 增 `output_locale`（nullable）；assumption 增 `output_locale` 维度（由 audience 决定，impact=High，可问）。仿 D-02 预留 F-16 字段的方式，additive 不破坏现状。→ 票 I-16。
+- **(c) 商业化定位**：freemium 订阅假设写入 PRD（M1 不收费，但验证可收费性：保存率/重跑率/留存即付费意愿先行指标）。纯文档。→ `PRD-M1.md` §4.3。
+
+### D-08 延后（贵、会推翻代码，不进 M1）
+
+- 平台中立 taxonomy 改名（`content_package` → `carousel_package`）：与 **D-01** 冲突，延后至真正切换平台时统一改。
+- 去小红书化 / 英文内容 / 禁用词改平台中立：绑实际上线市场，延后。
+- Stripe / 收款：M2（M1 不收费）。
+- 影响文件：无（明确不做）。
+
+---
+
 ## 仍待拍板（未纳入 Day 0）
 
 - `card_count` 默认与上限是否随 output_type 变（仅卡片 vs 完整包）。（PRD §17-1）
