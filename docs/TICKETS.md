@@ -46,7 +46,7 @@
 | I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2）；F-16（I-12） | Batch A / Batch C |
 
 > **下一张唯一任务**：I-11（偏好页 `/profile`）。只做 edited assumptions 持久化 + 下次带出，不做自动学习、不做 F-16、不抢做观测 / eval。
-> 注（I-16 落地说明）：migration `0002_output_locale.sql` 仅 `sessions` 增 nullable text 列（additive，不 default / 不 enum / 不 backfill / 不改 RLS）；`recipes` 与 assumption 维度本票未做（见 DECISIONS D-07(b) 实现结果）。**该 migration 待 Owner 应用到 Supabase**：应用前带 locale 的生成/重跑返回 `DATABASE_ERROR`，无 locale 流程不受影响（route 条件写列）。
+> 注（I-16 落地说明）：migration `0002_output_locale.sql` 仅 `sessions` 增 nullable text 列（additive，不 default / 不 enum / 不 backfill / 不改 RLS）；`recipes` 与 assumption 维度本票未做（见 DECISIONS D-07(b) 实现结果）。该 migration 已应用到 Supabase，带 locale 的 forge / rerun 写入、`/forge?session=` 回填与 recipe `usage_count` 增量已通过登录态复测。
 > 注（I-15/I-17 范围澄清）：I-15 已交付产品表述收敛；原 D-07(a) 的「i18n 文案抽资源文件 + en/zh-Hans 脚手架」工程化外化未做，另立 Backlog 票 I-17，不阻塞 I-11。
 
 ## M1 剩余执行队列
@@ -59,7 +59,7 @@
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
 | I-17 | Backlog | UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | I-15；DECISIONS D-07(a) |
 
-> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`output_locale` 数据/生成链路已交付（I-16 Done，migration 待应用）；`/profile` 仍未交付。
+> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`output_locale` 数据/生成链路已交付且 migration 已应用（I-16 Done）；`/profile` 仍未交付。
 > I-17（i18n 资源文件外化，原 D-07(a)）为后续 Backlog，不抢占 I-11。
 
 ## 每票模板
