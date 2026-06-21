@@ -15,7 +15,11 @@ import type {
   GenerationErrorCode,
   IntentType,
 } from "@/lib/ai/types";
-import { MAX_INPUT_CHARS } from "@/lib/constants";
+import {
+  MAX_INPUT_CHARS,
+  MAX_OUTPUT_LOCALE_CHARS,
+  normalizeOutputLocale,
+} from "@/lib/constants";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 // 模型调用与 Auth cookie 读取需在 Node 运行时执行，禁止静态化。
@@ -31,9 +35,11 @@ const INTENT_TYPES = [
 
 const idSchema = z.string().uuid();
 
-// 入参：仅 rawInput（新主题/新输入）。配方上下文来自 recipe.fields，不允许覆盖。
+// 入参：rawInput（新主题/新输入）+ 可选 outputLocale。配方上下文来自 recipe.fields，不允许覆盖。
 const requestBodySchema = z.object({
   rawInput: z.string(),
+  // I-16：可选 outputLocale（自由文本，超长 → VALIDATION_FAILED；旧请求不传仍可用；不从 recipe 自动带）。
+  outputLocale: z.string().max(MAX_OUTPUT_LOCALE_CHARS).nullish(),
 });
 
 type RouteErrorCode =
@@ -177,14 +183,20 @@ export async function POST(
   }
 
   // 6) 组装引擎请求：intentType 与假设沿用配方，sourceRecipeId 指向该配方。
+  //    I-16：outputLocale 来自本次重跑请求（不从 recipe 自动带），归一化后传入。
   const fields = (recipe.fields ?? {}) as Record<string, unknown>;
   const intentType = normalizeIntent(recipe.intent_type);
+  const outputLocale = normalizeOutputLocale(parsed.data.outputLocale);
   const generationRequest: ForgeGenerationRequest = {
     rawInput,
     intentType,
     assumptions: buildRecipeAssumptions(fields),
     sourceRecipeId: recipe.id,
+    outputLocale,
   };
+  // I-16 additive：仅当 outputLocale 非空时写 output_locale 列；
+  //   未指定 locale 的既有重跑流程不依赖该列，0002 未应用也不回归。
+  const localePatch = outputLocale !== null ? { output_locale: outputLocale } : {};
 
   // 7) 真实生成（缺 env / 上游错误 / 解析失败均在内部降级为失败结果）。
   const result = await generateContentPackage(generationRequest);
@@ -203,6 +215,7 @@ export async function POST(
         recipe_snapshot: null,
         verification: null,
         source_recipe_id: recipe.id,
+        ...localePatch,
         status: "draft",
         error_code: result.error.code,
         error_message: result.error.message,
@@ -234,6 +247,7 @@ export async function POST(
       recipe_snapshot: result.recipe,
       verification: result.verification,
       source_recipe_id: recipe.id,
+      ...localePatch,
       status: "completed",
       error_code: null,
       error_message: null,
@@ -267,6 +281,7 @@ export async function POST(
       outcome: result.outcome,
       recipe: result.recipe,
       verification: result.verification,
+      outputLocale,
     },
   });
 }

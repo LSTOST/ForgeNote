@@ -172,12 +172,19 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     "正文与卡片禁止出现公众号 / 微信 / 私信领取等引流话术，禁止焦虑营销。",
   ].join("\n");
 
+  // I-16：仅当请求带 outputLocale 时，追加一条最小输出语言/表达偏好约束；
+  // 无 outputLocale 时这一段为空，现有输出行为完全不变。
+  const localeLine = request.outputLocale
+    ? `\n\n目标输出语言 / 表达偏好：${request.outputLocale}\n请用该语言 / 表达风格产出 outcome 文案（positioning / titles / body / cardStructure / cardPrompts / hashtags / commentGuide）；不改变 JSON 结构与字段名。`
+    : "";
+
   const user = [
     `用户原始想法：\n${request.rawInput}`,
     "",
     `内容类型：${request.intentType}`,
     "",
     `已确认的上下文假设：\n${assumptionLines}`,
+    localeLine,
   ].join("\n");
 
   return [

@@ -37,15 +37,17 @@
 | I-09 | Done | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | `docs/acceptance/I-09.md` |
 | I-10 | Done | 配方详情 `/recipes/[id]` + 换输入重跑（`POST /api/recipes/:id/rerun`） | `docs/acceptance/I-10.md` |
 | I-15 | Done | v5 选择性折叠文案 / 产品表述收敛（图文卡片 / carousel 方向，additive） | `docs/acceptance/I-15.md` |
+| I-16 | Done | output_locale 数据与生成链路（sessions 增 nullable text 列 + forge/rerun/session API + 生成约束 + UI 自由文本输入，additive） | `docs/acceptance/I-16.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-16 | Backlog | output_locale 字段与假设维度（sessions/recipes 增 nullable 列 + assumption 维度，additive） | perf 排序、繁简内容调优、按 locale 禁用词表 | Batch A；DATA-SCHEMA；DECISIONS D-07(b) |
+| I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2）；F-16（I-12） | Batch A / Batch C |
 
-> **下一张唯一任务**：I-16（`output_locale`，v5 选择性折叠 additive）。additive nullable 列，不 default / 不 enum / 不 backfill、不改 RLS、不改 `content_package`，不抢做 I-11 偏好页。
-> 注（I-15 范围澄清）：本轮 I-15 按执行指令聚焦**产品文案 / UI 表述 / 文档表述的 v5 收敛**（图文卡片 / carousel 方向，in-place 文案，不改行为）。原 D-07(a) 设想的「i18n 文案抽资源文件 + en/zh-Hans 脚手架」属更重的工程化外化，**未在本轮做**；若仍需要可作为后续 i18n 工程化票另立，不阻断 I-16。
+> **下一张唯一任务**：I-11（偏好页 `/profile`）。只做 edited assumptions 持久化 + 下次带出，不做自动学习、不做 F-16、不抢做观测 / eval。
+> 注（I-16 落地说明）：migration `0002_output_locale.sql` 仅 `sessions` 增 nullable text 列（additive，不 default / 不 enum / 不 backfill / 不改 RLS）；`recipes` 与 assumption 维度本票未做（见 DECISIONS D-07(b) 实现结果）。**该 migration 待 Owner 应用到 Supabase**：应用前带 locale 的生成/重跑返回 `DATABASE_ERROR`，无 locale 流程不受影响（route 条件写列）。
+> 注（I-15/I-17 范围澄清）：I-15 已交付产品表述收敛；原 D-07(a) 的「i18n 文案抽资源文件 + en/zh-Hans 脚手架」工程化外化未做，另立 Backlog 票 I-17，不阻塞 I-11。
 
 ## M1 剩余执行队列
 
@@ -55,9 +57,10 @@
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
+| I-17 | Backlog | UI copy resource extraction scaffold（i18n 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | I-15；DECISIONS D-07(a) |
 
-> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`/profile` 仍未交付。
-> I-16 为 v5 选择性折叠（DECISIONS「v5 选择性折叠」D-07(b)）的 additive 票，现为下一张唯一任务，排在 I-11 之前。
+> 说明：`/recipes` 列表 + `/recipes/[id]` 详情 / 换输入重跑已交付；产品表述已按 v5 收敛（I-15 Done）；`output_locale` 数据/生成链路已交付（I-16 Done，migration 待应用）；`/profile` 仍未交付。
+> I-17（i18n 资源文件外化，原 D-07(a)）为后续 Backlog，不抢占 I-11。
 
 ## 每票模板
 

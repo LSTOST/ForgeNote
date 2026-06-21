@@ -43,7 +43,7 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
     const { data } = await supabase
       .from("sessions")
       .select(
-        "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, status, error_message",
+        "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, output_locale, status, error_message",
       )
       .eq("id", sessionId)
       .maybeSingle();
@@ -70,6 +70,7 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
           assumptions,
           status: "success",
           errorMessage: null,
+          outputLocale: data.output_locale ?? null,
         };
       } else {
         // draft / 失败：回填输入并展示错误态，供用户重试（不丢输入）。
@@ -81,6 +82,7 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
           status: "error",
           errorMessage:
             data.error_message ?? "这条 session 没有可展示的生成结果，请重试。",
+          outputLocale: data.output_locale ?? null,
         };
       }
     }

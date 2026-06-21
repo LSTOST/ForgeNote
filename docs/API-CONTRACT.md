@@ -91,6 +91,7 @@
 | intentType | 否 | 用户手动指定内容类型 |
 | assumptions | 否 | 用户传入假设条，首次为空 |
 | sourceRecipeId | 否 | 如果从配方重跑传入 |
+| outputLocale | 否 | I-16：目标输出语言/表达偏好（自由文本，≤120 字，如 `zh-Hans` / `en-US`）。服务端 trim，空串视为 null；超长 → `VALIDATION_FAILED`。不传保持现有行为。非 enum、不与国家/平台绑定。 |
 
 ### Response
 
@@ -206,11 +207,14 @@
     "outcome": {},
     "recipeSnapshot": {},
     "verification": {},
+    "outputLocale": null,
     "status": "completed",
     "createdAt": "2026-06-19T00:00:00Z"
   }
 }
 ```
+
+> I-16：`outputLocale` 为该 session 的目标输出语言/表达偏好（nullable；未指定为 `null`）。
 
 ## 5.4 GET /api/recipes
 
@@ -321,18 +325,27 @@
 
 ```json
 {
-  "rawInput": "想做一组小红书卡片，主题是退租拍照清单"
+  "rawInput": "想做一组小红书卡片，主题是退租拍照清单",
+  "outputLocale": "en-US"
 }
 ```
 
+字段：
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| rawInput | 是 | 新输入，1-8000 字 |
+| outputLocale | 否 | I-16：目标输出语言/表达偏好（自由文本，≤120 字，规则同 §5.1）。不从 recipe 自动带，由本次重跑显式传入。 |
+
 ### Response
 
-同 POST /api/forge，返回新的 sessionId。
+同 POST /api/forge，返回新的 sessionId（含 `outputLocale`）。
 
 ### 规则
 
 - 原配方不被覆盖。
 - 新 session 记录 sourceRecipeId。
+- 新 session 记录本次 outputLocale（I-16，不写回 recipe）。
 - recipe usage_count +1。
 
 ## 5.9 GET /api/profile/preferences

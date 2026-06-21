@@ -55,7 +55,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, status, created_at",
+      "id, raw_input, intent_type, assumptions, outcome, recipe_snapshot, verification, output_locale, status, created_at",
     )
     .eq("id", parsedId.data)
     .maybeSingle();
@@ -78,6 +78,7 @@ export async function GET(
       outcome: data.outcome,
       recipeSnapshot: data.recipe_snapshot,
       verification: data.verification,
+      outputLocale: data.output_locale ?? null,
       status: data.status,
       createdAt: data.created_at,
     },

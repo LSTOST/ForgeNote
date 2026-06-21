@@ -15,7 +15,11 @@ import type {
   GenerationErrorCode,
   IntentType,
 } from "@/lib/ai/types";
-import { MAX_INPUT_CHARS } from "@/lib/constants";
+import {
+  MAX_INPUT_CHARS,
+  MAX_OUTPUT_LOCALE_CHARS,
+  normalizeOutputLocale,
+} from "@/lib/constants";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 // 模型调用与 Auth cookie 读取需在 Node 运行时执行，禁止静态化。
@@ -46,6 +50,8 @@ const requestBodySchema = z.object({
   intentType: z.enum(INTENT_TYPES).optional(),
   assumptions: z.array(assumptionSchema).optional(),
   sourceRecipeId: z.string().uuid().nullish(),
+  // I-16：可选 outputLocale（自由文本，超长 → VALIDATION_FAILED；旧请求不传仍可用）。
+  outputLocale: z.string().max(MAX_OUTPUT_LOCALE_CHARS).nullish(),
 });
 
 /** route 层错误码：模型层错误码 + 校验/鉴权/数据库错误（API-CONTRACT §3）。 */
@@ -119,12 +125,18 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // 4) 组装引擎请求：缺省 intentType=content_package、assumptions=[]。
+  //    I-16：outputLocale 归一化（trim；空串→null），可选。
+  const outputLocale = normalizeOutputLocale(parsed.data.outputLocale);
   const generationRequest: ForgeGenerationRequest = {
     rawInput,
     intentType: parsed.data.intentType ?? "content_package",
     assumptions: parsed.data.assumptions ?? [],
     sourceRecipeId: parsed.data.sourceRecipeId ?? null,
+    outputLocale,
   };
+  // I-16 additive：仅当 outputLocale 非空时才写 output_locale 列。
+  //   这样未指定 locale 的既有流程，即使 0002 migration 尚未应用也不依赖该列、不回归。
+  const localePatch = outputLocale !== null ? { output_locale: outputLocale } : {};
 
   // 5) 真实生成（缺 env / 上游错误 / 解析失败均在内部降级为失败结果，不抛到这里）。
   const result = await generateContentPackage(generationRequest);
@@ -143,6 +155,7 @@ export async function POST(request: Request): Promise<Response> {
         recipe_snapshot: null,
         verification: null,
         source_recipe_id: generationRequest.sourceRecipeId,
+        ...localePatch,
         status: "draft",
         error_code: result.error.code,
         error_message: result.error.message,
@@ -176,6 +189,7 @@ export async function POST(request: Request): Promise<Response> {
       recipe_snapshot: result.recipe,
       verification: result.verification,
       source_recipe_id: generationRequest.sourceRecipeId,
+      ...localePatch,
       status: "completed",
       error_code: null,
       error_message: null,
@@ -201,6 +215,7 @@ export async function POST(request: Request): Promise<Response> {
       outcome: result.outcome,
       recipe: result.recipe,
       verification: result.verification,
+      outputLocale,
     },
   });
 }

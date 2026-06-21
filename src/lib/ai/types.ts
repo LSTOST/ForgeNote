@@ -46,6 +46,11 @@ export interface ForgeGenerationRequest {
   assumptions: Assumption[];
   answers?: Record<string, string>;
   sourceRecipeId?: string | null;
+  /**
+   * I-16：目标输出语言 / 表达偏好（自由文本，如 zh-Hans / en-US / "English for Instagram carousel"）。
+   * 可选、nullable；缺省/为 null 时保持现有行为，不做多语言系统、不与国家/平台绑定、不是 enum。
+   */
+  outputLocale?: string | null;
 }
 
 /** 卡片结构条目。对齐 DATA-SCHEMA §4.2 cardStructure。 */

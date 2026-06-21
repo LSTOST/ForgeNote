@@ -16,6 +16,18 @@ export const POSITIONING =
 /** 单次想法输入上限（PRD §10.5）。 */
 export const MAX_INPUT_CHARS = 8000;
 
+/** I-16：输出语言 / 表达偏好的最大长度（自由文本防滥用，不是 enum、不与国家/平台绑定）。 */
+export const MAX_OUTPUT_LOCALE_CHARS = 120;
+
+/** I-16：归一化 outputLocale —— trim；空串视为 null。长度上限由各 route 的 schema 校验。 */
+export function normalizeOutputLocale(
+  value: string | null | undefined,
+): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
 /** Forge 输入框占位文案（UIUX §5.3）。 */
 export const IDEA_PLACEHOLDER =
   "写下你的模糊想法，比如：想做一组讲第一次独居备用金清单的图文卡片";

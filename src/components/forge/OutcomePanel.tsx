@@ -24,6 +24,8 @@ interface OutcomePanelProps {
   authRequired?: boolean;
   /** 成功落库后的 sessionId（Batch A）。 */
   sessionId?: string | null;
+  /** I-16：本次生成的目标输出语言 / 表达偏好（无则不展示）。 */
+  outputLocale?: string | null;
   onRetry: () => void;
   /** 新建：清空当前 session 回到空态（UIUX §7.5）。 */
   onNew: () => void;
@@ -57,6 +59,7 @@ export function OutcomePanel({
   errorMessage,
   authRequired = false,
   sessionId = null,
+  outputLocale = null,
   onRetry,
   onNew,
 }: OutcomePanelProps) {
@@ -131,6 +134,11 @@ export function OutcomePanel({
         {sessionId && (
           <p className="text-xs text-muted-foreground/70">
             session：<span className="font-mono">{sessionId}</span>
+          </p>
+        )}
+        {outputLocale && (
+          <p className="text-xs text-muted-foreground/70">
+            输出语言 / 表达偏好：<span className="font-medium">{outputLocale}</span>
           </p>
         )}
 

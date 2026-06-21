@@ -14,6 +14,7 @@ import type {
   RecipeDraft,
   Verification,
 } from "@/lib/ai/types";
+import { MAX_OUTPUT_LOCALE_CHARS } from "@/lib/constants";
 
 /** /api/forge 成功响应中的 data（与 route handler 输出对齐）。 */
 export interface ForgeData {
@@ -40,6 +41,8 @@ export interface InitialSession {
   assumptions: Assumption[];
   status: "success" | "error";
   errorMessage: string | null;
+  // I-16：预载 session 的目标输出语言 / 表达偏好（可为 null）。
+  outputLocale: string | null;
 }
 
 interface ForgeWorkbenchProps {
@@ -80,6 +83,10 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
   const [assumptions, setAssumptions] = useState<Assumption[]>(
     initialSession?.assumptions ?? [],
   );
+  // I-16：目标输出语言 / 表达偏好（自由文本，可选）。空串提交时归一化为 null。
+  const [outputLocale, setOutputLocale] = useState(
+    initialSession?.outputLocale ?? "",
+  );
 
   async function runForge() {
     setStatus("loading");
@@ -93,7 +100,12 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
       const res = await fetch("/api/forge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawInput: idea, assumptions: submitAssumptions }),
+        body: JSON.stringify({
+          rawInput: idea,
+          assumptions: submitAssumptions,
+          // I-16：空串视为不指定（null）；旧行为不受影响。
+          outputLocale: outputLocale.trim() || null,
+        }),
       });
       const json = await res.json();
 
@@ -127,6 +139,7 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
     setErrorCode(null);
     setSessionId(null);
     setAssumptions([]);
+    setOutputLocale("");
   }
 
   // 假设条状态机：编辑 / 删除 / 恢复 / 全部恢复（UIUX §6.3 / §6.4）。
@@ -176,6 +189,28 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
           onForge={runForge}
           pending={status === "loading"}
         />
+
+        {/* I-16：可选输出语言 / 表达偏好（自由文本，非下拉枚举；空值即不指定）。 */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="output-locale"
+            className="text-sm font-medium text-foreground"
+          >
+            输出语言 / 表达偏好
+            <span className="ml-1 font-normal text-muted-foreground">（可选）</span>
+          </label>
+          <input
+            id="output-locale"
+            type="text"
+            value={outputLocale}
+            onChange={(event) => setOutputLocale(event.target.value)}
+            placeholder="例如：zh-Hans、en-US、English for Instagram carousel"
+            maxLength={MAX_OUTPUT_LOCALE_CHARS}
+            disabled={status === "loading"}
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+          />
+        </div>
+
         {status !== "loading" && <ExampleIdeas onPick={setIdea} />}
       </section>
 
@@ -200,6 +235,7 @@ export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
           errorMessage={errorMessage}
           authRequired={authRequired}
           sessionId={sessionId}
+          outputLocale={status === "success" ? outputLocale.trim() || null : null}
           onRetry={runForge}
           onNew={handleNew}
         />

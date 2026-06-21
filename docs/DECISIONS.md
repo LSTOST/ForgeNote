@@ -183,6 +183,17 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 - **(b) output_locale 预留**：`sessions` / `recipes` 增 `output_locale`（nullable）；assumption 增 `output_locale` 维度（由 audience 决定，impact=High，可问）。仿 D-02 预留 F-16 字段的方式，additive 不破坏现状。→ 票 I-16。
 - **(c) 商业化定位**：freemium 订阅假设写入 PRD（M1 不收费，但验证可收费性：保存率/重跑率/留存即付费意愿先行指标）。纯文档。→ `PRD-M1.md` §4.3。
 
+#### D-07(b) 实现结果（I-16，2026-06-21）
+
+按最小闭环落地 `output_locale`，严格 additive：
+
+- **范围收敛**：仅给 `sessions` 增 `output_locale`（migration `0002_output_locale.sql`）；`recipes` 本票**不加**——最小闭环不需要持久化 recipe 的 locale，重跑按本次请求传入即可。assumption 的 `output_locale` 维度本票**不做**（避免改 ForgeWorkbench 假设种子语义），留作后续。
+- **列属性**：`text`、nullable、无 default、无 enum/check、不 backfill、不改 RLS（沿用 0001 的 `auth.uid() = user_id`）。NULL = 未指定，沿用现有行为。
+- **请求链路**：`POST /api/forge`、`POST /api/recipes/:id/rerun` 可选 `outputLocale`（自由文本，trim，空串→null，≤120 字→超长 `VALIDATION_FAILED`）；写入新 session；`GET /api/sessions/:id` 返回 `outputLocale`。
+- **生成链路**：仅当 `outputLocale` 非空时，向生成请求追加一条最小输出语言/表达偏好约束；无 locale 时输出行为不变。不做多语言系统/UI 翻译/资源文件外化/locale 下拉。
+- **非破坏保障**：route 仅在 `outputLocale` 非空时才写 `output_locale` 列（条件 spread），故未指定 locale 的既有流程即使 0002 尚未应用也不依赖该列、不回归。
+- **不与国家/平台/市场绑定**，不是 enum，不写入 Profile。
+
 ### D-08 延后（贵、会推翻代码，不进 M1）
 
 - 平台中立 taxonomy 改名（`content_package` → `carousel_package`）：与 **D-01** 冲突，延后至真正切换平台时统一改。

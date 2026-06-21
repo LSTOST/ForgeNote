@@ -114,6 +114,8 @@ create table sessions (
   status text not null default 'draft',
   error_code text,
   error_message text,
+  -- I-16（additive，migration 0002）：目标输出语言/表达偏好，nullable，无 default，无 enum，不 backfill。
+  output_locale text,
   -- F-16 表现回填 lite（手动；range 枚举见 §2.6；M1 不做 perf_score）
   published_at timestamptz,
   like_range text,
@@ -139,6 +141,7 @@ create table sessions (
 | recipe_snapshot | 本次内容配方快照 |
 | verification | 验收检查结果 |
 | source_recipe_id | 如果来自配方重跑，记录配方 ID |
+| output_locale | I-16：目标输出语言/表达偏好（自由文本，如 `zh-Hans` / `en-US` / 自由描述）。nullable，NULL=未指定（沿用现有行为）。不是 enum、不与国家/平台绑定、不 backfill。仅 sessions；recipes 本票不加（重跑按请求传入）。 |
 | status | draft / generating / completed / failed |
 | error_code | 失败错误码，如 GENERATION_FAILED（见 DECISIONS D-04） |
 | error_message | 失败原因 |
