@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-I-17 — UI copy resource extraction scaffold（Done）。M1 主线 + Batch D + I-17 已全部交付。
+M1 Preview / 部署环境验收（进行中 → **Blocked**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done 且本地验收全绿；Preview 因 Vercel Deployment Protection 无法访问，未转 Ready。
 
 ## 当前分支
 i-01-forge-workspace
@@ -154,8 +154,9 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - `/api/forge` 仍必须登录（未改动，AUTH_REQUIRED 兜底保留）
 
 ## 阻塞项
-- Google provider 是否已配置未确认（Magic Link 已通；Google OAuth 待 Owner 确认）
-- Vercel Preview 未确认
+- Google provider 是否已配置未确认（Magic Link 已通；Google OAuth 待 Owner 确认；Preview 上受保护未验）
+- **Vercel Preview 验收 Blocked**（见 docs/acceptance/Preview-M1.md）：集成在跑、HEAD `3e5a012` Preview 构建 success，但 Preview 受 **Deployment Protection** 保护——未认证 curl 401(SSO)、本机浏览器过 SSO 后 404(未授权)，本环境无 Vercel CLI/token/bypass，**无法访问 app 路由完成 Preview 功能验收**（未绕过）。Vercel env 存在性亦无法核验。解除方式见该文档。
+- **GitHub Actions CI（HEAD）红**：失败步骤为 `npm ci`（Install dependencies），本地同 lockfile `npm ci` exit 0、Vercel 同 commit 构建也成功 → 判定 transient 网络 flake，**建议重跑 CI job**，非代码问题。
 - Codex GitHub App 未确认
 
 ## 下一张唯一任务
@@ -172,6 +173,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-21 (M1 Preview/部署验收：Vercel 集成在跑、HEAD 3e5a012 Preview 构建 success，但 Preview 受 Deployment Protection → 未认证 401(SSO)/浏览器 404，无 Vercel CLI/token，app 路由不可达 → 验收 Blocked、不转 Ready；CI 本次红为 npm ci 瞬时失败（本地 npm ci exit 0，建议重跑）；本地 lint/typecheck/build/doctor/smoke/eval 全绿。详见 docs/acceptance/Preview-M1.md)
 2026-06-21 (I-17 完成：src/lib/copy en+zh-Hans 资源 scaffold + typed helper（Copy=typeof zhHans，en:Copy 编译期保证 key 不漂移）；接线 TopNav / /recipes / /profile 页头；默认 zh-Hans 行为不变；不引 i18n 依赖、不做运行时切换；lint/typecheck/build/doctor/smoke + Chrome smoke 通过。M1 计划票 I-08~I-17 全部交付)
 2026-06-21 (Batch D 完成：I-12 表现回填 lite（POST /api/sessions/:id/performance + GET 读回 + OutcomePanel 入口，无 migration，真实 Chrome 回填/读回通过）、I-13 eval 门禁（eval:forge npm + safe-mode SKIP，不进 PR CI）、I-14 观测 scaffold（零依赖 no-op + 可选 env + doctor info）；lint/typecheck/build/doctor/smoke 全通过；下一张唯一任务 I-17)
 2026-06-21 (I-11 偏好页 /profile 完成：profile_preferences CRUD API（GET/POST upsert/PUT/DELETE）+ 受保护 /profile 页 + /forge 按 RLS 带出 source=profile 偏好假设 + AssumptionPanel「记住为偏好」写入；无 migration（表/RLS 已存在）；back-compat 无偏好不变；自动验证、匿名边界与真实 Chrome 登录态验收通过；下一张唯一任务 I-12)
