@@ -76,7 +76,7 @@ for (const doc of [
   checkFile(doc);
 }
 
-// ── npm 脚本（仅检查本仓库真实提供的脚本；eval 未纳入 npm，故不检查）──
+// ── npm 脚本（仅检查本仓库真实提供的脚本；I-13 起 eval:forge 已纳入 npm）──
 for (const script of [
   "dev",
   "lint",
@@ -85,6 +85,7 @@ for (const script of [
   "doctor",
   "smoke:api",
   "db:test-rls",
+  "eval:forge",
 ]) {
   checkScript(pkg, script);
 }

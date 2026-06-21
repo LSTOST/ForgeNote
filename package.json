@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.mjs",
     "smoke:api": "node scripts/smoke-forge-api.mjs",
-    "db:test-rls": "node scripts/test-rls.mjs"
+    "db:test-rls": "node scripts/test-rls.mjs",
+    "eval:forge": "node scripts/eval-forge.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

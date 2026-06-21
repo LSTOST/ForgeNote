@@ -78,12 +78,23 @@ npm run smoke:api      # 匿名冒烟：合法 body → AUTH_REQUIRED；非法 J
 DATABASE_URL='postgres://...' npm run db:test-rls
 ```
 
-涉及模型 prompt、输出结构、验收逻辑时（eval，尚未纳入 npm/CI，见 `docs/TICKETS.md` I-13）：
+涉及模型 prompt、输出结构、验收逻辑时（eval gate，I-13 已纳入 npm，**手动 / 本地命令，不进 PR CI**）：
 
 ```bash
-# 需登录态：从已登录浏览器复制整段 Cookie 头
-FORGENOTE_AUTH_COOKIE='sb-...=...; ...' node scripts/eval-forge.mjs --base-url http://localhost:3000
+npm run eval:forge        # 安全默认：未设 FORGENOTE_AUTH_COOKIE → 明确 SKIP（exit 0），不计失败、不打印 secret
+
+# 真实跑分（需登录态 + 模型 env）：先 `npm run dev`，再从已登录浏览器复制整段 Cookie 头
+FORGENOTE_AUTH_COOKIE='sb-...=...; ...' npm run eval:forge
+# 可选参数：--base-url http://localhost:3000 --cases eval/cases/content-package.json
 ```
+
+判定语义：
+
+- **SKIP（exit 0）**：未提供 `FORGENOTE_AUTH_COOKIE`，或模型未配置（`MODEL_NOT_CONFIGURED`）——视为跳过，不当失败。
+- **FAIL（exit 1）**：cookie 无效/过期（`AUTH_REQUIRED`），或某用例的检查项未通过（逐项打印检查名）。
+- **PASS（exit 0）**：全部用例检查通过。
+
+> 为什么不进每次 PR CI：eval 需真实模型调用（成本 + 需登录态），强行进 CI 会因缺 key / 缺登录态无意义失败。eval 作为**手动 / 本地门禁**运行；CI 仍只跑 doctor / lint / typecheck / build（`.github/workflows/ci.yml`）。`npm run eval:forge` 的 SKIP 语义保证它即使被无 key 环境调用也安全退 0、不打印 secret。
 
 ## 排障
 

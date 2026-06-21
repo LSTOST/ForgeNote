@@ -36,6 +36,10 @@ const caseFile = args.get("cases") || "eval/cases/content-package.json";
 const authCookie = process.env.FORGENOTE_AUTH_COOKIE || "";
 const suite = JSON.parse(readFileSync(join(root, caseFile), "utf8"));
 
+// I-13：无登录态 / 模型未配置时的「明确跳过」语义——退出 0，不计失败，
+// 避免在缺外部 key 的环境（如 CI、本地未登录）里产生无意义的红。
+class SkipError extends Error {}
+
 function fail(message) {
   throw new Error(message);
 }
@@ -74,7 +78,13 @@ async function callForge(testCase) {
   if (!res.ok || !json?.ok) {
     const code = json?.error?.code || res.status;
     if (code === "AUTH_REQUIRED") {
-      fail("AUTH_REQUIRED：eval 需登录态。请设置 FORGENOTE_AUTH_COOKIE（见脚本头注释）。");
+      // cookie 缺失已在入口跳过；走到这里说明 cookie 无效/过期 → 明确失败。
+      fail("AUTH_REQUIRED：FORGENOTE_AUTH_COOKIE 无效或已过期，请更新后重试。");
+    }
+    if (code === "MODEL_NOT_CONFIGURED") {
+      throw new SkipError(
+        "MODEL_NOT_CONFIGURED：缺 OPENROUTER_API_KEY / OPENROUTER_MODEL，eval 跳过（不计失败）。",
+      );
     }
     fail(`API 未生成内容 (${code})。eval 需要运行中的 server + 模型 env + 登录态。`);
   }
@@ -143,8 +153,16 @@ function evaluateData(testCase, data) {
 
 console.log(`Eval target: ${baseUrl}`);
 console.log(`Eval cases: ${caseFile}`);
+
+// I-13：safe mode —— 未提供登录态 cookie 时明确跳过（exit 0），不计失败、不打印 secret。
 if (!authCookie) {
-  console.log("提示：未提供 FORGENOTE_AUTH_COOKIE；匿名调用会被 AUTH_REQUIRED 拦截。");
+  console.log(
+    "SKIP: 未设置 FORGENOTE_AUTH_COOKIE（eval 需登录态）。视为跳过，不计失败。",
+  );
+  console.log(
+    "运行方式：先 `npm run dev`，再 FORGENOTE_AUTH_COOKIE='<浏览器登录态 Cookie 头>' npm run eval:forge",
+  );
+  process.exit(0);
 }
 
 let failed = 0;
@@ -161,6 +179,11 @@ for (const testCase of suite.cases) {
       console.log(`OK   ${testCase.id}`);
     }
   } catch (error) {
+    // 模型未配置 → 整轮跳过（exit 0），避免缺 key 环境无意义失败。
+    if (error instanceof SkipError) {
+      console.log(`SKIP: ${error.message}`);
+      process.exit(0);
+    }
     failed += 1;
     console.log(`FAIL ${testCase.id}`);
     console.log(`  - ${error instanceof Error ? error.message : String(error)}`);
