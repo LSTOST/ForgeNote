@@ -19,6 +19,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY    # 绕过 RLS，绝不可在客户端暴露
 ```
 
+可选观测（I-14，全部可选；不配置则观测 scaffold 为 no-op，应用照常运行、build 不受影响）：
+
+```text
+SENTRY_DSN                   # 服务端错误上报（非公开，仅服务端读取）
+NEXT_PUBLIC_POSTHOG_KEY      # 前端事件（公开配置）
+NEXT_PUBLIC_POSTHOG_HOST     # 可选，自托管 PostHog 时用
+```
+
+启用说明（I-14 现状）：
+- 当前为 **scaffold + no-op**：`src/lib/observability.ts` 提供稳定调用点（`captureServerError` / `trackClientEvent`），未配置 env 时全部 no-op，**不引入 Sentry / PostHog SDK、不硬连服务**。
+- 配置上述 env 后，仍需后续票接入真实 SDK（在 `observability.ts` 的 TODO 处）才会真正上报；只填 env 不会自动外发。
+- 安全：观测**不采集用户输入全文**（rawInput / outcome / 复盘正文等不上报）；secret 不进客户端、不打印。
+
 规则：
 
 - Preview 和 Production 分开配置。

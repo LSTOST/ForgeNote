@@ -118,8 +118,16 @@ for (const name of [
   if (hasEnv(name)) mark("pass", `${name} 已配置`);
   else mark("warn", name, "未配置；登录闭环不可用、/api/forge 将 AUTH_REQUIRED");
 }
+// 可选观测 env（I-14）：纯 optional，未配置时观测 scaffold 为 no-op；info 不计 fail/warn、不阻断。
+for (const name of [
+  envName("SENTRY_DSN"),
+  envName("NEXT_PUBLIC_POSTHOG_KEY"),
+]) {
+  if (hasEnv(name)) mark("pass", `${name} 已配置（可选观测）`);
+  else mark("info", name, "未配置（可选；观测 scaffold 处于 no-op）");
+}
 
-const icon = { pass: "OK  ", warn: "WARN", fail: "FAIL" };
+const icon = { pass: "OK  ", warn: "WARN", fail: "FAIL", info: "INFO" };
 for (const item of results) {
   const suffix = item.detail ? ` - ${item.detail}` : "";
   console.log(`${icon[item.level]} ${item.label}${suffix}`);
