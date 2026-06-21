@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-M1 Preview / 部署环境验收（进行中 → **Blocked**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done 且本地验收全绿；Preview 因 Vercel Deployment Protection 无法访问，未转 Ready。
+M1 Preview / 部署环境验收（进行中 → **Blocked**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done；Preview 的 CI / framework / env / 未登录边界已通过，登录态因当前 Chrome 拦截 Supabase Auth 域名而未完成，不转 Ready。
 
 ## 当前分支
 i-01-forge-workspace
@@ -154,8 +154,8 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - `/api/forge` 仍必须登录（未改动，AUTH_REQUIRED 兜底保留）
 
 ## 阻塞项
-- Google provider 是否已配置未确认（Magic Link 已通；Google OAuth 待 Owner 确认；Preview 上受保护未验）
-- **Vercel Preview 验收 Blocked**（见 docs/acceptance/Preview-M1.md）：CI 已绿，HEAD `045e6f6` Preview READY；repo 侧 `vercel.json` 已解除 Vercel 级 404，`/login` 进入 Next.js、`/api/forge` GET 返回 405。当前 blocker 是 Preview env 为空（`vercel env ls preview` 无变量，登录页显示 Supabase 未配置）+ **Deployment Protection** 普通访问/登录态验收入口未打通。把本地 `.env.local` 必需键写入 Vercel Preview 需要 Owner 明确授权；不转 Ready。
+- Google provider / callback 在 Preview 上未验完：Google 登录已能从 Preview 发起到 Supabase authorize URL，但当前 Chrome 环境拦截 `tsqgetxhyitltgztxymd.supabase.co`（`ERR_BLOCKED_BY_CLIENT`），回调未完成。
+- **Vercel Preview：未登录路径已通过，登录态 Blocked**（见 docs/acceptance/Preview-M1.md）：CI 绿，HEAD `c18394a` 的 PR Preview 已 redeploy 为 `dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ`；`vercel.json` framework 修复已验证；Preview env 已配置 4 个必需键（Encrypted，未打印值）；分支别名 `/login` 渲染真实登录表单；未登录 `/forge`·`/recipes`→`/login`、匿名 `POST /api/forge` 合法 body→`AUTH_REQUIRED`、非法 JSON→`VALIDATION_FAILED` 均通过。唯一剩余 blocker = 当前 Chrome 拦截 Supabase Auth 域名，无法完成登录态生成 / recipes / profile / I-12 回填验收。Deployment Protection 仍开启，未公开 bypass URL。不转 Ready。
 - **GitHub Actions CI（npm ci）红 → 已修**：根因为 **npm 大版本不一致**——本机 node25/npm11 vs CI node20/npm10，lockfile 缺 npm10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退嵌套 optional 依赖）。本机 npm11 重生成无效（CI 仍红）；改用 `npx npm@10 install --package-lock-only` 重生成（匹配 CI），`npx npm@10 ci --dry-run` exit 0；lockfileVersion 仍 3、root deps 未变、无源码改动。初判 flake 有误，已更正。
 - Codex GitHub App 未确认
 
@@ -173,6 +173,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-21 (Preview env 已配置并 redeploy：Owner 授权后写入 4 个必需 Preview env，值均 Encrypted 未打印；PR Preview redeploy dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ READY，分支别名 /login 已渲染真实登录表单；未登录边界通过：合法 POST /api/forge→401 AUTH_REQUIRED，非法 JSON→400 VALIDATION_FAILED。登录态仍 Blocked：当前 Chrome 拦截 Supabase Auth 域名 tsqgetxhyitltgztxymd.supabase.co，显示 ERR_BLOCKED_BY_CLIENT；不转 Ready)
 2026-06-21 (Preview 修复进展：CI 已绿；commit 045e6f6 Preview READY，deployment dpl_47DRNL1djLWs4RZ8UfZnxSfsuX1t；vercel.json 已解除 Vercel 级 404，/login 为 Next.js 200，/api/forge GET 为 405。当前 blocker 转为 Preview env 为空（登录页 Supabase 未配置）+ Deployment Protection/登录态验收入口未打通；写入本地 .env.local 到 Vercel Preview 需 Owner 明确授权，不转 Ready)
 2026-06-21 (CI 修复 v2：真因为 npm 版本不一致（本机 npm11 vs CI npm10），lockfile 缺 npm10 期望的 @emnapi/*@1.11.1 顶层节点；本机 npm11 重生成无效，改用 npx npm@10 install --package-lock-only 重生成、npm@10 ci --dry-run exit 0。Preview 仍受 Deployment Protection（401 SSO），验收维持 Blocked、不转 Ready)
 2026-06-21 (M1 Preview/部署验收：Vercel 集成在跑、HEAD 3e5a012 Preview 构建 success，但 Preview 受 Deployment Protection → 未认证 401(SSO)/浏览器 404，无 Vercel CLI/token，app 路由不可达 → 验收 Blocked、不转 Ready；CI 本次红为 npm ci 瞬时失败（本地 npm ci exit 0，建议重跑）；本地 lint/typecheck/build/doctor/smoke/eval 全绿。详见 docs/acceptance/Preview-M1.md)
