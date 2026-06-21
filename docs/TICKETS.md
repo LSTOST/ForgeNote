@@ -34,26 +34,26 @@
 | Batch C | Done | 假设条编辑器 + 结果操作区（复制 / 重生成 / 新建） | `docs/acceptance/Batch-C.md` |
 | QA-01 | Done | 工具链与流程文档现代化恢复（doctor / smoke / RLS 检查 / RUNBOOK / DEPLOYMENT / PR 模板） | `docs/acceptance/Batch-C.md` |
 | I-08 | Done | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈） | `docs/acceptance/I-08.md` |
+| I-09 | Done | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | `docs/acceptance/I-09.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-09 | Ready | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | 配方详情、换输入重跑、高表现排序（依赖 perf_score） | I-08 |
+| I-10 | Ready | 配方详情 `/recipes/[id]` + 换输入重跑 | 多版本 diff、高表现排序、Profile / 偏好记忆、F-16 | I-09 |
 
-> **下一张唯一任务**：I-09。只做配方库列表/搜索/筛选/删除，不做详情、不做重跑、不做偏好记忆、不做 F-16。
+> **下一张唯一任务**：I-10。只做配方详情 + 换输入重跑，不做多版本 diff、不做偏好记忆、不做 F-16。
 
 ## M1 剩余执行队列
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-10 | Backlog | 配方详情 `/recipes/[id]` + 换输入重跑 | 多版本 diff | I-09 |
 | I-11 | Backlog | 偏好页 `/profile`：edited assumptions 写入并下次带出 | 自动学习（M2） | Batch A / Batch C |
 | I-12 | Backlog | F-16 表现回填 lite（`POST /api/sessions/:id/performance`） | perf_score、自动抓取 | I-09 |
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
 
-> 说明：`/recipes` 与 `/profile` 在导航中仍是占位链接，未交付（I-08~I-11）。
+> 说明：`/recipes` 列表已交付；`/recipes/[id]` 与 `/profile` 仍未交付。
 
 ## 每票模板
 

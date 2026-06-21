@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { getCurrentUser } from "@/lib/supabase/server";
 
-// 顶部导航（UIUX §3.1）。M1 只有 Forge 是实页，配方库 / 偏好为占位路由（页面待实现）。
+// 顶部导航（UIUX §3.1）。Forge 与配方库为实页；偏好页仍在后续票实现。
 const NAV_ITEMS = [
   { label: "Forge", href: "/forge" },
   { label: "配方库", href: "/recipes" },
