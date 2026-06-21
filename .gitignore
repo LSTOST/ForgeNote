@@ -44,3 +44,5 @@ next-env.d.ts
 # project-local
 .DS_Store
 .claude/
+# local Obsidian vault config (not project docs)
+.obsidian/
