@@ -30,6 +30,23 @@ export interface ForgeData {
 export type ForgeStatus = "idle" | "loading" | "success" | "error";
 
 /**
+ * 服务端预载的初始 session（I-10：换输入重跑后落到 /forge?session=<id> 查看结果）。
+ * completed 且含 outcome → 直接呈现成功结果；draft/失败 → 回填输入并展示错误态供重试。
+ */
+export interface InitialSession {
+  sessionId: string;
+  rawInput: string;
+  data: ForgeData | null;
+  assumptions: Assumption[];
+  status: "success" | "error";
+  errorMessage: string | null;
+}
+
+interface ForgeWorkbenchProps {
+  initialSession?: InitialSession | null;
+}
+
+/**
  * 默认假设种子（UIUX §6.1 示例维度）。Batch C 最小实现：
  * 引擎（I-02B 边界）不做智能推断、只回传输入假设，故首次成功后在客户端注入这组可编辑默认假设，
  * 供用户编辑 / 删除 / 恢复，并在重新生成时提交。source=inferred、state=default、editable=true。
@@ -42,17 +59,27 @@ const DEFAULT_ASSUMPTIONS: Assumption[] = [
   { key: "tone", label: "语气", value: "成熟、清楚、不焦虑", valueType: "text", source: "inferred", state: "default", editable: true },
 ];
 
-export function ForgeWorkbench() {
-  const [idea, setIdea] = useState("");
-  const [status, setStatus] = useState<ForgeStatus>("idle");
-  const [data, setData] = useState<ForgeData | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+export function ForgeWorkbench({ initialSession = null }: ForgeWorkbenchProps) {
+  const [idea, setIdea] = useState(initialSession?.rawInput ?? "");
+  const [status, setStatus] = useState<ForgeStatus>(
+    initialSession?.status ?? "idle",
+  );
+  const [data, setData] = useState<ForgeData | null>(
+    initialSession?.data ?? null,
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    initialSession?.errorMessage ?? null,
+  );
   // 区分 AUTH_REQUIRED 与一般生成失败：前者展示「需要登录」，不跳转登录页。
   const [errorCode, setErrorCode] = useState<string | null>(null);
   // 成功后保存 sessionId（Batch A）。
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(
+    initialSession?.sessionId ?? null,
+  );
   // 假设条工作集（Batch C）：客户端为唯一真相，保留 dismissed 以便恢复。
-  const [assumptions, setAssumptions] = useState<Assumption[]>([]);
+  const [assumptions, setAssumptions] = useState<Assumption[]>(
+    initialSession?.assumptions ?? [],
+  );
 
   async function runForge() {
     setStatus("loading");

@@ -7,6 +7,7 @@ import {
   BookMarked,
   CircleAlert,
   CircleCheck,
+  Eye,
   Filter,
   Search,
   Trash2,
@@ -242,9 +243,12 @@ export function RecipesLibrary({
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1 space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="min-w-0 truncate text-base font-semibold tracking-tight">
+                        <Link
+                          href={`/recipes/${recipe.id}`}
+                          className="min-w-0 truncate text-base font-semibold tracking-tight underline-offset-4 hover:underline"
+                        >
                           {recipe.name}
-                        </h2>
+                        </Link>
                         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                           {INTENT_LABELS[recipe.intentType] ?? recipe.intentType}
                         </span>
@@ -271,19 +275,31 @@ export function RecipesLibrary({
 
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
                       {!confirming ? (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            setConfirmId(recipe.id);
-                            setErrorMessage(null);
-                            setNotice(null);
-                          }}
-                        >
-                          <Trash2 className="size-3.5" aria-hidden />
-                          删除
-                        </Button>
+                        <>
+                          <Link
+                            href={`/recipes/${recipe.id}`}
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            })}
+                          >
+                            <Eye className="size-3.5" aria-hidden />
+                            查看详情
+                          </Link>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setConfirmId(recipe.id);
+                              setErrorMessage(null);
+                              setNotice(null);
+                            }}
+                          >
+                            <Trash2 className="size-3.5" aria-hidden />
+                            删除
+                          </Button>
+                        </>
                       ) : (
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm text-muted-foreground">

@@ -35,14 +35,16 @@
 | QA-01 | Done | 工具链与流程文档现代化恢复（doctor / smoke / RLS 检查 / RUNBOOK / DEPLOYMENT / PR 模板） | `docs/acceptance/Batch-C.md` |
 | I-08 | Done | 保存配方最小闭环（`POST /api/recipes` + RecipePanel 命名/保存/反馈） | `docs/acceptance/I-08.md` |
 | I-09 | Done | 配方库 `/recipes` 列表、搜索、类型筛选、删除 | `docs/acceptance/I-09.md` |
+| I-10 | Done | 配方详情 `/recipes/[id]` + 换输入重跑（`POST /api/recipes/:id/rerun`） | `docs/acceptance/I-10.md` |
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-10 | Ready | 配方详情 `/recipes/[id]` + 换输入重跑 | 多版本 diff、高表现排序、Profile / 偏好记忆、F-16 | I-09 |
+| I-15 | Backlog | i18n 文案外化（UI 文案抽资源文件，en + zh-Hans 脚手架，不改行为） | 多 UI locale 全量翻译、繁中调优、生成语言切换 | Batch C；DECISIONS D-07(a) |
 
-> **下一张唯一任务**：I-10。只做配方详情 + 换输入重跑，不做多版本 diff、不做偏好记忆、不做 F-16。
+> **下一张唯一任务**：I-15（v5 选择性折叠 additive）。只做 i18n 文案外化脚手架，不抢做 I-16 `output_locale`、不做 I-11 偏好页。
+> 注：I-15 / I-16 的票面定义随「v5 选择性折叠」战略文档（DECISIONS D-06/07/08、PRD §2/§4.3、本文件 M1 队列 I-15/I-16）一同维护，该批战略文档改动为既有未提交工作树状态，未纳入 I-10 功能提交，待技术负责人处理。
 
 ## M1 剩余执行队列
 
@@ -53,7 +55,7 @@
 | I-13 | Backlog | eval 门禁接入真实样例集（含登录态 runner，把 `scripts/eval-forge.mjs` 正式纳入 npm/CI） | 自动内容评分模型 | I-02B |
 | I-14 | Backlog | PostHog / Sentry 基础观测 | 完整增长分析 | 部署环境 |
 
-> 说明：`/recipes` 列表已交付；`/recipes/[id]` 与 `/profile` 仍未交付。
+> 说明：`/recipes` 列表与 `/recipes/[id]` 详情 + 换输入重跑均已交付；`/profile` 仍未交付。
 
 ## 每票模板
 
