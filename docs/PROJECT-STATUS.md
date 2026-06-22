@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-M1 Preview / 部署环境验收（**通过**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done；Preview 的 CI / framework / env / 未登录边界 + 登录态主路径全部通过。原 blocker（Supabase Google provider）根因修正为 Client Secret 未填，Owner 在 Supabase 控制台补填 Client Secret 并保存后解除；真实 Chrome 登录态下 Google 登录 → /forge 生成（session 落库）→ session 回看 → /recipes → /profile → I-12 表现回填写入/读回全套通过。
+无进行中开发票。M1 计划票 I-08~I-18 已全部 Done。最近完成的 I-18（补齐 UI copy 资源覆盖）已随 PR #2 squash merge 进 `main`。M1 Preview / 部署环境验收此前已**通过**（见 docs/acceptance/Preview-M1.md）：真实 Chrome 登录态下 Google 登录 → /forge 生成（session 落库）→ session 回看 → /recipes → /profile → I-12 表现回填写入/读回全套通过。下一张唯一任务待 Codex 判断、Owner 拍板后写入（不默认进入 runtime i18n）。
 
 ## 当前分支
-i-01-forge-workspace
+无活跃功能分支。`main` 已是最新基线（`b56cfa0`，含 PR #2 / I-18）。OPS-01 为文档-only 基线修复（不含产品代码），需 Owner 单独拍板合入。
 
 ## 当前 PR
-PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
+无进行中产品 PR。PR #1（M1 workspace）与 PR #2（I-18 copy coverage）均已 squash merge 进 `main`；`main` HEAD = `b56cfa0`。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -19,7 +19,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 **权威记录**：`DECISIONS.md`「v5 选择性折叠」D-06 / D-07 / D-08；`TICKETS.md` I-15 / I-16；`PRD-M1.md` §2、§4.3。
 
 **边界（review / 验收须守住）**
-- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）已完成；M1 计划票全部交付。
+- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）+ I-18（UI copy 资源覆盖补齐）已完成；M1 计划票（I-08~I-18）全部交付。
 - login / forge / recipes 已建代码不动。
 - **D-01 不变**：`content_package` 冻结，M1 不改名 `carousel_package`。
 - M1 不收费；Stripe / 去小红书化 / taxonomy 改名延后（D-08）。
@@ -117,10 +117,18 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 边界：不引入 i18n 依赖、不做运行时语言切换 / locale 路由 / 偏好持久化 / output_locale 联动 / 自动翻译；不改 prompt/DB/RLS/API；不改 Batch D / I-11；不重构组件结构；`constants.ts` 产品级文案不重复纳入
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor/smoke:api 全通过；Chrome smoke：`/recipes`、`/profile`、`/forge` 文案正确、无 raw key / undefined / [object Object]（见 docs/acceptance/I-17.md）
 
+## 已完成（I-18 — UI copy 资源覆盖补齐）
+- 承接 I-17 scaffold：把 M1 活跃页面剩余硬编码 UI chrome 文案收敛到 `src/lib/copy/{zh-Hans,en}.ts`，默认 zh-Hans 行为不变
+- 扩展 copy 分组：`common` / `intentTypes` / `login` / `idea` / `forge` / `outcome` / `recipePanel` / `assumptions` / `performance` / `recipes` / `recipeDetail` / `profile`；`en: Copy` 编译期同构，typecheck 保证 en/zh key 不漂移；含 `{n}`/`{max}`/`{label}`/`{date}`/`{count}` 占位符的值在调用处 `.replace(...)` 注入（copy 值保持纯 string）
+- 接线（消费 `copy.*`）：`LoginForm`、`IdeaInput` / `ExampleIdeas` / `ForgeWorkbench`、`OutcomePanel`（含复制全文/卡片导出标题、section 标题、空/错误/登录态）、`RecipePanel`、`AssumptionPanel`（含 aria/title）、`PerformancePanel`、`RecipesLibrary`、`RecipeRerun`、`/recipes/[id]`、`ProfilePreferences`；intent 标签集中到 `copy.intentTypes` 三处复用去重
+- 边界：不做运行时语言切换 / locale route / middleware / cookie / 偏好持久化；不联动 `output_locale`；不改 prompt / DB / RLS / API；不做视觉 redesign；`constants.ts` 产品级文案保留单一来源不复制；`DEFAULT_ASSUMPTIONS` 作为种子数据/内容保留，非 UI chrome
+- 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
+
 ## 进行中
-- M1 计划票全部交付（I-08~I-17，含 Batch D）。后续：真正多语言运行时切换 / scaffold-only 文案逐组接线（需另立票）；部署 / 观测 SDK 接入（I-14 后续）按技术负责人排期
+- 无进行中开发票。M1 计划票全部交付（I-08~I-18，含 Batch D）。下一张唯一任务待 Codex 判断、Owner 拍板。候选后续（需另立票、不默认采纳）：真正多语言运行时切换 / scaffold-only 文案逐组接线；部署 / 观测 SDK 接入（I-14 后续）按技术负责人排期
 
 ## 已通过验收
+- I-18：UI copy 资源覆盖补齐（en/zh key parity 编译期保证 + 活跃页面接线 + 本地登录态 Chrome smoke 无泄漏）通过自动验证，进入 Done；已随 PR #2 squash merge 进 `main`（`b56cfa0`），远端分支 `i-18-copy-coverage` 已删除
 - I-17：UI copy 资源 scaffold（en/zh key parity 编译期保证 + 代表性接线 + Chrome smoke）通过，进入 Done
 - Batch D：I-12 表现回填（含真实 Chrome 登录态回填/读回）、I-13 eval 门禁（safe-mode 实测）、I-14 观测 scaffold（no-op / build 不破）均通过自动验证，进入 Done
 - I-11：偏好页 `/profile` CRUD + `/forge` 偏好带出 + edited assumptions「记住为偏好」通过自动验证、匿名边界与真实 Chrome 登录态验收，进入 Done
@@ -160,7 +168,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - Codex GitHub App 未确认
 
 ## 下一张唯一任务
-（待技术负责人定）M1 计划票 I-08~I-17 已全部交付。候选后续：① 真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；② I-14 观测真实 SDK 接入；③ 部署 / Preview 验收（DEPLOYMENT 清单）。均需另立票。
+（待 Owner 拍板 / Codex 定义）M1 计划票 I-08~I-18 已全部 Done。**不默认进入 runtime i18n**，不擅自开产品功能票——下一张票由 Codex 判断、Owner 拍板后写入。候选后续（均需另立票、不默认采纳）：① 真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；② I-14 观测真实 SDK 接入；③ 部署 / Preview 验收（DEPLOYMENT 清单）。
 
 ## 最近一次验收结果（Batch C）
 - npm run lint：通过
@@ -173,6 +181,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-22 (OPS-01 文档基线同步：基于 origin/main `b56cfa0`（PR #2 / I-18 已 squash merge），修正过期 live 状态——「当前分支 i-01-forge-workspace」「当前 PR PR #1 Draft」改为「无活跃功能分支 / main 已含 PR #2」；I-18 补入已完成、已通过验收、TICKETS Done 表；下一张唯一任务标注待 Owner 拍板、不默认进入 runtime i18n。新增 `docs/OPERATING-MODEL.md`，AGENTS/DECISIONS/RUNBOOK/PR 模板对齐角色·Gate·QA Agent 真实用户路径验收协议。仅文档改动，未触碰 src / package / API / DB / RLS / prompt)
 2026-06-22 (Preview 登录态验收**通过**，blocker 解除：精确根因为 Supabase Google provider 的 Client Secret 为空（authorize 直连 `400 validation_failed` / `missing OAuth secret`）；Owner 在 Supabase 控制台补填 Client Secret 并保存后 authorize 直连返回 `302` 重定向 Google。真实 Chrome 登录态下 Google 登录 → /forge 生成（session 939ec634-dddd-410d-98eb-78128f5eab9f 落库）→ ?session= 回看 → /recipes → /profile → I-12 表现回填写入/读回（11-50/51-100/1-10/0）全套通过。仅 Supabase 外部配置变更，无代码改动；Deployment Protection 仍开启，未公开 bypass URL。PR #1 登录态主路径已完整通过，转 Ready 由 Owner 决定)
 2026-06-22 (Preview 登录态 blocker 纠偏：关闭/切换 Chrome 后仍无法 Google 登录；用真实 Supabase authorize URL 直连确认返回 400 validation_failed / "Unsupported provider: provider is not enabled"。根因是 Supabase Auth Google provider 未启用或 Google OAuth client 未配置完成；不是 Codex 扩展、Chrome profile、Vercel framework/env 或 ForgeNote 代码。Preview 登录态仍 Blocked，不转 Ready)
 2026-06-22 (Preview 登录态复测中曾观察到 Chrome `ERR_BLOCKED_BY_CLIENT`，当时误判为客户端拦截；后续已用 Supabase Auth 直连响应纠偏，以上方 provider 未启用结论为准。登录态验收仍 Blocked，不转 Ready)
