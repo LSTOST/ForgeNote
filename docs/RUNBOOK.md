@@ -125,6 +125,30 @@ M1 主路径基线：
 
 > 为什么不进每次 PR CI：eval 需真实模型调用（成本 + 需登录态），强行进 CI 会因缺 key / 缺登录态无意义失败。eval 作为**手动 / 本地门禁**运行；CI 仍只跑 doctor / lint / typecheck / build（`.github/workflows/ci.yml`）。`npm run eval:forge` 的 SKIP 语义保证它即使被无 key 环境调用也安全退 0、不打印 secret。
 
+## 验证指标读出（I-19）
+
+从现有库表只读算出 OPERATING-MODEL「指标闭环」的 6 个指标，首批用户样本下无需第三方 SDK。连接方式与 `db:test-rls` 同款（`DATABASE_URL` + 本机 psql，零生产依赖）。
+
+```bash
+# 有库（如对 Production 只读读出首批数值）：
+DATABASE_URL='postgres://...:5432/postgres' npm run metrics
+# 无库：
+npm run metrics        # SKIP exit 0
+```
+
+输出 6 个指标：`activation_rate` / `assumption_edit_rate` / `recipe_save_rate` / `recipe_rerun_rate` / `return_session_rate` / `performance_fill_rate`，每个显示 `命中/分母 (百分比)`。
+
+判定语义：
+
+- **SKIP（exit 0）**：未提供 `DATABASE_URL` / `SUPABASE_DB_URL`——视为跳过，不当失败。
+- **读出（exit 0）**：连库成功，打印 6 个指标聚合。
+
+安全约束：
+
+- 只 SELECT 计数 / 布尔聚合，**绝不取** `raw_input` / `outcome` / `recipe_snapshot` / `performance_note` 等输入全文或生成正文；跨进程的只有整数。
+- 不打印连接串、不打印 secret；脚本不内嵌任何 key；只读，不写库、不绕过 RLS。
+- 小样本噪声大：脚本只负责「能读出」，不设达标阈值。
+
 ## 排障
 
 | 问题 | 先查 |

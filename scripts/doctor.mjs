@@ -86,6 +86,7 @@ for (const script of [
   "smoke:api",
   "db:test-rls",
   "eval:forge",
+  "metrics",
 ]) {
   checkScript(pkg, script);
 }
@@ -96,6 +97,7 @@ for (const file of [
   "scripts/smoke-forge-api.mjs",
   "scripts/test-rls.mjs",
   "scripts/eval-forge.mjs",
+  "scripts/metrics.mjs",
   "eval/cases/content-package.json",
   "supabase/migrations/0001_init.sql",
   ".github/pull_request_template.md",

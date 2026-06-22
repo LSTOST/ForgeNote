@@ -125,7 +125,8 @@ M1
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 进行中
-- 无进行中开发票。M1 计划票全部交付（I-08~I-18，含 Batch D）。下一张唯一任务待 Codex 判断、Owner 拍板。候选后续（需另立票、不默认采纳）：真正多语言运行时切换 / scaffold-only 文案逐组接线；部署 / 观测 SDK 接入（I-14 后续）按技术负责人排期
+- **I-19（Ready，下一张唯一任务）**：Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出（只读 `scripts/metrics.mjs`，不接 PostHog/Sentry SDK）。Owner 已于 2026-06-22 拍板批准；runtime i18n 与观测 SDK **延后**，待 I-19 拿到指标证据后再定。票面见 `docs/TICKETS.md`「I-19 执行票」。
+- M1 计划票 I-08~I-18 全部交付（含 Batch D），已并入 `main`（`2959399`，含 OPS-01）。
 
 ## 已通过验收
 - I-18：UI copy 资源覆盖补齐（en/zh key parity 编译期保证 + 活跃页面接线 + 本地登录态 Chrome smoke 无泄漏）通过自动验证，进入 Done；已随 PR #2 squash merge 进 `main`（`b56cfa0`），远端分支 `i-18-copy-coverage` 已删除
@@ -168,7 +169,7 @@ M1
 - Codex GitHub App 未确认
 
 ## 下一张唯一任务
-（待 Owner 拍板 / Codex 定义）M1 计划票 I-08~I-18 已全部 Done。**不默认进入 runtime i18n**，不擅自开产品功能票——下一张票由 Codex 判断、Owner 拍板后写入。候选后续（均需另立票、不默认采纳）：① 真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；② I-14 观测真实 SDK 接入；③ 部署 / Preview 验收（DEPLOYMENT 清单）。
+**I-19（Ready）— Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出**。Owner 已拍板（2026-06-22）。Codex 判断：M1 功能闭环已完整，瓶颈是没有真实用户可访问的 Production、拿不到「有人持续用」的证据；首批 6 个指标可直接用 SQL 从现有表读出，无需先接观测 SDK。范围内（Claude Code）：只读 `scripts/metrics.mjs` + DEPLOYMENT Production 段 + `docs/acceptance/I-19.md` 模板 + RUNBOOK；不接 PostHog/Sentry SDK、不做 runtime i18n、不加产品功能、不改 schema/RLS/prompt/API。Owner 侧：Vercel Production env、Supabase Production redirect/OAuth（含 Client Secret）、migration 应用、Deployment Protection 决策。**延后**：runtime i18n、观测 SDK 接入（待 I-19 指标证据后再定）。票面见 `docs/TICKETS.md`「I-19 执行票」。
 
 ## 最近一次验收结果（Batch C）
 - npm run lint：通过

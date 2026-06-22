@@ -52,16 +52,73 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| —（待 Owner 拍板 / Codex 定义） | — | M1 计划票 I-08~I-18 已全部 Done；下一张票尚未确定 | 不默认进入 runtime i18n；不擅自开产品功能票 | — |
+| I-19 | Ready | Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出（不接第三方观测 SDK） | runtime i18n；PostHog/Sentry SDK；任何新产品功能；改 schema/RLS/prompt/API | M1 全部 Done（已满足）；Owner 配置 Vercel Production env / Supabase Production OAuth |
 
-> **状态**：M1 计划票全部 Done（含 I-18）。下一张唯一任务由 Codex 判断、Owner 拍板后写入，不在本票自行开启。候选后续票（均需另立、不默认采纳）：真正多语言运行时切换（locale 检测/选择/持久化 + scaffold-only 文案逐组接线）；I-14 观测真实 SDK 接入；部署 / Preview 验收（见 `docs/DEPLOYMENT.md`）。
+> **拍板**：Owner 已批准 I-19（2026-06-22），并明确**延后** runtime i18n 与观测 SDK。Codex 判断依据：M1 功能闭环已完整，瓶颈不是功能而是「没有真实用户能访问的 Production，也就拿不到任何『有人持续用』的证据」（见 `docs/OPERATING-MODEL.md` 目标与 Gate 4）。首批用户的 6 个指标可直接用 SQL 从现有表（`sessions` / `recipes.usage_count` / `usage_events` / sessions 的 performance 列）读出，无需先接 PostHog——故观测 SDK 延后、不进 I-19。
+
+### I-19 执行票（Codex 写给 Claude Code）
+
+```text
+票号：I-19
+状态：Ready
+目标：把 M1 推到真实用户可登录使用的 Production，并按 OPERATING-MODEL Gate 3/4 拿到第一份真实使用证据；
+      产出一个只读指标脚本，能从现有库表直接算出 M1 验证闭环的 6 个指标（无需第三方 SDK）。
+
+范围内（Claude Code 实现，不触碰 Owner secret）：
+1. 新增 scripts/metrics.mjs（只读）：连 DATABASE_URL（与 db:test-rls 同款连接方式），聚合输出
+   - activation_rate：有 status='completed' session 的用户 / 有任意 session 的用户
+   - assumption_edit_rate：session.assumptions 中存在 state='edited' 的占比（按 completed session）
+   - recipe_save_rate：完成生成后产生 recipe 的占比
+   - recipe_rerun_rate：source_recipe_id 非空的 session 占比 / 或 recipes.usage_count>0 占比
+   - return_session_rate：同一 user 跨 >1 个自然日有 session 的占比
+   - performance_fill_rate：completed session 中 performance 列非空的占比
+   仅输出聚合计数/比率，**不 select 任何输入全文 / outcome / 复盘正文**；不打印 secret；无 DATABASE_URL → 明确 SKIP exit 0（对齐 db:test-rls / eval 的 safe-mode 语义）。
+2. package.json 增 "metrics" script；scripts/doctor.mjs 增对 scripts/metrics.mjs 存在性检查。
+3. docs/DEPLOYMENT.md 补「Production 上线段」：env 分区落实、Supabase Production redirect URL + Google OAuth（含 Client Secret，呼应 Preview 期 blocker 根因）、migration 0001+0002 应用确认、Deployment Protection 对真实用户的开放/ bypass 决策、上线前自动验证清单、回滚。
+4. 新增 docs/acceptance/I-19.md：按 Gate 3 模板预置（环境=Production、用户身份、真实用户路径、预期、实测、证据、残余风险）。
+5. docs/RUNBOOK.md 增 metrics 运行方式与判定语义（SKIP/读出）。
+
+范围外（守边界）：
+- 不引入 PostHog / Sentry SDK、不改 observability.ts 行为、不做 runtime i18n / locale 切换。
+- 不加任何产品功能、不改 schema / migration / RLS / prompt / API / 既有路由。
+- metrics 脚本不写库、不删数据、不绕过 RLS（只读聚合；用 service role 或直连只读账号由 DEPLOYMENT 说明，脚本本身不内嵌任何 key）。
+
+涉及文件：
+- 新增：scripts/metrics.mjs、docs/acceptance/I-19.md
+- 修改：package.json（+metrics）、scripts/doctor.mjs、docs/DEPLOYMENT.md、docs/RUNBOOK.md
+- 状态同步：docs/PROJECT-STATUS.md、docs/TICKETS.md
+
+验收标准（Gate 2 实现正确性）：
+- metrics 脚本：无 DATABASE_URL → SKIP exit 0、不报错、不打印 secret；有库时输出 6 个指标聚合，且 SQL 只取计数/布尔，不取输入全文。
+- doctor / lint / typecheck / build 全通过；不新增运行时路由、不新增生产依赖（脚本可用现有 pg 依赖链，若需新依赖须先回 Codex 评估）。
+
+验证命令：
+  npm run doctor
+  npm run lint && npm run typecheck && npm run build
+  DATABASE_URL='postgres://...' npm run metrics   # 有库时
+  npm run metrics                                  # 无库时期望 SKIP exit 0
+
+手工验收步骤（Gate 3 真实用户路径，Production）：
+  真实用户登录 → /forge 输入模糊想法 → 看懂/改一条假设 → 成功生成内容包 → 保存配方
+  → 刷新后仍能找回结果 → 配方详情换输入重跑 → 记录发布表现 → 回看时表现仍在
+  证据写入 docs/acceptance/I-19.md；并贴 npm run metrics 对 Production DB 的首批读出。
+
+风险：
+- Owner 侧 Production env / Supabase OAuth 未就绪会阻塞 Gate 3（与 Preview 期 Client Secret 同类）；Claude Code 先交付可验证的脚本/文档部分，Gate 3 待 Owner 配置后补证据。
+- 指标定义在小样本下噪声大；I-19 只要求「能读出」，不要求达标阈值。
+
+下一步：
+- Claude Code 实现范围内 1–5，跑自动验证；Codex 切 QA Agent 复核脚本只读性与边界。
+- Owner 完成 Production 配置后执行 Gate 3，补 docs/acceptance/I-19.md。
+- I-19 Done 后再由 Codex/Owner 决定是否进入「观测 SDK 接入」或「runtime i18n」（仍需指标证据支撑）。
+```
 > 注（I-13 决策）：eval 为**手动 / 本地门禁**，**不进 PR CI**（真实模型调用 + 需登录态，进 CI 会因缺 key/登录态无意义失败）；CI 仍只跑 doctor / lint / typecheck / build。`npm run eval:forge` 无 cookie 时 SKIP exit 0。
 > 注（I-14 决策）：观测为**零依赖 no-op scaffold**，未配 env 不影响 build / 运行；真实 SDK 接入留作后续票（`observability.ts` TODO）。
 > 注（I-17 决策）：i18n 仅 **scaffold**（en/zh 资源 + typed helper + 代表性接线），默认 zh-Hans 行为不变；运行时切换 / 偏好持久化 / output_locale 联动留作后续票。
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-18）已全部交付，执行队列清空。后续票按上「下一张唯一任务」候选另立，由 Codex/Owner 确定后才进入队列。
+> M1 计划票（I-08~I-18）已全部交付。当前唯一在途票为 **I-19（Ready）**：Production 上线就绪 + 真实用户路径验收 + DB 指标读出。runtime i18n / 观测 SDK 接入仍为候选，**待 I-19 拿到指标证据后**由 Codex/Owner 再定，不默认采纳。
 
 ## 每票模板
 
