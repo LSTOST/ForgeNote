@@ -1,11 +1,11 @@
 # M1 Preview / 部署环境验收
 
 > 范围：PR #1（`i-01-forge-workspace`）的 Vercel Preview / 部署环境验收。仅部署与环境验证，不写业务功能。
-> **状态：Blocked（仅登录态受阻）。** CI 绿；Vercel framework 404 已修；Preview 必需 env 已配置并重新部署；未登录页面/API 边界通过。唯一剩余 blocker：当前 Chrome 环境拦截 Supabase Auth 域名，导致 Google 登录/回调和登录态主路径无法完成。
+> **状态：Blocked（仅登录态受阻）。** CI 绿；Vercel framework 404 已修；Preview 必需 env 已配置并重新部署；未登录页面/API 边界通过。唯一剩余 blocker：Supabase Auth 的 Google provider 未启用，导致 Google 登录/回调和登录态主路径无法完成。
 
 ## 当前部署
 
-- **HEAD**：`a161fad docs(deploy): record preview env rollout`
+- **HEAD**：`45ab379 docs(deploy): record preview auth retry blocker`
 - **GitHub Actions**：run `27906078732` → `success`
 - **PR Preview deployment**：`dpl_2VVEQQoLH1MHv1kSnbJGb1YgJmJs` → `READY`
 - **Preview URL**：`https://forge-note-bg0nw95o2-lstosts-projects.vercel.app`
@@ -70,9 +70,10 @@
 - Chrome 打开 Preview 登录页正常。
 - 点击「使用 Google 登录」后跳到 Supabase Auth authorize URL：
   - `https://tsqgetxhyitltgztxymd.supabase.co/auth/v1/authorize?...`
-- 当前 Chrome 环境显示：`ERR_BLOCKED_BY_CLIENT` / `tsqgetxhyitltgztxymd.supabase.co 已被屏蔽`。
-- 判断：这是浏览器扩展/内容拦截器阻断 Supabase Auth 域名，不是 ForgeNote 代码、Vercel framework、Preview env 或 Supabase 配置缺失。
-- 2026-06-22 复测：从分支别名 `/login` 再次点击 Google 登录，仍进入同一 Supabase authorize URL 并被 Chrome 拦截为 `ERR_BLOCKED_BY_CLIENT`。拦截页已留在 Chrome 中供 Owner 查看。
+- 2026-06-22 复测修正：Chrome/内置浏览器的表现曾误判为客户端拦截；用同一真实 authorize URL 直接请求 Supabase Auth 后，返回：
+  - `400 validation_failed`
+  - `Unsupported provider: provider is not enabled`
+- 判断：根因是 Supabase Auth project 尚未启用 Google provider（或 Google OAuth client 未配置完成），不是 ForgeNote 代码、Vercel framework、Preview env 或 Deployment Protection 问题。
 
 因此以下登录态验收未完成：
 
@@ -84,19 +85,21 @@
 
 ## 解除 Blocked
 
-1. 在 Chrome 中允许 `tsqgetxhyitltgztxymd.supabase.co`，或临时关闭拦截该域名的扩展。
-2. 重新从 Preview 登录页点击 Google 登录。
-3. 完成登录后按 `docs/DEPLOYMENT.md` 的 Preview 验收清单跑：
+1. 在 Supabase Dashboard → Authentication → Providers 中启用 Google。
+2. 配置 Google OAuth Client ID / Client Secret，并确认 Google OAuth redirect URI 使用 Supabase 项目的 callback URL（形如 `https://tsqgetxhyitltgztxymd.supabase.co/auth/v1/callback`）。
+3. 保持 ForgeNote Preview 的 app callback：`https://forge-note-git-i-01-forge-workspace-lstosts-projects.vercel.app/auth/callback` 可被 Supabase 作为 `redirect_to` 接受。
+4. 重新从 Preview 登录页点击 Google 登录。
+5. 完成登录后按 `docs/DEPLOYMENT.md` 的 Preview 验收清单跑：
    - `/forge` 生成成功
    - session 落库/可回看
    - `/recipes` 可访问
    - `/profile` 可访问
    - I-12 表现回填入口可写入/读回
-4. 全部通过后，PR #1 才能考虑从 Draft 转 Ready。
+6. 全部通过后，PR #1 才能考虑从 Draft 转 Ready。
 
 ## 结论
 
 - Preview / 部署环境验收：**部分通过，登录态 Blocked**。
 - 已解决：CI、Vercel framework 404、Preview 必需 env、PR Preview redeploy、未登录页面/API 边界。
-- 未解决：Chrome 环境拦截 Supabase Auth 域名，登录态主路径无法验收。
+- 未解决：Supabase Auth Google provider 未启用，登录态主路径无法验收。
 - **不建议转 Ready**。
