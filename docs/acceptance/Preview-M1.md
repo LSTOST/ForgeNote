@@ -5,10 +5,10 @@
 
 ## 当前部署
 
-- **HEAD**：`c18394a docs(deploy): record preview env blocker`
+- **HEAD**：`a161fad docs(deploy): record preview env rollout`
 - **GitHub Actions**：run `27906078732` → `success`
-- **PR Preview redeploy**：`dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ` → `READY`
-- **Preview URL**：`https://forge-note-jr6g1qo0n-lstosts-projects.vercel.app`
+- **PR Preview deployment**：`dpl_2VVEQQoLH1MHv1kSnbJGb1YgJmJs` → `READY`
+- **Preview URL**：`https://forge-note-bg0nw95o2-lstosts-projects.vercel.app`
 - **分支别名**：`https://forge-note-git-i-01-forge-workspace-lstosts-projects.vercel.app`
 - **Vercel env**：Preview 环境已存在 4 个必需键，值均为 Encrypted，未打印任何 secret：
   - `OPENROUTER_API_KEY`
@@ -36,7 +36,7 @@
 
 - Owner 已授权把本地 `.env.local` 中 4 个必需键写入 Vercel Preview env。
 - 已通过 `vercel env ls preview` 确认变量存在，值显示为 `Encrypted`。
-- 已 redeploy PR Preview：`dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ`。
+- 已 redeploy PR Preview；最新分支别名 deployment：`dpl_2VVEQQoLH1MHv1kSnbJGb1YgJmJs`。
 - 分支别名 `/login` 已渲染真实登录表单：Google 登录按钮、邮箱输入、发送登录链接按钮；不再显示「Supabase 未配置」。
 
 ### 3. 未登录 Preview 验收通过
@@ -72,6 +72,7 @@
   - `https://tsqgetxhyitltgztxymd.supabase.co/auth/v1/authorize?...`
 - 当前 Chrome 环境显示：`ERR_BLOCKED_BY_CLIENT` / `tsqgetxhyitltgztxymd.supabase.co 已被屏蔽`。
 - 判断：这是浏览器扩展/内容拦截器阻断 Supabase Auth 域名，不是 ForgeNote 代码、Vercel framework、Preview env 或 Supabase 配置缺失。
+- 2026-06-22 复测：从分支别名 `/login` 再次点击 Google 登录，仍进入同一 Supabase authorize URL 并被 Chrome 拦截为 `ERR_BLOCKED_BY_CLIENT`。拦截页已留在 Chrome 中供 Owner 查看。
 
 因此以下登录态验收未完成：
 

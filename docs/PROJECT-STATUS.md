@@ -155,7 +155,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 
 ## 阻塞项
 - Google provider / callback 在 Preview 上未验完：Google 登录已能从 Preview 发起到 Supabase authorize URL，但当前 Chrome 环境拦截 `tsqgetxhyitltgztxymd.supabase.co`（`ERR_BLOCKED_BY_CLIENT`），回调未完成。
-- **Vercel Preview：未登录路径已通过，登录态 Blocked**（见 docs/acceptance/Preview-M1.md）：CI 绿，HEAD `c18394a` 的 PR Preview 已 redeploy 为 `dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ`；`vercel.json` framework 修复已验证；Preview env 已配置 4 个必需键（Encrypted，未打印值）；分支别名 `/login` 渲染真实登录表单；未登录 `/forge`·`/recipes`→`/login`、匿名 `POST /api/forge` 合法 body→`AUTH_REQUIRED`、非法 JSON→`VALIDATION_FAILED` 均通过。唯一剩余 blocker = 当前 Chrome 拦截 Supabase Auth 域名，无法完成登录态生成 / recipes / profile / I-12 回填验收。Deployment Protection 仍开启，未公开 bypass URL。不转 Ready。
+- **Vercel Preview：未登录路径已通过，登录态 Blocked**（见 docs/acceptance/Preview-M1.md）：CI 绿，HEAD `a161fad` 的分支别名 Preview 为 `dpl_2VVEQQoLH1MHv1kSnbJGb1YgJmJs`；`vercel.json` framework 修复已验证；Preview env 已配置 4 个必需键（Encrypted，未打印值）；分支别名 `/login` 渲染真实登录表单；未登录 `/forge`·`/recipes`·`/profile`→`/login`、匿名 `POST /api/forge` 合法 body→`AUTH_REQUIRED`、非法 JSON→`VALIDATION_FAILED` 均通过。2026-06-22 复测 Google 登录仍被当前 Chrome 拦截 Supabase Auth 域名（`ERR_BLOCKED_BY_CLIENT`），无法完成登录态生成 / recipes / profile / I-12 回填验收。Deployment Protection 仍开启，未公开 bypass URL。不转 Ready。
 - **GitHub Actions CI（npm ci）红 → 已修**：根因为 **npm 大版本不一致**——本机 node25/npm11 vs CI node20/npm10，lockfile 缺 npm10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退嵌套 optional 依赖）。本机 npm11 重生成无效（CI 仍红）；改用 `npx npm@10 install --package-lock-only` 重生成（匹配 CI），`npx npm@10 ci --dry-run` exit 0；lockfileVersion 仍 3、root deps 未变、无源码改动。初判 flake 有误，已更正。
 - Codex GitHub App 未确认
 
@@ -173,6 +173,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-22 (Preview 登录态复测：分支别名 /login 可打开真实登录表单；点击 Google 登录进入 Supabase authorize URL 后仍被当前 Chrome 拦截 tsqgetxhyitltgztxymd.supabase.co，ERR_BLOCKED_BY_CLIENT。不是 env/framework 问题；登录态验收仍 Blocked，拦截页已留在 Chrome；不转 Ready)
 2026-06-21 (Preview env 已配置并 redeploy：Owner 授权后写入 4 个必需 Preview env，值均 Encrypted 未打印；PR Preview redeploy dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ READY，分支别名 /login 已渲染真实登录表单；未登录边界通过：合法 POST /api/forge→401 AUTH_REQUIRED，非法 JSON→400 VALIDATION_FAILED。登录态仍 Blocked：当前 Chrome 拦截 Supabase Auth 域名 tsqgetxhyitltgztxymd.supabase.co，显示 ERR_BLOCKED_BY_CLIENT；不转 Ready)
 2026-06-21 (Preview 修复进展：CI 已绿；commit 045e6f6 Preview READY，deployment dpl_47DRNL1djLWs4RZ8UfZnxSfsuX1t；vercel.json 已解除 Vercel 级 404，/login 为 Next.js 200，/api/forge GET 为 405。当前 blocker 转为 Preview env 为空（登录页 Supabase 未配置）+ Deployment Protection/登录态验收入口未打通；写入本地 .env.local 到 Vercel Preview 需 Owner 明确授权，不转 Ready)
 2026-06-21 (CI 修复 v2：真因为 npm 版本不一致（本机 npm11 vs CI npm10），lockfile 缺 npm10 期望的 @emnapi/*@1.11.1 顶层节点；本机 npm11 重生成无效，改用 npx npm@10 install --package-lock-only 重生成、npm@10 ci --dry-run exit 0。Preview 仍受 Deployment Protection（401 SSO），验收维持 Blocked、不转 Ready)
