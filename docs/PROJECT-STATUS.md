@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-M1 Preview / 部署环境验收（进行中 → **Blocked**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done；Preview 的 CI / framework / env / 未登录边界已通过，登录态因当前 Chrome 拦截 Supabase Auth 域名而未完成，不转 Ready。
+M1 Preview / 部署环境验收（**通过**，见 docs/acceptance/Preview-M1.md）。代码侧 I-08~I-17 已全部 Done；Preview 的 CI / framework / env / 未登录边界 + 登录态主路径全部通过。原 blocker（Supabase Google provider）根因修正为 Client Secret 未填，Owner 在 Supabase 控制台补填 Client Secret 并保存后解除；真实 Chrome 登录态下 Google 登录 → /forge 生成（session 落库）→ session 回看 → /recipes → /profile → I-12 表现回填写入/读回全套通过。
 
 ## 当前分支
 i-01-forge-workspace
@@ -153,9 +153,9 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - TopNav 显示当前用户 email + 退出按钮
 - `/api/forge` 仍必须登录（未改动，AUTH_REQUIRED 兜底保留）
 
-## 阻塞项
-- Google provider / callback 在 Preview 上未验完：Google 登录已能从 Preview 发起到 Supabase authorize URL；2026-06-22 用同一真实 authorize URL 直连 Supabase Auth 复测，返回 `400 validation_failed` / `Unsupported provider: provider is not enabled`。根因修正为 Supabase Auth Google provider 未启用（或 Google OAuth client 未配置完成），不是 ForgeNote 代码、Vercel framework、Preview env 或 Deployment Protection 问题。
-- **Vercel Preview：未登录路径已通过，登录态 Blocked**（见 docs/acceptance/Preview-M1.md）：CI 绿；`vercel.json` framework 修复已验证；Preview env 已配置 4 个必需键（Encrypted，未打印值）；分支别名 `/login` 渲染真实登录表单；未登录 `/forge`·`/recipes`·`/profile`→`/login`、匿名 `POST /api/forge` 合法 body→`AUTH_REQUIRED`、非法 JSON→`VALIDATION_FAILED` 均通过。Google provider 未启用导致 `/auth/callback`、登录态生成、recipes、profile、I-12 回填验收无法完成。Deployment Protection 仍开启，未公开 bypass URL。不转 Ready。
+## 阻塞项（已全部解除）
+- ~~Google provider / callback 在 Preview 上未验完~~ **已解除（2026-06-22）**：精确根因为 Supabase Google provider 已 enabled、Client ID 已填，但 **Client Secret 为空**（authorize 直连返回 `400 validation_failed` / `Unsupported provider: missing OAuth secret`）。Owner 在 Supabase 控制台补填 Client Secret 并保存后，authorize 直连返回 `302` 重定向 Google，OAuth 流程恢复。
+- ~~**Vercel Preview：登录态 Blocked**~~ **已解除**：真实 Chrome 登录态下完成 Google 登录 → `/forge` 生成（session `939ec634-dddd-410d-98eb-78128f5eab9f` 落库）→ `?session=` 回看 → `/recipes` → `/profile` → I-12 表现回填写入「✓ 已记录表现」并重开预填回 `11-50/51-100/1-10/0`。Deployment Protection 仍开启（未认证公网 401 为预期），未公开 bypass URL。
 - **GitHub Actions CI（npm ci）红 → 已修**：根因为 **npm 大版本不一致**——本机 node25/npm11 vs CI node20/npm10，lockfile 缺 npm10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退嵌套 optional 依赖）。本机 npm11 重生成无效（CI 仍红）；改用 `npx npm@10 install --package-lock-only` 重生成（匹配 CI），`npx npm@10 ci --dry-run` exit 0；lockfileVersion 仍 3、root deps 未变、无源码改动。初判 flake 有误，已更正。
 - Codex GitHub App 未确认
 
@@ -173,6 +173,7 @@ PR #1 Draft：https://github.com/LSTOST/ForgeNote/pull/1
 - 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
 
 ## 最后更新时间
+2026-06-22 (Preview 登录态验收**通过**，blocker 解除：精确根因为 Supabase Google provider 的 Client Secret 为空（authorize 直连 `400 validation_failed` / `missing OAuth secret`）；Owner 在 Supabase 控制台补填 Client Secret 并保存后 authorize 直连返回 `302` 重定向 Google。真实 Chrome 登录态下 Google 登录 → /forge 生成（session 939ec634-dddd-410d-98eb-78128f5eab9f 落库）→ ?session= 回看 → /recipes → /profile → I-12 表现回填写入/读回（11-50/51-100/1-10/0）全套通过。仅 Supabase 外部配置变更，无代码改动；Deployment Protection 仍开启，未公开 bypass URL。PR #1 登录态主路径已完整通过，转 Ready 由 Owner 决定)
 2026-06-22 (Preview 登录态 blocker 纠偏：关闭/切换 Chrome 后仍无法 Google 登录；用真实 Supabase authorize URL 直连确认返回 400 validation_failed / "Unsupported provider: provider is not enabled"。根因是 Supabase Auth Google provider 未启用或 Google OAuth client 未配置完成；不是 Codex 扩展、Chrome profile、Vercel framework/env 或 ForgeNote 代码。Preview 登录态仍 Blocked，不转 Ready)
 2026-06-22 (Preview 登录态复测中曾观察到 Chrome `ERR_BLOCKED_BY_CLIENT`，当时误判为客户端拦截；后续已用 Supabase Auth 直连响应纠偏，以上方 provider 未启用结论为准。登录态验收仍 Blocked，不转 Ready)
 2026-06-21 (Preview env 已配置并 redeploy：Owner 授权后写入 4 个必需 Preview env，值均 Encrypted 未打印；PR Preview redeploy dpl_HYpjff1BTpP76ncWZCoVoEF3oNVQ READY，分支别名 /login 已渲染真实登录表单；未登录边界通过：合法 POST /api/forge→401 AUTH_REQUIRED，非法 JSON→400 VALIDATION_FAILED。登录态仍 Blocked：当前 Chrome 拦截 Supabase Auth 域名 tsqgetxhyitltgztxymd.supabase.co，显示 ERR_BLOCKED_BY_CLIENT；不转 Ready)
