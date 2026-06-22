@@ -4,6 +4,9 @@ import { useState } from "react";
 import { BarChart3, Check, CircleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { copy } from "@/lib/copy";
+
+const c = copy.performance;
 
 interface PerformancePanelProps {
   sessionId: string;
@@ -13,10 +16,10 @@ interface PerformancePanelProps {
 const RANGES = ["0", "1-10", "11-50", "51-100", "101-500", "500+", "unknown"];
 
 const METRICS = [
-  { key: "likeRange", label: "点赞" },
-  { key: "favoriteRange", label: "收藏" },
-  { key: "commentRange", label: "评论" },
-  { key: "followerGainRange", label: "涨粉" },
+  { key: "likeRange", label: c.like },
+  { key: "favoriteRange", label: c.favorite },
+  { key: "commentRange", label: c.comment },
+  { key: "followerGainRange", label: c.follower },
 ] as const;
 
 type MetricKey = (typeof METRICS)[number]["key"];
@@ -102,11 +105,11 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
       if (json?.ok) {
         setState("saved");
       } else {
-        setError(json?.error?.message ?? "回填失败，请重试");
+        setError(json?.error?.message ?? c.failed);
         setState("error");
       }
     } catch {
-      setError("网络异常，请稍后重试");
+      setError(copy.common.networkError);
       setState("error");
     }
   }
@@ -116,7 +119,7 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
       <div className="border-t pt-4">
         <Button type="button" variant="ghost" size="sm" onClick={expand}>
           <BarChart3 className="size-3.5" aria-hidden />
-          记录发布表现
+          {c.expand}
         </Button>
       </div>
     );
@@ -126,17 +129,16 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
     <section className="space-y-3 border-t pt-4">
       <div className="flex items-center gap-2">
         <BarChart3 className="size-4 text-muted-foreground" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-tight">记录发布表现</h3>
-        <span className="text-xs text-muted-foreground">
-          手动回填，仅你可见，不自动抓取
-        </span>
+        <h3 className="text-sm font-semibold tracking-tight">{c.title}</h3>
+        <span className="text-xs text-muted-foreground">{c.subtitle}</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {METRICS.map((m) => (
           <label key={m.key} className="space-y-1 text-sm">
             <span className="text-xs font-medium text-muted-foreground">
-              {m.label}区间
+              {m.label}
+              {c.rangeSuffix}
             </span>
             <select
               value={ranges[m.key]}
@@ -146,7 +148,7 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
               disabled={state === "saving"}
               className="h-9 w-full appearance-none rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="">未填</option>
+              <option value="">{c.unfilled}</option>
               {RANGES.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -158,7 +160,7 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="text-xs font-medium text-muted-foreground">发布时间（可选）</span>
+        <span className="text-xs font-medium text-muted-foreground">{c.publishedAt}</span>
         <input
           type="datetime-local"
           value={publishedAt}
@@ -169,11 +171,11 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="text-xs font-medium text-muted-foreground">一句话复盘（可选）</span>
+        <span className="text-xs font-medium text-muted-foreground">{c.note}</span>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="例如：收藏比点赞高，干货向有效"
+          placeholder={c.notePlaceholder}
           rows={2}
           maxLength={500}
           disabled={state === "saving"}
@@ -188,12 +190,12 @@ export function PerformancePanel({ sessionId }: PerformancePanelProps) {
           onClick={save}
           disabled={!hasAny || state === "saving"}
         >
-          {state === "saving" ? "保存中…" : "保存表现"}
+          {state === "saving" ? c.saving : c.save}
         </Button>
         {state === "saved" && (
           <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
             <Check className="size-4" aria-hidden />
-            已记录表现
+            {c.saved}
           </span>
         )}
         {state === "error" && error && (

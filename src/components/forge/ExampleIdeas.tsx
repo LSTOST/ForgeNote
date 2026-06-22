@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { copy } from "@/lib/copy";
 import { EXAMPLE_IDEAS } from "@/lib/constants";
 
 interface ExampleIdeasProps {
@@ -11,7 +12,7 @@ interface ExampleIdeasProps {
 export function ExampleIdeas({ onPick }: ExampleIdeasProps) {
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">试试这些示例：</p>
+      <p className="text-xs text-muted-foreground">{copy.idea.examplesHint}</p>
       <div className="flex flex-wrap gap-2">
         {EXAMPLE_IDEAS.map((idea) => (
           <Button

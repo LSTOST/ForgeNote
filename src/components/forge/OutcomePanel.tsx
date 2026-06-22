@@ -15,7 +15,10 @@ import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { PerformancePanel } from "@/components/forge/PerformancePanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { copy as uiCopy } from "@/lib/copy";
 import type { ContentPackage } from "@/lib/ai/types";
+
+const c = uiCopy.outcome;
 
 interface OutcomePanelProps {
   status: ForgeStatus;
@@ -35,21 +38,23 @@ interface OutcomePanelProps {
 /** 将整包内容拼为 UIUX §7.3 的全文（复制全文用）。 */
 function buildFullText(o: ContentPackage): string {
   const lines: string[] = [];
-  lines.push("# 内容定位", o.positioning, "");
-  lines.push("# 标题备选", ...o.titles.map((t) => `- ${t}`), "");
-  lines.push("# 发布正文", o.body, "");
+  lines.push(`# ${c.positioning}`, o.positioning, "");
+  lines.push(`# ${c.titles}`, ...o.titles.map((t) => `- ${t}`), "");
+  lines.push(`# ${c.body}`, o.body, "");
   lines.push(
-    "# 卡片结构",
-    ...o.cardStructure.map((c) => `${c.index}. [${c.type}] ${c.title}`),
+    `# ${c.cardStructure}`,
+    ...o.cardStructure.map((card) => `${card.index}. [${card.type}] ${card.title}`),
     "",
   );
   lines.push(
-    "# 卡片 Prompt",
-    ...o.cardPrompts.map((c) => `【第 ${c.index} 张】\n${c.prompt}`),
+    `# ${c.cardPrompts}`,
+    ...o.cardPrompts.map(
+      (card) => `${c.cardNoBracket.replace("{n}", String(card.index))}\n${card.prompt}`,
+    ),
     "",
   );
-  lines.push("# 发布话题", o.hashtags.map((t) => `#${t}`).join(" "), "");
-  lines.push("# 评论区引导", o.commentGuide);
+  lines.push(`# ${c.hashtags}`, o.hashtags.map((t) => `#${t}`).join(" "), "");
+  lines.push(`# ${c.commentGuide}`, o.commentGuide);
   return lines.join("\n");
 }
 
@@ -79,7 +84,7 @@ export function OutcomePanel({
   if (status === "loading") {
     return (
       <Card className="min-h-72 p-6">
-        <p className="mb-4 text-sm text-muted-foreground">正在锻造内容…</p>
+        <p className="mb-4 text-sm text-muted-foreground">{c.loading}</p>
         <div className="space-y-3" aria-hidden>
           <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
           <div className="h-4 w-full animate-pulse rounded bg-muted" />
@@ -96,9 +101,9 @@ export function OutcomePanel({
     return (
       <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
         <LogIn className="size-8 text-muted-foreground/70" aria-hidden />
-        <h2 className="text-base font-medium">需要登录后才能生成</h2>
+        <h2 className="text-base font-medium">{c.authRequiredTitle}</h2>
         <p className="max-w-sm text-sm text-muted-foreground">
-          {errorMessage ?? "请登录后再开始锻造。"}
+          {errorMessage ?? c.authRequiredBody}
         </p>
       </Card>
     );
@@ -108,13 +113,13 @@ export function OutcomePanel({
     return (
       <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-destructive/30 p-8 text-center">
         <CircleAlert className="size-8 text-destructive" aria-hidden />
-        <h2 className="text-base font-medium">生成失败</h2>
+        <h2 className="text-base font-medium">{c.failTitle}</h2>
         <p className="max-w-sm text-sm text-muted-foreground">
-          {errorMessage ?? "生成失败，请重试。"}
+          {errorMessage ?? c.failBody}
         </p>
         <Button type="button" variant="outline" onClick={onRetry}>
           <RotateCw className="size-4" aria-hidden />
-          重新生成
+          {c.regenerate}
         </Button>
       </Card>
     );
@@ -122,7 +127,7 @@ export function OutcomePanel({
 
   if (status === "success" && outcome) {
     const copyLabel = (key: string, base: string) =>
-      copiedKey === key ? "已复制" : base;
+      copiedKey === key ? uiCopy.common.copied : base;
     const copyIcon = (key: string) =>
       copiedKey === key ? (
         <Check className="size-3.5" aria-hidden />
@@ -134,12 +139,12 @@ export function OutcomePanel({
       <Card className="min-h-72 space-y-6 p-6">
         {sessionId && (
           <p className="text-xs text-muted-foreground/70">
-            session：<span className="font-mono">{sessionId}</span>
+            {c.sessionLabel}<span className="font-mono">{sessionId}</span>
           </p>
         )}
         {outputLocale && (
           <p className="text-xs text-muted-foreground/70">
-            输出语言 / 表达偏好：<span className="font-medium">{outputLocale}</span>
+            {c.localeLabel}<span className="font-medium">{outputLocale}</span>
           </p>
         )}
 
@@ -152,7 +157,7 @@ export function OutcomePanel({
             onClick={() => copy("all", buildFullText(outcome))}
           >
             {copyIcon("all")}
-            {copyLabel("all", "复制全文")}
+            {copyLabel("all", c.copyAll)}
           </Button>
           <Button
             type="button"
@@ -161,7 +166,7 @@ export function OutcomePanel({
             onClick={() => copy("body", outcome.body)}
           >
             {copyIcon("body")}
-            {copyLabel("body", "复制正文")}
+            {copyLabel("body", c.copyBody)}
           </Button>
           <Button
             type="button"
@@ -171,13 +176,16 @@ export function OutcomePanel({
               copy(
                 "prompts",
                 outcome.cardPrompts
-                  .map((c) => `【第 ${c.index} 张】\n${c.prompt}`)
+                  .map(
+                    (card) =>
+                      `${c.cardNoBracket.replace("{n}", String(card.index))}\n${card.prompt}`,
+                  )
                   .join("\n\n"),
               )
             }
           >
             {copyIcon("prompts")}
-            {copyLabel("prompts", "复制卡片 Prompt")}
+            {copyLabel("prompts", c.copyPrompts)}
           </Button>
           <Button
             type="button"
@@ -188,25 +196,25 @@ export function OutcomePanel({
             }
           >
             {copyIcon("tags")}
-            {copyLabel("tags", "复制话题")}
+            {copyLabel("tags", c.copyTags)}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={onRetry}>
             <RotateCw className="size-3.5" aria-hidden />
-            重新生成
+            {c.regenerate}
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={onNew}>
             <FilePlus2 className="size-3.5" aria-hidden />
-            新建
+            {c.new}
           </Button>
         </div>
 
-        <Section title="内容定位">
+        <Section title={c.positioning}>
           <p className="text-sm leading-relaxed text-foreground">
             {outcome.positioning}
           </p>
         </Section>
 
-        <Section title="标题备选">
+        <Section title={c.titles}>
           <ul className="list-disc space-y-1 pl-5 text-sm">
             {outcome.titles.map((title, i) => (
               <li key={i}>{title}</li>
@@ -214,13 +222,13 @@ export function OutcomePanel({
           </ul>
         </Section>
 
-        <Section title="发布正文">
+        <Section title={c.body}>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {outcome.body}
           </p>
         </Section>
 
-        <Section title="卡片结构">
+        <Section title={c.cardStructure}>
           <ol className="space-y-1 text-sm">
             {outcome.cardStructure.map((card) => (
               <li key={card.index} className="flex gap-2">
@@ -232,12 +240,12 @@ export function OutcomePanel({
           </ol>
         </Section>
 
-        <Section title="卡片 Prompt">
+        <Section title={c.cardPrompts}>
           <ol className="space-y-3 text-sm">
             {outcome.cardPrompts.map((card) => (
               <li key={card.index} className="space-y-1">
                 <p className="font-medium text-muted-foreground">
-                  第 {card.index} 张
+                  {c.cardNo.replace("{n}", String(card.index))}
                 </p>
                 <p className="whitespace-pre-wrap leading-relaxed">
                   {card.prompt}
@@ -247,7 +255,7 @@ export function OutcomePanel({
           </ol>
         </Section>
 
-        <Section title="发布话题">
+        <Section title={c.hashtags}>
           <div className="flex flex-wrap gap-2">
             {outcome.hashtags.map((tag, i) => (
               <span
@@ -260,7 +268,7 @@ export function OutcomePanel({
           </div>
         </Section>
 
-        <Section title="评论区引导">
+        <Section title={c.commentGuide}>
           <p className="text-sm leading-relaxed text-foreground">
             {outcome.commentGuide}
           </p>
@@ -276,10 +284,8 @@ export function OutcomePanel({
   return (
     <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
       <Sparkles className="size-8 text-muted-foreground/60" aria-hidden />
-      <h2 className="text-base font-medium">生成结果会出现在这里</h2>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        输入想法并点击“开始锻造”后，将生成标题、正文、卡片 Prompt 和话题。
-      </p>
+      <h2 className="text-base font-medium">{c.emptyTitle}</h2>
+      <p className="max-w-sm text-sm text-muted-foreground">{c.emptyBody}</p>
     </Card>
   );
 }

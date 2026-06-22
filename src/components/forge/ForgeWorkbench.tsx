@@ -14,6 +14,7 @@ import type {
   RecipeDraft,
   Verification,
 } from "@/lib/ai/types";
+import { copy } from "@/lib/copy";
 import { MAX_OUTPUT_LOCALE_CHARS } from "@/lib/constants";
 
 /** /api/forge 成功响应中的 data（与 route handler 输出对齐）。 */
@@ -131,12 +132,12 @@ export function ForgeWorkbench({
         setStatus("success");
       } else {
         // 失败时保留用户输入（idea 不清空），展示错误并允许重试（UIUX §7.4 / D-04）。
-        setErrorMessage(json?.error?.message ?? "生成失败，请重试");
+        setErrorMessage(json?.error?.message ?? copy.forge.generateFailed);
         setErrorCode(json?.error?.code ?? null);
         setStatus("error");
       }
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
       setErrorCode(null);
       setStatus("error");
     }
@@ -236,15 +237,17 @@ export function ForgeWorkbench({
             htmlFor="output-locale"
             className="text-sm font-medium text-foreground"
           >
-            输出语言 / 表达偏好
-            <span className="ml-1 font-normal text-muted-foreground">（可选）</span>
+            {copy.forge.outputLocaleLabel}
+            <span className="ml-1 font-normal text-muted-foreground">
+              {copy.common.optionalSuffix}
+            </span>
           </label>
           <input
             id="output-locale"
             type="text"
             value={outputLocale}
             onChange={(event) => setOutputLocale(event.target.value)}
-            placeholder="例如：zh-Hans、en-US、English for Instagram carousel"
+            placeholder={copy.forge.outputLocalePlaceholder}
             maxLength={MAX_OUTPUT_LOCALE_CHARS}
             disabled={status === "loading"}
             className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"

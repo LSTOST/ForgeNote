@@ -8,6 +8,7 @@ import {
   createSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { copy } from "@/lib/copy";
 import { PRODUCT_NAME, SLOGAN } from "@/lib/constants";
 
 interface LoginFormProps {
@@ -42,14 +43,11 @@ export function LoginForm({ initialError }: LoginFormProps) {
       });
       // 成功时浏览器会被重定向到 Google；走到这里通常意味着 provider 未配置/失败。
       if (oauthError) {
-        setError(
-          oauthError.message ||
-            "Google 登录暂不可用，请改用邮箱 Magic Link 登录。",
-        );
+        setError(oauthError.message || copy.login.googleUnavailable);
         setOauthState("error");
       }
     } catch {
-      setError("无法发起 Google 登录，请稍后重试或改用邮箱登录。");
+      setError(copy.login.googleInitFailed);
       setOauthState("error");
     }
   }
@@ -66,13 +64,13 @@ export function LoginForm({ initialError }: LoginFormProps) {
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (otpError) {
-        setError(otpError.message || "发送失败，请稍后重试。");
+        setError(otpError.message || copy.login.magicSendFailed);
         setMagicState("error");
         return;
       }
       setMagicState("sent");
     } catch {
-      setError("发送失败，请检查网络后重试。");
+      setError(copy.login.magicSendNetworkError);
       setMagicState("error");
     }
   }
@@ -86,10 +84,9 @@ export function LoginForm({ initialError }: LoginFormProps) {
 
       {!configured ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          <p className="font-medium">登录暂不可用：Supabase 未配置</p>
+          <p className="font-medium">{copy.login.notConfiguredTitle}</p>
           <p className="mt-1 text-destructive/80">
-            缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY，
-            请在环境变量中配置后重试。
+            {copy.login.notConfiguredBody}
           </p>
         </div>
       ) : (
@@ -116,41 +113,42 @@ export function LoginForm({ initialError }: LoginFormProps) {
             ) : (
               <GoogleIcon />
             )}
-            使用 Google 登录
+            {copy.login.googleButton}
           </Button>
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
-            或使用邮箱
+            {copy.login.emailDivider}
             <span className="h-px flex-1 bg-border" />
           </div>
 
           {magicState === "sent" ? (
             <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
-              <p className="font-medium text-foreground">登录链接已发送</p>
+              <p className="font-medium text-foreground">{copy.login.magicSentTitle}</p>
               <p className="mt-1 text-muted-foreground">
-                我们已向 <span className="font-medium">{email.trim()}</span>{" "}
-                发送了一封登录邮件，点击其中的链接即可登录。
+                {copy.login.magicSentBodyPrefix}
+                <span className="font-medium">{email.trim()}</span>
+                {copy.login.magicSentBodySuffix}
               </p>
               <button
                 type="button"
                 className="mt-3 text-sm text-primary underline-offset-4 hover:underline"
                 onClick={() => setMagicState("idle")}
               >
-                换一个邮箱
+                {copy.login.changeEmail}
               </button>
             </div>
           ) : (
             <form onSubmit={handleMagicLink} className="space-y-3">
               <label htmlFor="email" className="sr-only">
-                邮箱地址
+                {copy.login.emailLabel}
               </label>
               <input
                 id="email"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={copy.login.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={busy}
@@ -166,7 +164,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 ) : (
                   <Mail className="size-4" aria-hidden />
                 )}
-                {magicState === "sending" ? "发送中…" : "发送登录链接"}
+                {magicState === "sending" ? copy.login.sending : copy.login.sendMagicLink}
               </Button>
             </form>
           )}
@@ -174,7 +172,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
       )}
 
       <p className="text-center text-xs text-muted-foreground">
-        登录后可保存配方和偏好。
+        {copy.login.footerNote}
       </p>
     </div>
   );
