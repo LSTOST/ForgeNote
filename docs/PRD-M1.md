@@ -508,8 +508,8 @@ Next.js + TypeScript · Tailwind + shadcn/ui · React Hook Form + Zod · Supabas
 ```
 
 ### 15.3 一人开发工具链 + 日常流程
-ChatGPT（判断/拆解/AC/审查）· Claude（长文档/文案/逻辑）· Codex / Claude Code（写代码/修 bug/review diff）· GitHub Issues · Vercel · Supabase · PostHog · Sentry。
-日常：定当天唯一目标+AC → 写 Issue → Codex/Claude Code 实现 → 本地手测 → 修 → review diff → 过 AC commit → Vercel Preview。
+Codex（读文档、判断下一票、写执行指令、最终 review）· Claude Code（按票改代码、跑验证、反馈结果）· Claude Design（UI 方向/原型，不直接作为代码来源）· GitHub Issues · Vercel · Supabase · PostHog · Sentry。
+日常：Codex 定唯一目标+AC → 写 Issue/执行票 → Claude Code 实现 → 本地手测/自动验证 → Codex review diff → 过 AC commit → Vercel Preview。
 
 ### 15.4 里程碑
 
