@@ -16,6 +16,9 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { copy } from "@/lib/copy";
+
+const c = copy.recipes;
 
 export interface RecipeListItem {
   id: string;
@@ -36,11 +39,11 @@ interface RecipesLibraryProps {
 }
 
 const INTENT_OPTIONS = [
-  { value: "all", label: "全部类型" },
-  { value: "content_package", label: "内容包" },
-  { value: "xiaohongshu_note", label: "小红书笔记" },
-  { value: "card_prompt", label: "卡片 Prompt" },
-  { value: "generic_content", label: "通用内容" },
+  { value: "all", label: copy.intentTypes.all },
+  { value: "content_package", label: copy.intentTypes.content_package },
+  { value: "xiaohongshu_note", label: copy.intentTypes.xiaohongshu_note },
+  { value: "card_prompt", label: copy.intentTypes.card_prompt },
+  { value: "generic_content", label: copy.intentTypes.generic_content },
 ] as const;
 
 const INTENT_LABELS: Record<string, string> = Object.fromEntries(
@@ -58,7 +61,7 @@ function formatDate(value: string): string {
 }
 
 function shortId(value: string | null): string {
-  if (!value) return "无来源 session";
+  if (!value) return c.noSource;
   return value.slice(0, 8);
 }
 
@@ -114,17 +117,17 @@ export function RecipesLibrary({
       const json = await response.json().catch(() => null);
 
       if (!json?.ok) {
-        setErrorMessage(json?.error?.message ?? "删除失败，请重试");
+        setErrorMessage(json?.error?.message ?? c.deleteFailed);
         return;
       }
 
       setRecipes((current) => current.filter((item) => item.id !== recipe.id));
       setActiveCount((current) => Math.max(0, current - 1));
       setConfirmId(null);
-      setNotice("已删除配方");
+      setNotice(c.deleted);
       router.refresh();
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
     } finally {
       setDeletingId(null);
     }
@@ -144,7 +147,7 @@ export function RecipesLibrary({
           }}
         >
           <label className="relative block">
-            <span className="sr-only">搜索配方名称</span>
+            <span className="sr-only">{c.searchAria}</span>
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -152,13 +155,13 @@ export function RecipesLibrary({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="按配方名称搜索"
+              placeholder={c.searchPlaceholder}
               className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </label>
 
           <label className="relative block">
-            <span className="sr-only">内容类型筛选</span>
+            <span className="sr-only">{c.filterAria}</span>
             <Filter
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -182,7 +185,7 @@ export function RecipesLibrary({
 
           <Button type="submit" disabled={isPending}>
             <Search className="size-4" aria-hidden />
-            {isPending ? "筛选中…" : "搜索"}
+            {isPending ? c.filtering : c.search}
           </Button>
 
           <Button
@@ -192,17 +195,19 @@ export function RecipesLibrary({
             disabled={!hasFilters || isPending}
           >
             <X className="size-4" aria-hidden />
-            清空
+            {c.clear}
           </Button>
         </form>
       </Card>
 
       <div className="flex min-h-6 flex-wrap items-center gap-3 text-sm text-muted-foreground">
         <span>
-          当前显示 {recipes.length} 条
-          {activeCount !== recipes.length ? ` / 全部 ${activeCount} 条` : ""}
+          {c.showing.replace("{n}", String(recipes.length))}
+          {activeCount !== recipes.length
+            ? c.ofTotal.replace("{n}", String(activeCount))
+            : ""}
         </span>
-        {isPending && <span>正在加载筛选结果…</span>}
+        {isPending && <span>{c.loadingResults}</span>}
         {notice && (
           <span className="inline-flex items-center gap-1 text-emerald-600">
             <CircleCheck className="size-4" aria-hidden />
@@ -261,11 +266,11 @@ export function RecipesLibrary({
                       )}
 
                       <dl className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
-                        <InfoItem label="创建时间" value={formatDate(recipe.createdAt)} />
-                        <InfoItem label="更新时间" value={formatDate(recipe.updatedAt)} />
-                        <InfoItem label="使用次数" value={`${recipe.usageCount}`} />
+                        <InfoItem label={c.createdAt} value={formatDate(recipe.createdAt)} />
+                        <InfoItem label={c.updatedAt} value={formatDate(recipe.updatedAt)} />
+                        <InfoItem label={c.usageCount} value={`${recipe.usageCount}`} />
                         <InfoItem
-                          label="来源 session"
+                          label={c.sourceSession}
                           value={shortId(recipe.sourceSessionId)}
                           title={recipe.sourceSessionId ?? undefined}
                           mono={Boolean(recipe.sourceSessionId)}
@@ -284,7 +289,7 @@ export function RecipesLibrary({
                             })}
                           >
                             <Eye className="size-3.5" aria-hidden />
-                            查看详情
+                            {c.viewDetail}
                           </Link>
                           <Button
                             type="button"
@@ -297,13 +302,13 @@ export function RecipesLibrary({
                             }}
                           >
                             <Trash2 className="size-3.5" aria-hidden />
-                            删除
+                            {copy.common.delete}
                           </Button>
                         </>
                       ) : (
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm text-muted-foreground">
-                            确认删除？
+                            {copy.common.confirmDeletePrompt}
                           </span>
                           <Button
                             type="button"
@@ -313,7 +318,7 @@ export function RecipesLibrary({
                             disabled={deleting}
                           >
                             <Trash2 className="size-3.5" aria-hidden />
-                            {deleting ? "删除中…" : "确认删除"}
+                            {deleting ? copy.common.deleting : copy.common.confirmDelete}
                           </Button>
                           <Button
                             type="button"
@@ -322,7 +327,7 @@ export function RecipesLibrary({
                             onClick={() => setConfirmId(null)}
                             disabled={deleting}
                           >
-                            取消
+                            {copy.common.cancel}
                           </Button>
                         </div>
                       )}
@@ -364,16 +369,14 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
     <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
       <BookMarked className="size-8 text-muted-foreground/60" aria-hidden />
       <h2 className="text-base font-medium">
-        {hasFilters ? "没有符合条件的配方" : "还没有配方"}
+        {hasFilters ? c.emptyFilteredTitle : c.emptyTitle}
       </h2>
       <p className="max-w-sm text-sm text-muted-foreground">
-        {hasFilters
-          ? "换个关键词或内容类型再试。"
-          : "在 Forge 工作台生成内容后，把好用的内容配方保存到这里。"}
+        {hasFilters ? c.emptyFilteredBody : c.emptyBody}
       </p>
       {!hasFilters && (
         <Link href="/forge" className={buttonVariants()}>
-          去 Forge 创建
+          {c.goCreate}
         </Link>
       )}
     </Card>

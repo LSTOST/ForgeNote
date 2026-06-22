@@ -6,7 +6,10 @@ import { BookMarked, Check, CircleAlert, CircleCheck, Copy, Save } from "lucide-
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { copy } from "@/lib/copy";
 import type { RecipeDraft, Verification } from "@/lib/ai/types";
+
+const c = copy.recipePanel;
 
 interface RecipePanelProps {
   status: ForgeStatus;
@@ -19,17 +22,17 @@ interface RecipePanelProps {
 /** 将配方拼为可复制的纯文本摘要。 */
 function buildRecipeSummary(r: RecipeDraft): string {
   const lines: string[] = [
-    `配方名称：${r.name}`,
-    `内容类型：${r.intentType}`,
-    `目标受众：${r.audience}`,
-    `内容目标：${r.goal}`,
-    `语气风格：${r.tone}`,
-    `视觉规范：${r.visualStyle}`,
+    `${c.summaryName}：${r.name}`,
+    `${c.summaryIntent}：${r.intentType}`,
+    `${c.summaryAudience}：${r.audience}`,
+    `${c.summaryGoal}：${r.goal}`,
+    `${c.summaryTone}：${r.tone}`,
+    `${c.summaryVisual}：${r.visualStyle}`,
   ];
-  if (r.structure.length) lines.push(`结构方式：${r.structure.join("、")}`);
-  if (r.negativeRules.length) lines.push(`禁止项：${r.negativeRules.join("、")}`);
-  if (r.variables.length) lines.push(`可替换变量：${r.variables.join("、")}`);
-  if (r.acceptance.length) lines.push(`验收标准：${r.acceptance.join("、")}`);
+  if (r.structure.length) lines.push(`${c.summaryStructure}：${r.structure.join("、")}`);
+  if (r.negativeRules.length) lines.push(`${c.summaryNegative}：${r.negativeRules.join("、")}`);
+  if (r.variables.length) lines.push(`${c.summaryVariables}：${r.variables.join("、")}`);
+  if (r.acceptance.length) lines.push(`${c.summaryAcceptance}：${r.acceptance.join("、")}`);
   return lines.join("\n");
 }
 
@@ -87,18 +90,18 @@ export function RecipePanel({
         setSaveState("saved");
       } else {
         // 失败：保留命名 UI 与已生成结果，显示 inline error，可重试（UIUX §9.2）。
-        setSaveError(json?.error?.message ?? "保存失败，请重试");
+        setSaveError(json?.error?.message ?? c.saveFailed);
         setSaveState("error");
       }
     } catch {
-      setSaveError("网络异常，请稍后重试");
+      setSaveError(copy.common.networkError);
       setSaveState("error");
     }
   }
   if (status === "loading") {
     return (
       <Card className="min-h-72 p-6">
-        <p className="mb-4 text-sm text-muted-foreground">正在整理配方…</p>
+        <p className="mb-4 text-sm text-muted-foreground">{c.loading}</p>
         <div className="space-y-3" aria-hidden>
           <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
           <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
@@ -126,7 +129,7 @@ export function RecipePanel({
               ) : (
                 <Copy className="size-3.5" aria-hidden />
               )}
-              {copied ? "已复制" : "复制配方摘要"}
+              {copied ? copy.common.copied : c.copySummary}
             </Button>
 
             {/* 命名态以外：展示「保存配方」入口（saved 后可再次保存为新配方）。 */}
@@ -137,17 +140,17 @@ export function RecipePanel({
                 size="sm"
                 onClick={() => startNaming(recipe.name)}
                 disabled={!sessionId}
-                title={!sessionId ? "需要先成功生成内容" : undefined}
+                title={!sessionId ? c.needSession : undefined}
               >
                 <Save className="size-3.5" aria-hidden />
-                保存配方
+                {c.saveRecipe}
               </Button>
             )}
 
             {saveState === "saved" && (
               <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
                 <CircleCheck className="size-4" aria-hidden />
-                已保存到配方库
+                {c.saved}
               </span>
             )}
           </div>
@@ -162,8 +165,8 @@ export function RecipePanel({
                   type="text"
                   value={recipeName}
                   onChange={(e) => setRecipeName(e.target.value)}
-                  placeholder="给这个配方起个名字"
-                  aria-label="配方名称"
+                  placeholder={c.namePlaceholder}
+                  aria-label={c.nameAria}
                   disabled={saveState === "saving"}
                   className="h-9 min-w-56 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />
@@ -173,7 +176,7 @@ export function RecipePanel({
                   onClick={saveRecipe}
                   disabled={recipeName.trim().length === 0 || saveState === "saving"}
                 >
-                  {saveState === "saving" ? "保存中…" : "保存"}
+                  {saveState === "saving" ? copy.common.saving : copy.common.save}
                 </Button>
                 <Button
                   type="button"
@@ -182,7 +185,7 @@ export function RecipePanel({
                   onClick={() => setSaveState("idle")}
                   disabled={saveState === "saving"}
                 >
-                  取消
+                  {copy.common.cancel}
                 </Button>
               </div>
               {saveState === "error" && saveError && (
@@ -195,16 +198,16 @@ export function RecipePanel({
           )}
         </div>
 
-        <Field label="配方名称" value={recipe.name} />
-        <Field label="内容类型" value={recipe.intentType} />
-        <Field label="目标受众" value={recipe.audience} />
-        <Field label="内容目标" value={recipe.goal} />
-        <Field label="语气风格" value={recipe.tone} />
-        <Field label="视觉规范" value={recipe.visualStyle} />
-        <ListField label="结构方式" items={recipe.structure} />
-        <ListField label="禁止项" items={recipe.negativeRules} />
-        <ListField label="可替换变量" items={recipe.variables} />
-        <ListField label="验收标准" items={recipe.acceptance} />
+        <Field label={c.summaryName} value={recipe.name} />
+        <Field label={c.summaryIntent} value={recipe.intentType} />
+        <Field label={c.summaryAudience} value={recipe.audience} />
+        <Field label={c.summaryGoal} value={recipe.goal} />
+        <Field label={c.summaryTone} value={recipe.tone} />
+        <Field label={c.summaryVisual} value={recipe.visualStyle} />
+        <ListField label={c.summaryStructure} items={recipe.structure} />
+        <ListField label={c.summaryNegative} items={recipe.negativeRules} />
+        <ListField label={c.summaryVariables} items={recipe.variables} />
+        <ListField label={c.summaryAcceptance} items={recipe.acceptance} />
 
         {verification && <VerificationBlock verification={verification} />}
       </Card>
@@ -215,10 +218,8 @@ export function RecipePanel({
   return (
     <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
       <BookMarked className="size-8 text-muted-foreground/60" aria-hidden />
-      <h2 className="text-base font-medium">内容配方会出现在这里</h2>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        配方记录这次内容是如何生成的，下次可以换输入重跑。
-      </p>
+      <h2 className="text-base font-medium">{c.emptyTitle}</h2>
+      <p className="max-w-sm text-sm text-muted-foreground">{c.emptyBody}</p>
     </Card>
   );
 }
@@ -250,7 +251,7 @@ function VerificationBlock({ verification }: { verification: Verification }) {
   return (
     <div className="space-y-2 border-t pt-4">
       <div className="flex items-center gap-2">
-        <p className="text-xs font-medium text-muted-foreground">验收结果</p>
+        <p className="text-xs font-medium text-muted-foreground">{c.verificationTitle}</p>
         <span
           className={
             verification.overallPassed
@@ -258,7 +259,7 @@ function VerificationBlock({ verification }: { verification: Verification }) {
               : "text-xs font-medium text-destructive"
           }
         >
-          {verification.overallPassed ? "全部通过" : "存在未通过项"}
+          {verification.overallPassed ? c.verifyPass : c.verifyFail}
         </span>
       </div>
       <ul className="space-y-1.5">

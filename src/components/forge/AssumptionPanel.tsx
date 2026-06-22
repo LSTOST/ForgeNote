@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Check, Pencil, RotateCcw, RotateCw, Star, Undo2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { copy } from "@/lib/copy";
 import type { Assumption } from "@/lib/ai/types";
 import { cn } from "@/lib/utils";
+
+const ac = copy.assumptions;
 
 interface AssumptionPanelProps {
   assumptions: Assumption[];
@@ -68,10 +71,8 @@ export function AssumptionPanel({
     <section className="space-y-3 rounded-xl ring-1 ring-foreground/10 bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="space-y-0.5">
-          <h2 className="text-sm font-semibold tracking-tight">内容假设</h2>
-          <p className="text-xs text-muted-foreground">
-            这些是系统对你想法的理解。点击可编辑，× 可删除，改完点「应用并重新生成」。
-          </p>
+          <h2 className="text-sm font-semibold tracking-tight">{ac.title}</h2>
+          <p className="text-xs text-muted-foreground">{ac.hint}</p>
         </div>
         <Button
           type="button"
@@ -80,7 +81,7 @@ export function AssumptionPanel({
           disabled={pending}
         >
           <RotateCw className={cn("size-3.5", pending && "animate-spin")} aria-hidden />
-          应用修改并重新生成
+          {ac.regenerate}
         </Button>
       </div>
 
@@ -104,7 +105,7 @@ export function AssumptionPanel({
                       if (e.key === "Escape") cancelEdit();
                     }}
                     onBlur={() => commitEdit(a.key)}
-                    aria-label={`编辑 ${a.label}`}
+                    aria-label={ac.editAria.replace("{label}", a.label)}
                     className="w-32 bg-transparent outline-none"
                   />
                 </span>
@@ -127,7 +128,7 @@ export function AssumptionPanel({
                   onClick={() => startEdit(a)}
                   disabled={pending || !a.editable}
                   className="inline-flex items-center gap-1 disabled:cursor-not-allowed"
-                  title={a.editable ? "点击编辑" : undefined}
+                  title={a.editable ? ac.editTitle : undefined}
                 >
                   <span className="font-medium text-foreground/80">{a.label}</span>
                   <span>：{a.value}</span>
@@ -135,27 +136,27 @@ export function AssumptionPanel({
                 </button>
                 {isEdited && (
                   <span className="rounded bg-primary/15 px-1 text-[10px] font-medium text-primary">
-                    已改
+                    {ac.edited}
                   </span>
                 )}
                 {fromProfile && (
                   <span className="rounded bg-foreground/10 px-1 text-[10px]">
-                    来自偏好
+                    {ac.fromProfile}
                   </span>
                 )}
                 {onRemember &&
                   (rememberedKeys.includes(a.key) ? (
                     <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1 text-[10px] font-medium text-emerald-600">
                       <Check className="size-3" aria-hidden />
-                      已记住
+                      {ac.remembered}
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => onRemember(a)}
                       disabled={pending}
-                      aria-label={`把「${a.label}」记住为偏好`}
-                      title="记住为偏好，下次自动带出"
+                      aria-label={ac.rememberAria.replace("{label}", a.label)}
+                      title={ac.rememberTitle}
                       className="ml-0.5 rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:opacity-50"
                     >
                       <Star className="size-3" aria-hidden />
@@ -165,7 +166,7 @@ export function AssumptionPanel({
                   type="button"
                   onClick={() => onDismiss(a.key)}
                   disabled={pending}
-                  aria-label={`删除假设 ${a.label}`}
+                  aria-label={ac.dismissAria.replace("{label}", a.label)}
                   className="ml-0.5 rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:opacity-50"
                 >
                   <X className="size-3" aria-hidden />
@@ -175,9 +176,7 @@ export function AssumptionPanel({
           );
         })}
         {active.length === 0 && (
-          <li className="text-xs text-muted-foreground">
-            已删除全部假设，系统将仅依据原始输入生成。
-          </li>
+          <li className="text-xs text-muted-foreground">{ac.allDismissed}</li>
         )}
       </ul>
 
@@ -185,7 +184,7 @@ export function AssumptionPanel({
         <div className="space-y-2 border-t pt-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">
-              已删除假设（{dismissed.length}）
+              {ac.dismissedLabel.replace("{n}", String(dismissed.length))}
             </p>
             <Button
               type="button"
@@ -195,7 +194,7 @@ export function AssumptionPanel({
               disabled={pending}
             >
               <RotateCcw className="size-3" aria-hidden />
-              恢复全部
+              {ac.restoreAll}
             </Button>
           </div>
           <ul className="flex flex-wrap gap-2">
@@ -206,7 +205,7 @@ export function AssumptionPanel({
                   onClick={() => onRestore(a.key)}
                   disabled={pending}
                   className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground line-through hover:text-foreground hover:no-underline disabled:opacity-50"
-                  title="点击恢复"
+                  title={ac.restoreTitle}
                 >
                   <Undo2 className="size-3" aria-hidden />
                   <span className="no-underline">{a.label}：{a.value}</span>

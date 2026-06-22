@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { CircleAlert, RotateCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { copy } from "@/lib/copy";
 import { MAX_INPUT_CHARS, MAX_OUTPUT_LOCALE_CHARS } from "@/lib/constants";
+
+const c = copy.recipeDetail;
 
 interface RecipeRerunProps {
   recipeId: string;
@@ -50,10 +53,10 @@ export function RecipeRerun({ recipeId }: RecipeRerunProps) {
         return;
       }
 
-      setErrorMessage(json?.error?.message ?? "重跑失败，请重试");
+      setErrorMessage(json?.error?.message ?? c.rerunFailed);
       setState("error");
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
       setState("error");
     }
   }
@@ -65,18 +68,16 @@ export function RecipeRerun({ recipeId }: RecipeRerunProps) {
           htmlFor="rerun-input"
           className="text-sm font-medium text-foreground"
         >
-          换输入重跑
+          {c.rerunTitle}
         </label>
-        <p className="text-sm text-muted-foreground">
-          沿用本配方，输入一个新主题，生成一个新的结果。原配方不会被改动。
-        </p>
+        <p className="text-sm text-muted-foreground">{c.rerunDescription}</p>
       </div>
 
       <textarea
         id="rerun-input"
         value={input}
         onChange={(event) => setInput(event.target.value)}
-        placeholder="写下新的主题，例如：想做一组退租拍照清单的图文卡片"
+        placeholder={c.rerunPlaceholder}
         rows={5}
         disabled={state === "running"}
         className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
@@ -88,15 +89,17 @@ export function RecipeRerun({ recipeId }: RecipeRerunProps) {
           htmlFor="rerun-output-locale"
           className="text-sm font-medium text-foreground"
         >
-          输出语言 / 表达偏好
-          <span className="ml-1 font-normal text-muted-foreground">（可选）</span>
+          {copy.forge.outputLocaleLabel}
+          <span className="ml-1 font-normal text-muted-foreground">
+            {copy.common.optionalSuffix}
+          </span>
         </label>
         <input
           id="rerun-output-locale"
           type="text"
           value={outputLocale}
           onChange={(event) => setOutputLocale(event.target.value)}
-          placeholder="例如：zh-Hans、en-US、English for Instagram carousel"
+          placeholder={copy.forge.outputLocalePlaceholder}
           maxLength={MAX_OUTPUT_LOCALE_CHARS}
           disabled={state === "running"}
           className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
@@ -111,13 +114,15 @@ export function RecipeRerun({ recipeId }: RecipeRerunProps) {
               : "text-xs text-muted-foreground"
           }
         >
-          {input.length} / {MAX_INPUT_CHARS} 字
-          {overLimit ? "（已超出上限）" : ""}
+          {c.charCounter
+            .replace("{count}", String(input.length))
+            .replace("{max}", String(MAX_INPUT_CHARS))}
+          {overLimit ? c.overLimitSuffix : ""}
         </span>
 
         <Button type="button" onClick={rerun} disabled={!canSubmit}>
           <RotateCw className="size-4" aria-hidden />
-          {state === "running" ? "重跑中…" : "换输入重跑"}
+          {state === "running" ? c.rerunning : c.rerunButton}
         </Button>
       </div>
 

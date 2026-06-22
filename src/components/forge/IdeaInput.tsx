@@ -4,6 +4,7 @@ import { Hammer, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { copy } from "@/lib/copy";
 import { IDEA_PLACEHOLDER, MAX_INPUT_CHARS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ export function IdeaInput({ value, onChange, onForge, pending = false }: IdeaInp
         onChange={(e) => onChange(e.target.value)}
         placeholder={IDEA_PLACEHOLDER}
         rows={6}
-        aria-label="想法输入"
+        aria-label={copy.idea.inputAria}
         aria-invalid={isTooLong}
         disabled={pending}
         className="resize-y text-base"
@@ -42,8 +43,10 @@ export function IdeaInput({ value, onChange, onForge, pending = false }: IdeaInp
           )}
         >
           {isTooLong
-            ? `已超过 ${MAX_INPUT_CHARS} 字，请精简后再锻造`
-            : `${charCount} / ${MAX_INPUT_CHARS}`}
+            ? copy.idea.tooLong.replace("{max}", String(MAX_INPUT_CHARS))
+            : copy.idea.counter
+                .replace("{count}", String(charCount))
+                .replace("{max}", String(MAX_INPUT_CHARS))}
         </p>
 
         <Button type="button" disabled={!canForge} onClick={onForge}>
@@ -52,7 +55,7 @@ export function IdeaInput({ value, onChange, onForge, pending = false }: IdeaInp
           ) : (
             <Hammer className="size-4" aria-hidden />
           )}
-          {pending ? "锻造中…" : "开始锻造"}
+          {pending ? copy.idea.forging : copy.idea.forge}
         </Button>
       </div>
     </div>

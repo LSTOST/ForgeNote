@@ -13,6 +13,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { copy } from "@/lib/copy";
+
+const c = copy.profile;
 
 export interface PreferenceItem {
   id: string;
@@ -29,10 +32,10 @@ interface ProfilePreferencesProps {
 }
 
 const INTENT_OPTIONS = [
-  { value: "content_package", label: "内容包" },
-  { value: "xiaohongshu_note", label: "小红书笔记" },
-  { value: "card_prompt", label: "卡片 Prompt" },
-  { value: "generic_content", label: "通用内容" },
+  { value: "content_package", label: copy.intentTypes.content_package },
+  { value: "xiaohongshu_note", label: copy.intentTypes.xiaohongshu_note },
+  { value: "card_prompt", label: copy.intentTypes.card_prompt },
+  { value: "generic_content", label: copy.intentTypes.generic_content },
 ] as const;
 
 const INTENT_LABELS: Record<string, string> = Object.fromEntries(
@@ -102,16 +105,16 @@ export function ProfilePreferences({
       });
       const json = await res.json().catch(() => null);
       if (!json?.ok) {
-        setErrorMessage(json?.error?.message ?? "保存失败，请重试");
+        setErrorMessage(json?.error?.message ?? c.saveFailed);
         return;
       }
       setDimensionKey("");
       setDimensionLabel("");
       setValue("");
-      setNotice("已保存偏好");
+      setNotice(c.savedPref);
       refresh();
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
     } finally {
       setAdding(false);
     }
@@ -131,7 +134,7 @@ export function ProfilePreferences({
       });
       const json = await res.json().catch(() => null);
       if (!json?.ok) {
-        setErrorMessage(json?.error?.message ?? "修改失败，请重试");
+        setErrorMessage(json?.error?.message ?? c.editFailed);
         return;
       }
       setItems((cur) =>
@@ -139,10 +142,10 @@ export function ProfilePreferences({
       );
       setEditingId(null);
       setEditValue("");
-      setNotice("已更新偏好");
+      setNotice(c.updatedPref);
       refresh();
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
     } finally {
       setSavingId(null);
     }
@@ -158,15 +161,15 @@ export function ProfilePreferences({
       });
       const json = await res.json().catch(() => null);
       if (!json?.ok) {
-        setErrorMessage(json?.error?.message ?? "删除失败，请重试");
+        setErrorMessage(json?.error?.message ?? c.deleteFailed);
         return;
       }
       setItems((cur) => cur.filter((p) => p.id !== item.id));
       setConfirmId(null);
-      setNotice("已删除偏好");
+      setNotice(c.deletedPref);
       refresh();
     } catch {
-      setErrorMessage("网络异常，请稍后重试");
+      setErrorMessage(copy.common.networkError);
     } finally {
       setDeletingId(null);
     }
@@ -176,10 +179,10 @@ export function ProfilePreferences({
     <div className="space-y-4">
       {/* 新增偏好（UIUX 工具型，不做营销页）。 */}
       <Card className="space-y-3 p-4">
-        <h2 className="text-sm font-semibold tracking-tight">新增偏好</h2>
+        <h2 className="text-sm font-semibold tracking-tight">{c.addTitle}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[160px_1fr_1fr_auto]">
           <label className="block">
-            <span className="sr-only">内容类型</span>
+            <span className="sr-only">{c.intentTypeAria}</span>
             <select
               value={intentType}
               onChange={(e) => setIntentType(e.target.value)}
@@ -195,37 +198,35 @@ export function ProfilePreferences({
           <input
             value={dimensionLabel}
             onChange={(e) => setDimensionLabel(e.target.value)}
-            placeholder="维度名，如：语气"
+            placeholder={c.dimensionLabelPlaceholder}
             maxLength={80}
             className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           <input
             value={dimensionKey}
             onChange={(e) => setDimensionKey(e.target.value)}
-            placeholder="维度 key，如：tone"
+            placeholder={c.dimensionKeyPlaceholder}
             maxLength={80}
             className="h-9 w-full rounded-lg border border-input bg-background px-3 font-mono text-sm outline-none transition-colors placeholder:font-sans placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           <Button type="button" onClick={addPreference} disabled={!canAdd}>
             <Plus className="size-4" aria-hidden />
-            {adding ? "保存中…" : "添加"}
+            {adding ? copy.common.saving : c.add}
           </Button>
         </div>
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="偏好值，如：成熟、克制、不焦虑"
+          placeholder={c.valuePlaceholder}
           maxLength={MAX_VALUE}
           className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
-        <p className="text-xs text-muted-foreground">
-          同一「内容类型 + 维度 key」重复添加会覆盖旧值。下次 Forge 生成时作为「来自偏好」假设带出。
-        </p>
+        <p className="text-xs text-muted-foreground">{c.addHint}</p>
       </Card>
 
       <div className="flex min-h-6 flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span>共 {items.length} 条偏好</span>
-        {isPending && <span>正在刷新…</span>}
+        <span>{c.count.replace("{n}", String(items.length))}</span>
+        {isPending && <span>{c.refreshing}</span>}
         {notice && (
           <span className="inline-flex items-center gap-1 text-emerald-600">
             <CircleCheck className="size-4" aria-hidden />
@@ -277,7 +278,7 @@ export function ProfilePreferences({
                               if (e.key === "Escape") setEditingId(null);
                             }}
                             maxLength={MAX_VALUE}
-                            aria-label={`编辑 ${item.dimensionLabel} 的值`}
+                            aria-label={c.editValueAria.replace("{label}", item.dimensionLabel)}
                             className="h-9 min-w-64 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           />
                           <Button
@@ -286,7 +287,7 @@ export function ProfilePreferences({
                             onClick={() => saveEdit(item)}
                             disabled={editValue.trim().length === 0 || saving}
                           >
-                            {saving ? "保存中…" : "保存"}
+                            {saving ? copy.common.saving : copy.common.save}
                           </Button>
                           <Button
                             type="button"
@@ -295,7 +296,7 @@ export function ProfilePreferences({
                             onClick={() => setEditingId(null)}
                             disabled={saving}
                           >
-                            取消
+                            {copy.common.cancel}
                           </Button>
                         </div>
                       ) : (
@@ -305,7 +306,7 @@ export function ProfilePreferences({
                       )}
 
                       <p className="text-xs text-muted-foreground">
-                        更新于 {formatDate(item.updatedAt)}
+                        {c.updatedAt.replace("{date}", formatDate(item.updatedAt))}
                       </p>
                     </div>
 
@@ -325,7 +326,7 @@ export function ProfilePreferences({
                               }}
                             >
                               <Pencil className="size-3.5" aria-hidden />
-                              编辑
+                              {copy.common.edit}
                             </Button>
                             <Button
                               type="button"
@@ -338,13 +339,13 @@ export function ProfilePreferences({
                               }}
                             >
                               <Trash2 className="size-3.5" aria-hidden />
-                              删除
+                              {copy.common.delete}
                             </Button>
                           </>
                         ) : (
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-sm text-muted-foreground">
-                              确认删除？
+                              {copy.common.confirmDeletePrompt}
                             </span>
                             <Button
                               type="button"
@@ -354,7 +355,7 @@ export function ProfilePreferences({
                               disabled={deleting}
                             >
                               <Trash2 className="size-3.5" aria-hidden />
-                              {deleting ? "删除中…" : "确认删除"}
+                              {deleting ? copy.common.deleting : copy.common.confirmDelete}
                             </Button>
                             <Button
                               type="button"
@@ -363,7 +364,7 @@ export function ProfilePreferences({
                               onClick={() => setConfirmId(null)}
                               disabled={deleting}
                             >
-                              取消
+                              {copy.common.cancel}
                             </Button>
                           </div>
                         )}
@@ -384,10 +385,8 @@ function EmptyState() {
   return (
     <Card className="flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
       <SlidersHorizontal className="size-8 text-muted-foreground/60" aria-hidden />
-      <h2 className="text-base font-medium">还没有偏好</h2>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        在上方添加常用的内容假设，或在 Forge 工作台编辑假设后点「记住为偏好」。下次生成会自动带出。
-      </p>
+      <h2 className="text-base font-medium">{c.emptyTitle}</h2>
+      <p className="max-w-sm text-sm text-muted-foreground">{c.emptyBody}</p>
     </Card>
   );
 }

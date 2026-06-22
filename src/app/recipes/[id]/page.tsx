@@ -6,6 +6,7 @@ import { RecipeRerun } from "@/components/recipes/RecipeRerun";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TopNav } from "@/components/layout/TopNav";
+import { copy } from "@/lib/copy";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +14,13 @@ export const dynamic = "force-dynamic";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const c = copy.recipeDetail;
+
 const INTENT_LABELS: Record<string, string> = {
-  content_package: "内容包",
-  xiaohongshu_note: "小红书笔记",
-  card_prompt: "卡片 Prompt",
-  generic_content: "通用内容",
+  content_package: copy.intentTypes.content_package,
+  xiaohongshu_note: copy.intentTypes.xiaohongshu_note,
+  card_prompt: copy.intentTypes.card_prompt,
+  generic_content: copy.intentTypes.generic_content,
 };
 
 interface RecipeDetailPageProps {
@@ -62,16 +65,14 @@ function NotFoundState() {
           className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
           <ArrowLeft className="size-4" aria-hidden />
-          返回配方库
+          {c.backToLibrary}
         </Link>
         <Card className="mt-6 flex min-h-72 flex-col items-center justify-center gap-3 border-dashed p-8 text-center">
           <FileWarning className="size-8 text-muted-foreground/60" aria-hidden />
-          <h1 className="text-base font-medium">配方不存在或不可见</h1>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            这条配方可能已被删除，或不属于当前账号。
-          </p>
+          <h1 className="text-base font-medium">{c.notFoundTitle}</h1>
+          <p className="max-w-sm text-sm text-muted-foreground">{c.notFoundBody}</p>
           <Link href="/recipes" className={buttonVariants()}>
-            回到配方库
+            {c.backToLibraryBtn}
           </Link>
         </Card>
       </main>
@@ -110,10 +111,10 @@ export default async function RecipeDetailPage({
   const fields = asRecord(recipe.fields);
   const schema = asRecord(recipe.schema);
   const coreFields: Array<{ label: string; value: string | null }> = [
-    { label: "目标受众", value: asString(fields.audience) },
-    { label: "内容目标", value: asString(fields.goal) },
-    { label: "语气风格", value: asString(fields.tone) },
-    { label: "视觉规范", value: asString(fields.visualStyle) },
+    { label: c.audience, value: asString(fields.audience) },
+    { label: c.goal, value: asString(fields.goal) },
+    { label: c.tone, value: asString(fields.tone) },
+    { label: c.visualStyle, value: asString(fields.visualStyle) },
   ];
   const structure = asStringArray(fields.structure);
   const variables = asStringArray(recipe.variables);
@@ -133,7 +134,7 @@ export default async function RecipeDetailPage({
           className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
           <ArrowLeft className="size-4" aria-hidden />
-          返回配方库
+          {c.backToLibrary}
         </Link>
 
         <header className="mt-6 mb-6 space-y-2">
@@ -147,12 +148,12 @@ export default async function RecipeDetailPage({
             </span>
           </div>
           <dl className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
-            <Meta label="创建时间" value={formatDate(recipe.created_at)} />
-            <Meta label="更新时间" value={formatDate(recipe.updated_at)} />
-            <Meta label="使用次数" value={`${recipe.usage_count ?? 0}`} />
+            <Meta label={c.createdAt} value={formatDate(recipe.created_at)} />
+            <Meta label={c.updatedAt} value={formatDate(recipe.updated_at)} />
+            <Meta label={c.usageCount} value={`${recipe.usage_count ?? 0}`} />
             <Meta
-              label="来源 session"
-              value={recipe.source_session_id ?? "无来源 session"}
+              label={c.sourceSession}
+              value={recipe.source_session_id ?? c.noSource}
               mono={Boolean(recipe.source_session_id)}
             />
           </dl>
@@ -160,15 +161,15 @@ export default async function RecipeDetailPage({
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="space-y-5 p-6">
-            <h2 className="text-base font-semibold tracking-tight">配方字段</h2>
+            <h2 className="text-base font-semibold tracking-tight">{c.fieldsTitle}</h2>
             {coreFields.map((field) => (
               <Field key={field.label} label={field.label} value={field.value} />
             ))}
-            <ListField label="结构方式" items={structure} />
-            <ListField label="可替换变量" items={variables} />
-            <ListField label="禁止项" items={negativeRules} />
-            <ListField label="验收标准" items={acceptance} />
-            <Field label="Schema" value={schemaSummary} mono />
+            <ListField label={c.structure} items={structure} />
+            <ListField label={c.variables} items={variables} />
+            <ListField label={c.negativeRules} items={negativeRules} />
+            <ListField label={c.acceptance} items={acceptance} />
+            <Field label={c.schema} value={schemaSummary} mono />
           </Card>
 
           <Card className="space-y-4 p-6">
