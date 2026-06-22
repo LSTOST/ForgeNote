@@ -41,8 +41,8 @@ NEXT_PUBLIC_POSTHOG_HOST     # 可选，自托管 PostHog 时用
 
 ## 数据库迁移
 
-- 当前 schema：`supabase/migrations/0001_init.sql`（五张业务表 + RLS）。
-- 部署到新环境后，确认迁移已应用，并跑 RLS 检查：
+- 当前 schema：`supabase/migrations/0001_init.sql`（五张业务表 + RLS）+ `supabase/migrations/0002_output_locale.sql`（I-16：`sessions.output_locale`，nullable additive）。
+- 部署到新环境后，**按序应用 0001 → 0002**，确认迁移已应用，并跑 RLS 检查：
 
 ```bash
 DATABASE_URL='postgres://...' npm run db:test-rls
@@ -65,6 +65,58 @@ DATABASE_URL='postgres://...' npm run db:test-rls
    - 配好模型 env 时不返回 `MODEL_NOT_CONFIGURED`。
    - Outcome / Recipe 字段完整，Verification 可见。
    - 生成失败时错误态清楚，输入与假设保留（D-04 草稿）。
+
+## Production 上线就绪清单（I-19）
+
+> 目标：把 M1 推到真实用户可登录使用的 Production，拿到第一份真实使用证据（Gate 3/4）。
+> 角色：以下「Owner 配置」项需在 Vercel / Supabase 控制台操作，代码侧不内嵌任何 key、不代为操作。
+
+**1. Vercel Production env（与 Preview 分开配置）**
+
+```text
+OPENROUTER_API_KEY            # 仅服务端
+OPENROUTER_MODEL
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+# 可选观测（不配则 no-op）：SENTRY_DSN / NEXT_PUBLIC_POSTHOG_KEY / NEXT_PUBLIC_POSTHOG_HOST
+```
+
+**2. Supabase Auth（Production）**
+
+- Site URL / Redirect URLs 加入 Production 域名的 `/auth/callback`。
+- Google provider：enabled + Client ID + **Client Secret 必须填**（Preview 期 blocker 根因即 Client Secret 为空 → `400 validation_failed` / `missing OAuth secret`，见 `docs/PROJECT-STATUS.md`）。
+- 邮箱 Magic Link 如启用，确认发信配置可用。
+
+**3. 数据库迁移（Production DB）**
+
+- 按序应用 `0001_init.sql` → `0002_output_locale.sql`。
+- 跑 RLS 检查：`DATABASE_URL='postgres://...' npm run db:test-rls`（五表 RLS + policy）。
+
+**4. Deployment Protection 决策**
+
+- 若要真实用户直接访问：关闭 Deployment Protection，或提供 bypass / 自定义域名。
+- 未认证公网返回 401(SSO) 属保护开启时的预期；真实用户验收前必须确认入口可达。
+
+**5. 上线前自动验证**
+
+```bash
+npm run doctor
+npm run lint
+npm run typecheck
+npm run build
+```
+
+**6. 真实用户路径验收（Gate 3）**
+
+- 真实用户在 Production 跑通主路径，证据写入 `docs/acceptance/I-19.md`（环境=Production、用户身份、路径、实测、证据、残余风险）。
+
+**7. 指标读出（Gate 4）**
+
+- 用只读脚本从 Production DB 读出首批 6 个验证指标（不接第三方 SDK；不取输入全文/不打印 secret）：
+
+```bash
+DATABASE_URL='postgres://...' npm run metrics
+```
 
 ## Production 上线前
 
