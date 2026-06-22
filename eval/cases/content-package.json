@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "suite": "content_package_m1",
+  "cases": [
+    {
+      "id": "reserve-fund-xiaohongshu-cards",
+      "rawInput": "想做一组小红书卡片，主题是第一次独居备用金清单",
+      "intentType": "content_package",
+      "expect": {
+        "minTitles": 2,
+        "minCards": 5,
+        "hashtagRange": [5, 10],
+        "bodyMustIncludeAny": ["独居", "备用金"],
+        "bannedTerms": ["公众号", "微信", "私信", "加我", "扫码", "免费领取"]
+      }
+    },
+    {
+      "id": "kunming-sunny-room-note",
+      "rawInput": "昆明树景房今天出太阳了，帮我写一篇小红书",
+      "intentType": "content_package",
+      "expect": {
+        "minTitles": 2,
+        "minCards": 5,
+        "hashtagRange": [5, 10],
+        "bodyMustIncludeAny": ["昆明", "树景房", "太阳"],
+        "bannedTerms": ["公众号", "微信", "私信", "加我", "扫码", "免费领取"]
+      }
+    },
+    {
+      "id": "collectible-life-experience",
+      "rawInput": "帮我把这个生活经验做成可收藏的图文笔记：搬家前先拍照记录所有水电燃气表数",
+      "intentType": "content_package",
+      "expect": {
+        "minTitles": 2,
+        "minCards": 5,
+        "hashtagRange": [5, 10],
+        "bodyMustIncludeAny": ["搬家", "水电", "燃气", "拍照"],
+        "bannedTerms": ["公众号", "微信", "私信", "加我", "扫码", "免费领取"]
+      }
+    }
+  ]
+}
