@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-无进行中开发票。M1 计划票 I-08~I-18 已全部 Done。最近完成的 I-18（补齐 UI copy 资源覆盖）已随 PR #2 squash merge 进 `main`。M1 Preview / 部署环境验收此前已**通过**（见 docs/acceptance/Preview-M1.md）：真实 Chrome 登录态下 Google 登录 → /forge 生成（session 落库）→ session 回看 → /recipes → /profile → I-12 表现回填写入/读回全套通过。下一张唯一任务待 Codex 判断、Owner 拍板后写入（不默认进入 runtime i18n）。
+无进行中开发票。M1 计划票 I-08~I-18 已全部 Done。I-19（Production readiness + read-only validation metrics）代码/文档侧已随 PR #4 squash merge 进 `main`（`acd94fe`），当前状态为 **Review / Pending Production Acceptance**：Gate 2 实现正确性已交付并通过，Gate 3 Production 真实用户路径与 Gate 4 Production DB 指标读出仍待 Owner 完成 Production 配置后补证据。M1 Preview / 部署环境验收此前已**通过**（见 docs/acceptance/Preview-M1.md）。下一步不是新功能票，而是收口 I-19 Production 验收。
 
 ## 当前分支
-无活跃功能分支。`main` 已是最新基线（`b56cfa0`，含 PR #2 / I-18）。OPS-01 为文档-only 基线修复（不含产品代码），需 Owner 单独拍板合入。
+无活跃功能分支。`main` 已是最新基线（`acd94fe`，含 PR #4 / I-19 代码文档侧交付）。
 
 ## 当前 PR
-无进行中产品 PR。PR #1（M1 workspace）与 PR #2（I-18 copy coverage）均已 squash merge 进 `main`；`main` HEAD = `b56cfa0`。
+无进行中产品 PR。PR #1（M1 workspace）、PR #2（I-18 copy coverage）、PR #3（OPS-01 operating model docs）、PR #4（I-19 production readiness + read-only validation metrics）均已 squash merge 进 `main`；`main` HEAD = `acd94fe`。I-19 仍未 Done，因为 Production Gate 3/4 证据未补齐。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -19,7 +19,7 @@ M1
 **权威记录**：`DECISIONS.md`「v5 选择性折叠」D-06 / D-07 / D-08；`TICKETS.md` I-15 / I-16；`PRD-M1.md` §2、§4.3。
 
 **边界（review / 验收须守住）**
-- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）+ I-18（UI copy 资源覆盖补齐）已完成；M1 计划票（I-08~I-18）全部交付。
+- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）+ I-18（UI copy 资源覆盖补齐）已完成；M1 计划票（I-08~I-18）全部交付；I-19 代码/文档侧已合入但 Production Gate 3/4 未关账。
 - login / forge / recipes 已建代码不动。
 - **D-01 不变**：`content_package` 冻结，M1 不改名 `carousel_package`。
 - M1 不收费；Stripe / 去小红书化 / taxonomy 改名延后（D-08）。
@@ -125,10 +125,11 @@ M1
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 进行中
-- **I-19（Ready，下一张唯一任务）**：Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出（只读 `scripts/metrics.mjs`，不接 PostHog/Sentry SDK）。Owner 已于 2026-06-22 拍板批准；runtime i18n 与观测 SDK **延后**，待 I-19 拿到指标证据后再定。票面见 `docs/TICKETS.md`「I-19 执行票」。
-- M1 计划票 I-08~I-18 全部交付（含 Batch D），已并入 `main`（`2959399`，含 OPS-01）。
+- **I-19（Review / Pending Production Acceptance）**：代码/文档侧已合入 `main`（`acd94fe`，PR #4），包括 `scripts/metrics.mjs`、`metrics` npm script、doctor 检查、Production 部署清单、RUNBOOK 与 `docs/acceptance/I-19.md` 模板。剩余不是实现工作，而是 Gate 3 Production 真实用户路径验收 + Gate 4 Production DB 指标读出。Owner 需先完成 Production env / Supabase OAuth / migration / Deployment Protection 决策；Codex 再做 QA；Claude Code 仅补验收证据文档。
+- M1 计划票 I-08~I-18 全部交付（含 Batch D），已并入 `main`。OPS-01 已随 PR #3 合入 `main`（`2959399`）。
 
 ## 已通过验收
+- I-19（部分）：Gate 2 实现正确性通过，且代码/文档侧已随 PR #4 合入 `main`（`acd94fe`）；Gate 3/4 未通过前不得标 Done（见 `docs/acceptance/I-19.md`）
 - I-18：UI copy 资源覆盖补齐（en/zh key parity 编译期保证 + 活跃页面接线 + 本地登录态 Chrome smoke 无泄漏）通过自动验证，进入 Done；已随 PR #2 squash merge 进 `main`（`b56cfa0`），远端分支 `i-18-copy-coverage` 已删除
 - I-17：UI copy 资源 scaffold（en/zh key parity 编译期保证 + 代表性接线 + Chrome smoke）通过，进入 Done
 - Batch D：I-12 表现回填（含真实 Chrome 登录态回填/读回）、I-13 eval 门禁（safe-mode 实测）、I-14 观测 scaffold（no-op / build 不破）均通过自动验证，进入 Done
@@ -168,20 +169,20 @@ M1
 - **GitHub Actions CI（npm ci）红 → 已修**：根因为 **npm 大版本不一致**——本机 node25/npm11 vs CI node20/npm10，lockfile 缺 npm10 期望的 `@emnapi/runtime@1.11.1` / `@emnapi/core@1.11.1`（`@tailwindcss/oxide-wasm32-wasi` wasm 回退嵌套 optional 依赖）。本机 npm11 重生成无效（CI 仍红）；改用 `npx npm@10 install --package-lock-only` 重生成（匹配 CI），`npx npm@10 ci --dry-run` exit 0；lockfileVersion 仍 3、root deps 未变、无源码改动。初判 flake 有误，已更正。
 - Codex GitHub App 未确认
 
-## 下一张唯一任务
-**I-19（Ready）— Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出**。Owner 已拍板（2026-06-22）。Codex 判断：M1 功能闭环已完整，瓶颈是没有真实用户可访问的 Production、拿不到「有人持续用」的证据；首批 6 个指标可直接用 SQL 从现有表读出，无需先接观测 SDK。范围内（Claude Code）：只读 `scripts/metrics.mjs` + DEPLOYMENT Production 段 + `docs/acceptance/I-19.md` 模板 + RUNBOOK；不接 PostHog/Sentry SDK、不做 runtime i18n、不加产品功能、不改 schema/RLS/prompt/API。Owner 侧：Vercel Production env、Supabase Production redirect/OAuth（含 Client Secret）、migration 应用、Deployment Protection 决策。**延后**：runtime i18n、观测 SDK 接入（待 I-19 指标证据后再定）。票面见 `docs/TICKETS.md`「I-19 执行票」。
+## 下一步收口
+无新功能票。唯一下一步是 **I-19 Production 验收收口**：Owner 配置 Production（Vercel env、Supabase Production redirect/OAuth Client Secret、migration 0001/0002、Deployment Protection 访问方式）→ Codex 按 Gate 3 跑真实用户路径 → 对 Production DB 跑 `npm run metrics` 读出聚合指标 → Claude Code 补 `docs/acceptance/I-19.md` 与状态文档证据。runtime i18n、PostHog/Sentry SDK、任何新产品功能全部延后，等 I-19 指标证据出来后再定。
 
-## 最近一次验收结果（Batch C）
-- npm run lint：通过
-- npm run typecheck：通过
-- npm run build：通过（路由表不变：`/`、`/_not-found` 静态；`/api/forge`、`/api/sessions/[id]`、`/auth/callback`、`/auth/signout`、`/forge`、`/login` 均为 ƒ 动态）
-- 登录态真实浏览器验收：通过
-- edited assumption 落库：通过
-- dismissed assumption 不提交：通过
-- restore 后重新提交：通过
-- 复制操作（全文/正文/卡片 Prompt/话题/配方摘要）与新建清空：通过
+## 最近一次验收结果（I-19 Gate 2）
+- PR #4 已 squash merge：`acd94fe`
+- `npm run doctor`：通过（0 failed / 0 warnings）
+- `npm run lint`：通过
+- `npm run typecheck`：通过
+- `npm run build`：通过
+- `npm run metrics`（无 `DATABASE_URL`）：SKIP exit 0，不打印 secret
+- Codex QA Agent 对 `scripts/metrics.mjs` 的只读性、聚合口径和合成数据读出做过复核；结论为 Conditional Pass，条件是 Production Gate 3/4 证据补齐
 
 ## 最后更新时间
+2026-06-22 (OPS-02 状态同步：当前 `main`/`origin/main` HEAD = `acd94fe`，PR #4 / I-19 代码文档侧已 squash merge；修正 PROJECT-STATUS/TICKETS 中仍指向 `b56cfa0`、PR #2、I-19 Ready/下一张唯一任务的过期现状。I-19 当前状态定为 Review / Pending Production Acceptance：Gate 2 已交付，Gate 3 Production 真实用户路径与 Gate 4 Production DB metrics 待 Owner 配置后补证据。未改产品代码、脚本、API、DB、RLS、prompt)
 2026-06-22 (OPS-01 文档基线同步：基于 origin/main `b56cfa0`（PR #2 / I-18 已 squash merge），修正过期 live 状态——「当前分支 i-01-forge-workspace」「当前 PR PR #1 Draft」改为「无活跃功能分支 / main 已含 PR #2」；I-18 补入已完成、已通过验收、TICKETS Done 表；下一张唯一任务标注待 Owner 拍板、不默认进入 runtime i18n。新增 `docs/OPERATING-MODEL.md`，AGENTS/DECISIONS/RUNBOOK/PR 模板对齐角色·Gate·QA Agent 真实用户路径验收协议。仅文档改动，未触碰 src / package / API / DB / RLS / prompt)
 2026-06-22 (Preview 登录态验收**通过**，blocker 解除：精确根因为 Supabase Google provider 的 Client Secret 为空（authorize 直连 `400 validation_failed` / `missing OAuth secret`）；Owner 在 Supabase 控制台补填 Client Secret 并保存后 authorize 直连返回 `302` 重定向 Google。真实 Chrome 登录态下 Google 登录 → /forge 生成（session 939ec634-dddd-410d-98eb-78128f5eab9f 落库）→ ?session= 回看 → /recipes → /profile → I-12 表现回填写入/读回（11-50/51-100/1-10/0）全套通过。仅 Supabase 外部配置变更，无代码改动；Deployment Protection 仍开启，未公开 bypass URL。PR #1 登录态主路径已完整通过，转 Ready 由 Owner 决定)
 2026-06-22 (Preview 登录态 blocker 纠偏：关闭/切换 Chrome 后仍无法 Google 登录；用真实 Supabase authorize URL 直连确认返回 400 validation_failed / "Unsupported provider: provider is not enabled"。根因是 Supabase Auth Google provider 未启用或 Google OAuth client 未配置完成；不是 Codex 扩展、Chrome profile、Vercel framework/env 或 ForgeNote 代码。Preview 登录态仍 Blocked，不转 Ready)
