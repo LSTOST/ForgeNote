@@ -54,9 +54,57 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| —（待 Codex 定义 / Owner 拍板） | — | M1 计划票 I-08~I-19 已全部 Done；下一张票尚未确定 | 不默认进入 runtime i18n / 观测 SDK；仍需**真实用户**指标证据支撑 | — |
+| V-01 | Ready | 首批真实用户验证：在 Production 让真实目标用户走通 M1 主路径，拿到「有人真实用」的第一份证据（真实用户 Gate 3 + 真实样本指标 + 定性卡点），据此决定下一步投入 | 新产品功能；观测 SDK；runtime i18n；改 schema/RLS/prompt/API；为 n<~5 建反馈 UI | M1 全部 Done（已满足）；Production 已上线（已满足）；Owner 招募真实用户 |
 
-> **状态**：I-19 已 Done。下一张唯一任务由 Codex 判断、Owner 拍板后写入。候选（均需另立、不默认）：观测真实 SDK 接入（待出现真实用户、指标有量后）；runtime i18n（仍无证据需求）。
+> **拍板**：Owner 已确认方向（2026-06-23）——功能已够，瓶颈是「没有真实用户证据」。V-01 是**产品验证票**（非新功能）：Owner 主导招募与试用，Codex 做 QA 与发现归纳，默认无代码（仅需要时给剔除测试账号的 SQL）。这是 OPERATING-MODEL「先证明当前闭环有人走完，再决定是否堆功能」的直接落地。
+
+### V-01 执行票（Codex 写）
+
+```text
+票号：V-01
+状态：Ready
+类型：产品验证票（Owner 主导 + Codex QA；默认无代码）
+目标：在 Production（https://forge-note-gold.vercel.app）让首批真实目标用户走通 M1 主路径，
+      拿到第一份真实使用证据：真实用户 Gate 3 路径 + 真实样本 6 指标 + 定性卡点，
+      据此判断主路径是否成立、最大卡点在哪、是否/如何继续投入。
+
+范围内：
+1. Owner 招募 3–5 名真实目标用户（做图文卡片 / carousel / 小红书内容的人），非测试账号。
+2. 每名用户在 Production 走 M1 主路径：登录 → 输入模糊想法 → 看懂/改一条假设 → 生成内容包
+   → 保存配方 → 刷新找回 → 配方详情换输入重跑 → 记录发布表现 → 回看仍在。
+   Owner 旁观或事后访谈，记录每一步是否走通、卡在哪、为什么。
+3. Codex（QA Agent）把每名用户的实测 + 定性卡点写入 docs/acceptance/V-01.md（真实用户证据，不模拟、不代跑）。
+4. 跑指标（Supabase SQL Editor，同 scripts/metrics.mjs 口径，**剔除测试账号 user_id**），
+   得到真实样本的 activation / assumption_edit / recipe_save / recipe_rerun / return_session / performance_fill。
+5. Codex 产出一页「发现与决策建议」：主路径是否成立、最大卡点 1–3 个、下一票候选（修卡点 / 加反馈入口 / 观测 SDK / 加功能），用证据排序。
+
+范围外（守边界）：
+- 不做新产品功能、不接 PostHog/Sentry SDK、不做 runtime i18n、不改 schema/RLS/prompt/API/既有路由。
+- 不为 n<~5 的样本建应用内反馈 UI（过早；首批用 Owner 访谈 + DB 指标即可）。
+- 不由代理模拟真实用户（会伪造 Gate 3 结论）。
+
+涉及文件：
+- 新增：docs/acceptance/V-01.md（真实用户路径证据 + 真实样本指标 + 发现与决策建议）。
+- 状态同步：docs/PROJECT-STATUS.md、docs/TICKETS.md。
+- 代码：默认无。仅当需要剔除测试账号时，给一段只读 SQL（不进仓库或作为 metrics 的可选过滤，另议）。
+
+验收标准（V-01 Done 的定义）：
+- ≥3 名真实用户完成主路径，或在明确卡点处中断，且每人的「走到哪一步 / 卡点 / 原因」有记录。
+- 真实样本（剔除测试账号）6 指标读出。
+- 产出「发现与决策建议」一页，含最大卡点与下一票候选排序。
+
+验证命令：
+  指标读出：Supabase SQL Editor 运行 metrics 同口径查询（带 `where user_id not in (<测试账号>)`）。
+  （直连库被 Owner 本机代理挡，走 SQL Editor。）
+
+风险：
+- 招募慢 / 用户少 → 证据弱；先小样本定性即可，不追求统计显著。
+- 真实用户可能卡在某步（注册、生成质量、看不懂假设条）——这正是要发现的，记录即成果。
+- 指标受测试账号污染 → 验收时必须剔除测试 user_id。
+
+下一步：
+- V-01 Done 后，Codex/Owner 据「发现与决策建议」定下一票（修主路径卡点 / 加反馈入口 / 观测 SDK / 加功能），证据驱动，不默认。
+```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
 
@@ -123,7 +171,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-19）已全部 Done。执行队列清空，无在途票。下一张唯一任务由 Codex 判断、Owner 拍板后写入。runtime i18n / 观测 SDK 接入仍为候选，**待 Production 出现真实用户、指标有量后**由 Codex/Owner 再定，不默认采纳。
+> M1 计划票（I-08~I-19）已全部 Done。当前唯一在途票为 **V-01（Ready）**：首批真实用户验证（产品验证票，非新功能）。runtime i18n / 观测 SDK 接入仍为候选，**待 V-01 拿到真实用户证据后**由 Codex/Owner 据「发现与决策建议」再定，不默认采纳。
 
 ## 每票模板
 

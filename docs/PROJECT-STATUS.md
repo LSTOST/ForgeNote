@@ -4,7 +4,7 @@
 M1
 
 ## 当前票
-无进行中开发票。**M1 计划票 I-08~I-19 已全部 Done。** I-19（Production readiness + read-only validation metrics）代码/文档侧已随 PR #4 squash merge 进 `main`（`acd94fe`）；2026-06-23 完成 Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返实测 + Gate 4 生产指标读出，用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，I-19 → Done。下一张唯一任务待 Codex 判断、Owner 拍板（不默认 runtime i18n / 观测 SDK）。
+无进行中开发票。**M1 计划票 I-08~I-19 已全部 Done。** I-19（Production readiness + read-only validation metrics）代码/文档侧已随 PR #4 squash merge 进 `main`（`acd94fe`）；2026-06-23 完成 Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返实测 + Gate 4 生产指标读出，用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，I-19 → Done。**下一张唯一任务 = V-01（Ready）：首批真实用户验证**（产品验证票，Owner 主导招募 + Codex QA，默认无代码），见 `docs/TICKETS.md`「V-01 执行票」与 `docs/acceptance/V-01.md`。
 
 ## 当前分支
 无活跃功能分支。`main` 已是最新基线（`acd94fe`，含 PR #4 / I-19 代码文档侧交付）。
@@ -125,7 +125,8 @@ M1
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 进行中
-- 无进行中开发票。M1 计划票 I-08~I-19 全部 Done。下一张唯一任务待 Codex 判断、Owner 拍板。候选（需另立、不默认）：观测真实 SDK 接入（待真实用户、指标有量）；runtime i18n（仍无证据需求）。
+- **V-01（Ready，下一张唯一任务）**：首批真实用户验证——在 Production 让 3–5 名真实目标用户走通 M1 主路径，拿真实用户 Gate 3 + 真实样本指标 + 定性卡点，据「发现与决策建议」定下一票。产品验证票（Owner 主导招募 + Codex QA，默认无代码）。票面见 `docs/TICKETS.md`，验收模板 `docs/acceptance/V-01.md`。
+- M1 计划票 I-08~I-19 全部 Done，已并入 `main`（`0e53047`，含 OPS-02）。
 - M1 计划票 I-08~I-18 全部交付（含 Batch D），已并入 `main`。OPS-01 已随 PR #3 合入 `main`（`2959399`）。
 
 ## 已通过验收
@@ -170,7 +171,7 @@ M1
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-19 全部 Done，无在途票。下一张唯一任务待 Codex 判断、Owner 拍板后写入。候选（均需另立、不默认）：① 观测真实 SDK 接入（待 Production 出现外部真实用户、指标有量后才有意义）；② runtime i18n（仍无证据需求）。当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
+M1 计划票 I-08~I-19 全部 Done。下一张唯一任务 = **V-01：首批真实用户验证**（Ready）。Owner 招募 3–5 名真实目标用户在 Production 走主路径 → Codex QA 把真实路径 + 定性卡点写入 `docs/acceptance/V-01.md` → SQL Editor 读真实样本指标（剔除测试账号）→ Codex 产出「发现与决策建议」→ 据证据定下一票（修卡点 / 加反馈入口 / 观测 SDK / 加功能）。runtime i18n、观测 SDK、新功能全部延后到 V-01 出证据后再定。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
