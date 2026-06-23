@@ -125,8 +125,9 @@ M1
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 进行中
-- 无进行中开发票。M1 计划票 I-08~I-19 全部 Done。下一张唯一任务待 Codex 判断、Owner 拍板。候选（需另立、不默认）：观测真实 SDK 接入（待真实用户、指标有量）；runtime i18n（仍无证据需求）。
-- M1 计划票 I-08~I-18 全部交付（含 Batch D），已并入 `main`。OPS-01 已随 PR #3 合入 `main`（`2959399`）。
+- **DSN-01（Ready，下一张唯一任务，设计先行）**：支柱1——把「假设条」设计成「可见的账号级判断」+ 首屏冷启动体验，让首次用户第一屏就感到「AI 已经懂我的账号」。Claude Design 产出 → Codex review → Owner 拍板 → 之后拆实现票。票面见 `docs/TICKETS.md`「DSN-01 执行票」。
+- **产品方向已修订并合入 main**（`docs/ForgeNote_修订版方向.md`，PR #7 `7e41bf7`）：护城河=过程层不做视觉渲染；M1 重定义为三支柱（假设条 / 内容包 / 配方复用），学习闭环 / 观测 SDK / runtime i18n 延后；冷启动「第一次怎么赢」。V-01（拉测试用户）已挂起（PR #6 关闭，前提不成立）。
+- M1 计划票 I-08~I-19 全部 Done，已并入 `main`（`7e41bf7`）。
 
 ## 已通过验收
 - I-19：Production 上线就绪 + 只读指标读出。Gate 2 实现正确性通过（自动验证 + 本地一次性库实证只读）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）完成并冒烟；生产 Google OAuth 登录往返实测通过；Gate 4 经 SQL Editor 从生产库读出 6 指标（2026-06-23，测试账号样本）；用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，进入 Done（见 `docs/acceptance/I-19.md`）。残余风险：Production 上尚无外部真实用户内容路径证据
