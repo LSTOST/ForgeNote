@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  ChevronDown,
-  ClipboardPaste,
   Hammer,
   LoaderCircle,
   RotateCcw,
@@ -17,11 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  InlineSummary,
-  CONFIDENCE_LABEL,
-  type Slot,
-} from "@/components/onboarding/InlineSummary";
+import { InlineSummary, type Slot } from "@/components/onboarding/InlineSummary";
 import { WorkbenchPreview } from "@/components/onboarding/WorkbenchPreview";
 
 type Step = "input" | "loading" | "understanding" | "error" | "generating";
@@ -29,22 +23,16 @@ type Step = "input" | "loading" | "understanding" | "error" | "generating";
 const DEFAULT_IDEA =
   "想做一组讲第一次独居要不要存备用金的内容，给刚毕业自己租房的人看";
 
-const EXAMPLES = [
-  "第一次独居要备的 10 样东西",
-  "月薪到手怎么分才不月光",
-  "租房避坑：签合同前必问的几句话",
-];
+/** 屏2 第一行的实质摘要：先证明读懂了想法本身。 */
+const SUBSTANCE = "要不要存 · 存多少 · 放在哪 · 什么时候能动";
 
-/** 引导首屏预告「我会替你补这些」的维度。 */
-const DIMENSION_CHIPS = ["受众", "平台", "内容形式", "目标", "风格"];
-
-/** 依据账号上下文构造 5 个判断槽位。 */
+/** 依据账号上下文构造 3 个真正影响生成的判断槽位。 */
 function buildSlots(withContext: boolean): Slot[] {
   return [
     {
       key: "audience",
       dimension: "受众",
-      value: "刚毕业、第一次独居的年轻人",
+      value: "刚独居、怕踩坑的年轻人",
       confidence: withContext ? "sure" : "guess",
       basis: withContext
         ? "你过往的帖也大多写给刚开始独立生活的人"
@@ -53,41 +41,25 @@ function buildSlots(withContext: boolean): Slot[] {
       corrected: false,
     },
     {
-      key: "platform",
-      dimension: "平台",
-      value: "小红书",
-      confidence: withContext ? "sure" : "guess",
-      basis: withContext ? "你过往内容大多发在小红书" : "你没特别说，先按最常见的来",
-      basisSource: withContext ? "account" : "idea",
-      corrected: false,
-    },
-    {
       key: "format",
       dimension: "内容形式",
-      value: "一组 7 张清单卡",
+      value: "小红书 · 7 张清单卡",
       confidence: "guess",
-      basis: "这种「要不要做某事」的话题，清单卡最好读",
-      basisSource: "idea",
-      corrected: false,
-    },
-    {
-      key: "goal",
-      dimension: "目标",
-      value: withContext ? "让人愿意收藏照着做" : "让人看完心里有底",
-      confidence: withContext ? "guess" : "unsure",
       basis: withContext
-        ? "你过往帖的收藏通常比点赞高，偏实用向"
-        : "你没说想要什么效果，这条我基本在猜",
+        ? "你过往多发小红书，这种「要不要做」的话题清单卡最好读"
+        : "这种「要不要做某事」的话题，清单卡最好读",
       basisSource: withContext ? "account" : "idea",
       corrected: false,
     },
     {
-      key: "style",
-      dimension: "风格",
-      value: "过来人、不制造焦虑、浅色清单",
-      confidence: "unsure",
-      basis: "你没提风格，这条我基本是猜的",
-      basisSource: "idea",
+      key: "angle",
+      dimension: "表达角度",
+      value: "过来人提醒，不制造焦虑",
+      confidence: withContext ? "guess" : "unsure",
+      basis: withContext
+        ? "你过往帖也偏稳、实用，不爱贩卖焦虑"
+        : "你没提想用什么口吻，这项我基本在猜",
+      basisSource: withContext ? "account" : "idea",
       corrected: false,
     },
   ];
@@ -96,13 +68,9 @@ function buildSlots(withContext: boolean): Slot[] {
 export function OnboardingPrototype() {
   const [step, setStep] = useState<Step>("input");
   const [idea, setIdea] = useState(DEFAULT_IDEA);
-  const [showPaste, setShowPaste] = useState(false);
-  const [pastPost, setPastPost] = useState("");
   const [withContext, setWithContext] = useState(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [editingKey, setEditingKey] = useState<string | null>(null);
-
-  const hasAccountContext = pastPost.trim().length > 0;
 
   function enterUnderstanding(ctx: boolean) {
     setWithContext(ctx);
@@ -112,9 +80,8 @@ export function OnboardingPrototype() {
   }
 
   function startUnderstanding() {
-    const ctx = hasAccountContext;
     setStep("loading");
-    window.setTimeout(() => enterUnderstanding(ctx), 1300);
+    window.setTimeout(() => enterUnderstanding(withContext), 1300);
   }
 
   // 引导：只点出最该确认的 1–2 条（还没把握优先）。
@@ -145,17 +112,7 @@ export function OnboardingPrototype() {
       />
 
       {step === "input" && (
-        <InputScreen
-          idea={idea}
-          onIdea={setIdea}
-          showPaste={showPaste}
-          onTogglePaste={() => setShowPaste((v) => !v)}
-          pastPost={pastPost}
-          onPastPost={setPastPost}
-          hasAccountContext={hasAccountContext}
-          onUnderstand={startUnderstanding}
-          onDirectStart={() => setStep("generating")}
-        />
+        <InputScreen idea={idea} onIdea={setIdea} onUnderstand={startUnderstanding} />
       )}
 
       {step === "loading" && <LoadingScreen withContext={withContext} />}
@@ -195,136 +152,35 @@ export function OnboardingPrototype() {
 interface InputScreenProps {
   idea: string;
   onIdea: (v: string) => void;
-  showPaste: boolean;
-  onTogglePaste: () => void;
-  pastPost: string;
-  onPastPost: (v: string) => void;
-  hasAccountContext: boolean;
   onUnderstand: () => void;
-  onDirectStart: () => void;
 }
 
-function InputScreen({
-  idea,
-  onIdea,
-  showPaste,
-  onTogglePaste,
-  pastPost,
-  onPastPost,
-  hasAccountContext,
-  onUnderstand,
-  onDirectStart,
-}: InputScreenProps) {
+function InputScreen({ idea, onIdea, onUnderstand }: InputScreenProps) {
   const canStart = idea.trim().length > 0;
   return (
-    <div className="space-y-5">
-      <div className="space-y-1.5">
-        <h2 className="text-2xl font-semibold tracking-tight text-balance">
-          你今天想做什么内容？
-        </h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          写一句模糊的想法就行。我会先替你想清楚该怎么做，再动手——你几乎不用解释。
-        </p>
-      </div>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold leading-snug tracking-tight text-balance">
+        把一个模糊想法，变成可以直接开始做的内容方案
+      </h2>
 
       <Textarea
         value={idea}
         onChange={(e) => onIdea(e.target.value)}
-        rows={4}
-        placeholder="比如：想做一组讲第一次独居备用金清单的内容"
+        rows={5}
+        placeholder="把没想清楚的想法直接写进来——要不要存钱、怎么排版，都行"
         className="resize-y text-base"
       />
 
-      {/* 3 个可点选示例 */}
-      <div className="flex flex-wrap gap-2">
-        <span className="self-center text-xs text-muted-foreground">没头绪？试试：</span>
-        {EXAMPLES.map((ex) => (
-          <button
-            key={ex}
-            type="button"
-            onClick={() => onIdea(ex)}
-            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted"
-          >
-            {ex}
-          </button>
-        ))}
-      </div>
-
-      {/* 输入前就亮出「我会替你补这些」 */}
-      <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 font-medium text-foreground">
-            <Sparkles className="size-3.5" aria-hidden />
-            你不用写全，这些我会替你补：
-          </span>
-          {DIMENSION_CHIPS.map((d) => (
-            <span
-              key={d}
-              className="rounded-md bg-background px-2 py-0.5 text-foreground"
-            >
-              {d}
-            </span>
-          ))}
-        </p>
-      </div>
-
-      {/* 冷启动：可选、可跳过、中等存在感 */}
-      <div className="rounded-xl border border-border bg-card">
-        <button
-          type="button"
-          onClick={onTogglePaste}
-          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-        >
-          <span className="flex items-center gap-2">
-            <ClipboardPaste className="size-4 text-muted-foreground" aria-hidden />
-            <span className="text-sm font-medium">
-              先让我认识你的账号风格——贴一条你发过的帖
-            </span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              可选
-            </span>
-          </span>
-          <ChevronDown
-            className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform",
-              showPaste && "rotate-180",
-            )}
-            aria-hidden
-          />
-        </button>
-        {showPaste && (
-          <div className="space-y-2 border-t border-border px-4 py-3">
-            <Textarea
-              value={pastPost}
-              onChange={(e) => onPastPost(e.target.value)}
-              rows={3}
-              placeholder="把一条你满意的旧帖正文贴进来即可，不贴也能继续。"
-              className="resize-y text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              贴了之后，我对你受众和平台的判断会更有把握；不贴我就只从这次的想法推断。
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          {hasAccountContext
-            ? "已读到你的旧帖，我会结合你的账号来理解。"
-            : "没贴旧帖也行，我会只凭这次的想法来理解。"}
-        </p>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" disabled={!canStart} onClick={onDirectStart}>
-            也可以直接开始
-          </Button>
-          <Button type="button" size="lg" disabled={!canStart} onClick={onUnderstand}>
-            <Sparkles className="size-4" aria-hidden />
-            看看我怎么理解
-            <ArrowRight className="size-4" aria-hidden />
-          </Button>
-        </div>
-      </div>
+      <Button
+        type="button"
+        size="lg"
+        className="w-full sm:w-auto"
+        disabled={!canStart}
+        onClick={onUnderstand}
+      >
+        生成内容方案
+        <ArrowRight className="size-4" aria-hidden />
+      </Button>
     </div>
   );
 }
@@ -417,7 +273,6 @@ interface UnderstandingScreenProps {
   onSubmit: (key: string, value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
-  onRestart: () => void;
   onBack: () => void;
 }
 
@@ -430,12 +285,8 @@ function UnderstandingScreen({
   onSubmit,
   onCancel,
   onConfirm,
-  onRestart,
   onBack,
 }: UnderstandingScreenProps) {
-  const openFlagged = slots.filter((s) => flaggedKeys.includes(s.key) && !s.corrected);
-  const allSettled = openFlagged.length === 0;
-
   return (
     <div className="space-y-5">
       <button
@@ -449,24 +300,26 @@ function UnderstandingScreen({
 
       <div className="space-y-1">
         <h2 className="text-lg font-semibold tracking-tight text-balance">
-          我打算这么做，对吗？
+          我先帮你定了这次的方向，改不对的就行
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-          {allSettled
-            ? "看起来都对上了，点【都对，开始生成】我就动手；想改哪个词，点一下就能改。"
-            : `带点的词是我还没把握的，帮我确认下；其余你点一下任意词就能改。`}
+          下面每个词点一下就能改，没改的我按默认理解来。
         </p>
       </div>
 
-      {/* 无账号上下文提示 */}
+      {/* 第一行先讲实质：证明读懂了想法本身 */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <p className="text-xs text-muted-foreground">这次内容我会替你讲清</p>
+        <p className="mt-1.5 text-base font-medium leading-relaxed text-foreground text-pretty">
+          {SUBSTANCE}
+        </p>
+      </div>
+
+      {/* 无账号上下文提示（柔和、不告警） */}
       {!withContext && (
-        <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-          <Sparkles className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          <span>
-            我还不认识你的账号，下面都是只凭这次想法的推测，所以有几条还没把握。
-            想更准，可以回上一步贴一条旧帖。
-          </span>
-        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          我还不认识你的账号，下面是只凭这次想法的推测——有一项你定一下会更贴你。
+        </p>
       )}
 
       <InlineSummary
@@ -478,22 +331,13 @@ function UnderstandingScreen({
         onCancel={onCancel}
       />
 
-      {/* 底部操作 */}
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background/95 px-1 pb-1 pt-4 backdrop-blur">
-        <Button type="button" variant="ghost" onClick={onRestart}>
-          <RotateCcw className="size-4" aria-hidden />
-          重新理解
+      {/* 底部：只留一个前进键 */}
+      <div className="sticky bottom-0 -mx-1 space-y-1.5 border-t border-border bg-background/95 px-1 pb-1 pt-4 backdrop-blur">
+        <Button type="button" size="lg" className="w-full" onClick={onConfirm}>
+          生成内容方案
+          <ArrowRight className="size-4" aria-hidden />
         </Button>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" onClick={onConfirm}>
-            先跳过，直接生成
-          </Button>
-          <Button type="button" size="lg" onClick={onConfirm}>
-            <Check className="size-4" aria-hidden />
-            都对，开始生成
-            <ArrowRight className="size-4" aria-hidden />
-          </Button>
-        </div>
+        <p className="text-center text-xs text-muted-foreground">没改的我按默认理解来</p>
       </div>
     </div>
   );
@@ -507,7 +351,7 @@ function GeneratingScreen({ slots, onBack }: { slots: Slot[]; onBack: () => void
   // 认可后：整条理解收成一行带 ✓。
   const line =
     slots.length > 0
-      ? `给${slots[0].value}，在${slots[1].value}做${slots[2].value}`
+      ? `给${slots[0].value}做${slots[1].value}，用${slots[2].value}`
       : "按你的想法";
 
   return (

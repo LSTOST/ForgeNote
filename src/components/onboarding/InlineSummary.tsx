@@ -40,13 +40,13 @@ const SOURCE_LABEL: Record<BasisSource, string> = {
 
 /**
  * 把判断压成一句话：用连接词把各标签串成自然语言。
- * 顺序对应 slots：受众 / 平台 / 内容形式 / 目标 / 风格。
+ * 顺序对应 slots：受众 / 内容形式 / 表达角度。
  */
-const CONNECTORS = ["给", "，在", "做", "，想让人", "，整体走", "的风格？"];
+const CONNECTORS = ["给", "做", "，用", "的角度。"];
 
 interface InlineSummaryProps {
   slots: Slot[];
-  /** 被标记为「最该确认」的 key（仅 1–2 条，导向注意力）。 */
+  /** 被标记为「这项你定一下会更准」的 key（仅 1–2 条，导向注意力）。 */
   flaggedKeys: string[];
   /** 哪个 slot 正在编辑。 */
   editingKey: string | null;
@@ -67,7 +67,7 @@ export function InlineSummary({
   const flaggedSlots = slots.filter((s) => flaggedKeys.includes(s.key) && !s.corrected);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* 一眼扫完的摘要句 */}
       <div className="rounded-xl border border-border bg-card p-5">
         <p className="text-lg leading-loose text-foreground text-pretty">
@@ -93,7 +93,7 @@ export function InlineSummary({
           />
         )}
 
-        {/* 依据：默认收起 */}
+        {/* 依据：默认收起，点开才看 */}
         <div className="mt-4 border-t border-border pt-3">
           <button
             type="button"
@@ -104,7 +104,7 @@ export function InlineSummary({
               className={cn("size-3.5 transition-transform", showBasis && "rotate-180")}
               aria-hidden
             />
-            {showBasis ? "收起我的依据" : "为什么这么理解？"}
+            {showBasis ? "收起依据" : "为什么这么定？"}
           </button>
           {showBasis && (
             <ul className="mt-3 space-y-2">
@@ -116,14 +116,7 @@ export function InlineSummary({
                   <span className="text-foreground/80">
                     因为{slot.corrected ? "你刚改成了这个" : slot.basis}
                   </span>
-                  <span
-                    className={cn(
-                      "ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px]",
-                      slot.basisSource === "account" && !slot.corrected
-                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                        : "bg-muted text-muted-foreground",
-                    )}
-                  >
+                  <span className="ml-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                     {SOURCE_LABEL[slot.corrected ? "corrected" : slot.basisSource]}
                   </span>
                 </li>
@@ -133,29 +126,23 @@ export function InlineSummary({
         </div>
       </div>
 
-      {/* 只有「还没把握」的 1–2 条才高亮 +「帮我定？」 */}
+      {/* 需要你拿主意的那一项：柔和单行、靠后放，不做告警大卡 */}
       {flaggedSlots.length > 0 && !editingKey && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {flaggedSlots.map((slot) => (
-            <div
+            <button
               key={slot.key}
-              className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5"
+              type="button"
+              onClick={() => onStartEdit(slot.key)}
+              className="flex w-full items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-left text-xs leading-relaxed text-muted-foreground transition-colors hover:bg-muted"
             >
-              <span className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                <span className="font-medium">{slot.dimension}</span>
-                {" 这条我还没把握，定一下会更准。"}
+              <Wand2 className="size-3.5 shrink-0 text-amber-500/70" aria-hidden />
+              <span>
+                <span className="font-medium text-foreground">{slot.dimension}</span>
+                {" 这项你定一下会更贴你的账号"}
               </span>
-              <Button
-                type="button"
-                size="xs"
-                variant="outline"
-                className="shrink-0 border-amber-500/40 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
-                onClick={() => onStartEdit(slot.key)}
-              >
-                <Wand2 className="size-3" aria-hidden />
-                帮我定？
-              </Button>
-            </div>
+              <span className="ml-auto shrink-0 font-medium text-foreground">定一下</span>
+            </button>
           ))}
         </div>
       )}
@@ -163,7 +150,7 @@ export function InlineSummary({
   );
 }
 
-/* ---- 内联标签：可点击改，置信度用极克制的单色点缀 ---- */
+/* ---- 内联标签：点一下即可改，置信度用极克制的单色点缀 ---- */
 
 function InlineTag({
   slot,
@@ -174,24 +161,20 @@ function InlineTag({
   flagged: boolean;
   onClick: () => void;
 }) {
-  const unsure = slot.confidence === "unsure" && !slot.corrected;
+  const soft = (slot.confidence === "unsure" || flagged) && !slot.corrected;
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "mx-0.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 align-baseline font-medium transition-colors",
-        "underline decoration-dashed decoration-1 underline-offset-4",
-        unsure
-          ? "bg-amber-500/10 text-amber-800 decoration-amber-500/50 hover:bg-amber-500/15 dark:text-amber-300"
-          : "bg-muted text-foreground decoration-muted-foreground/40 hover:bg-muted-foreground/15",
+        "mx-0.5 inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 align-baseline font-medium text-foreground transition-colors",
+        "underline decoration-dashed decoration-1 underline-offset-4 hover:bg-muted-foreground/15",
+        soft ? "decoration-amber-500/50" : "decoration-muted-foreground/40",
       )}
     >
       {slot.corrected && <Check className="size-3 text-emerald-600" aria-hidden />}
       {slot.value}
-      {(unsure || flagged) && (
-        <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />
-      )}
+      {soft && <span className="size-1.5 rounded-full bg-amber-400/70" aria-hidden />}
     </button>
   );
 }
