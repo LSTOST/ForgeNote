@@ -45,23 +45,24 @@
 | I-14 | Done | PostHog / Sentry 基础观测（零依赖 no-op scaffold + 可选 env + 文档） | `docs/acceptance/I-14.md` |
 | I-17 | Done | UI copy resource extraction scaffold（src/lib/copy en+zh-Hans + typed helper，代表性接线，不改行为） | `docs/acceptance/I-17.md` |
 | I-18 | Done | 补齐 UI copy 资源覆盖（活跃页面剩余硬编码 chrome 文案收敛到 `src/lib/copy/{zh-Hans,en}.ts`，承接 I-17，默认 zh-Hans 行为不变） | `docs/acceptance/I-18.md` |
+| I-19 | Done | Production 上线就绪 + DB 指标读出（只读 `scripts/metrics.mjs`）；Gate 3 OAuth/基础设施实测 + Gate 4 生产指标读出；用户内容路径 Conditional Pass（Preview 同码已验，Owner 接受） | `docs/acceptance/I-19.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
-> I-19 的代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4），但 Gate 3 Production 真实用户路径与 Gate 4 Production DB 指标读出未补证据，**不得列入 Done**。
+> I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
 
-## 当前唯一收口任务
+## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-19 | Review / Pending Production Acceptance | Production 上线就绪 + 首批真实用户路径验收 + DB 指标读出（不接第三方观测 SDK） | runtime i18n；PostHog/Sentry SDK；任何新产品功能；改 schema/RLS/prompt/API | 代码/文档侧已合入；Owner 配置 Vercel Production env / Supabase Production OAuth 后补 Gate 3/4 证据 |
+| —（待 Codex 定义 / Owner 拍板） | — | M1 计划票 I-08~I-19 已全部 Done；下一张票尚未确定 | 不默认进入 runtime i18n / 观测 SDK；仍需**真实用户**指标证据支撑 | — |
 
-> **拍板**：Owner 已批准 I-19（2026-06-22），并明确**延后** runtime i18n 与观测 SDK。PR #4 已完成 I-19 的脚本/文档实现侧并合入 `main`；当前剩余工作只有 Production Gate 3/4 验收证据，不是新实现票。Codex 判断依据：M1 功能闭环已完整，瓶颈不是功能而是「没有真实用户能访问的 Production，也就拿不到任何『有人持续用』的证据」（见 `docs/OPERATING-MODEL.md` 目标与 Gate 4）。首批用户的 6 个指标可直接用 SQL 从现有表（`sessions` / `recipes.usage_count` / `usage_events` / sessions 的 performance 列）读出，无需先接 PostHog——故观测 SDK 延后、不进 I-19。
+> **状态**：I-19 已 Done。下一张唯一任务由 Codex 判断、Owner 拍板后写入。候选（均需另立、不默认）：观测真实 SDK 接入（待出现真实用户、指标有量后）；runtime i18n（仍无证据需求）。
 
-### I-19 执行票（已实现，待 Production 验收收口）
+<details><summary>I-19 执行票（已完成，存档）</summary>
 
 ```text
 票号：I-19
-状态：Review / Pending Production Acceptance
+状态：Done（Gate 2 Pass / Production 配置 + OAuth 实测 / Gate 4 指标读出 / Gate 3 内容路径 Conditional Pass）
 目标：把 M1 推到真实用户可登录使用的 Production，并按 OPERATING-MODEL Gate 3/4 拿到第一份真实使用证据；
       产出一个只读指标脚本，能从现有库表直接算出 M1 验证闭环的 6 个指标（无需第三方 SDK）。
 
@@ -113,13 +114,16 @@
 - Claude Code 仅补 docs/acceptance/I-19.md 与状态文档证据；不得补新功能。
 - I-19 Done 后再由 Codex/Owner 决定是否进入「观测 SDK 接入」或「runtime i18n」（仍需指标证据支撑）。
 ```
+
+</details>
+
 > 注（I-13 决策）：eval 为**手动 / 本地门禁**，**不进 PR CI**（真实模型调用 + 需登录态，进 CI 会因缺 key/登录态无意义失败）；CI 仍只跑 doctor / lint / typecheck / build。`npm run eval:forge` 无 cookie 时 SKIP exit 0。
 > 注（I-14 决策）：观测为**零依赖 no-op scaffold**，未配 env 不影响 build / 运行；真实 SDK 接入留作后续票（`observability.ts` TODO）。
 > 注（I-17 决策）：i18n 仅 **scaffold**（en/zh 资源 + typed helper + 代表性接线），默认 zh-Hans 行为不变；运行时切换 / 偏好持久化 / output_locale 联动留作后续票。
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-18）已全部交付。I-19 的代码/文档侧已合入 `main`（`acd94fe`，PR #4），当前唯一剩余是 **I-19 Production 验收收口**：Gate 3 真实用户路径 + Gate 4 Production DB 指标读出。没有新的功能票。runtime i18n / 观测 SDK 接入仍为候选，**待 I-19 拿到指标证据后**由 Codex/Owner 再定，不默认采纳。
+> M1 计划票（I-08~I-19）已全部 Done。执行队列清空，无在途票。下一张唯一任务由 Codex 判断、Owner 拍板后写入。runtime i18n / 观测 SDK 接入仍为候选，**待 Production 出现真实用户、指标有量后**由 Codex/Owner 再定，不默认采纳。
 
 ## 每票模板
 
