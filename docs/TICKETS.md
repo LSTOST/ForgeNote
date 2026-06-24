@@ -48,6 +48,7 @@
 | I-19 | Done | Production 上线就绪 + DB 指标读出（只读 `scripts/metrics.mjs`）；Gate 3 OAuth/基础设施实测 + Gate 4 生产指标读出；用户内容路径 Conditional Pass（Preview 同码已验，Owner 接受） | `docs/acceptance/I-19.md` |
 | DSN-01 | Done | Open Design POC：onboarding-first `/forge` + account-level assumption chips；Codex review Conditional Pass，允许拆 I-20 | `docs/design/dsn-01-open-design/codex-review.md` |
 | I-20 | Done | DSN-01 最小实现：onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` 数据锚点；OpenRouter 401 修复后真实生成成功 | `docs/acceptance/I-20.md` |
+| I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -56,9 +57,9 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| — | — | 无当前唯一任务；I-20 已转 Done，下一张票待 Owner/Codex 重新定边界 | — | — |
+| — | — | 无当前唯一任务；I-21 已转 Done，下一张票待 Owner/Codex 重新定边界 | — | — |
 
-> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。
+> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。I-21 补齐 I-20 后暴露的最短用户路径缺口：生成结果必须可刷新、可回看。
 
 ### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
@@ -182,6 +183,49 @@
 - I-20 Done。下一张票重新定边界；不要把视觉渲染、自动学习、内容包重设计塞回 I-20。
 ```
 
+### I-21 执行票（已完成）
+
+```text
+票号：I-21
+状态：Done
+类型：实现票（I-20 用户路径连续性修正）
+目标：补齐 onboarding-first `/forge` 生成后的持久化回看路径：
+      生成成功后当前 URL 必须变成 `/forge?session=<id>`，用户刷新页面仍能看到刚生成的结果；
+      生成失败但草稿已落库时，也要把草稿 session 写进 URL，刷新后恢复输入与错误态。
+
+范围内：
+1. `ForgeWorkbench` 在 `POST /api/forge` 成功后用返回的 `sessionId` 更新 URL。
+2. `POST /api/forge` 返回草稿失败时读取 `draft.sessionId`，更新 URL 并保留错误态。
+3. 用户点击「新建」或重新进入方向确认时清理旧 `?session=`，避免把新任务误绑定到旧结果。
+4. 利用既有 `/forge?session=` Server Component 预载逻辑，不新增 API / DB / RLS。
+
+范围外：
+- 不改 prompt / schema / RLS / `content_package` 契约。
+- 不做 session history、版本列表、资产库、视觉配方、内容包重设计。
+- 不引入新依赖，不扩大 DSN-01 / I-20 范围。
+
+涉及文件：
+- `src/components/forge/ForgeWorkbench.tsx`
+- `docs/acceptance/I-21.md`
+- `docs/TICKETS.md`
+- `docs/PROJECT-STATUS.md`
+
+验收标准：
+- 生成成功后浏览器地址栏从 `/forge` 变成 `/forge?session=<uuid>`。
+- 刷新该 URL 后，服务端预载 session，结果区、配方区和 session id 仍可见。
+- 生成失败且 API 返回 draft session 时，URL 也变成 `/forge?session=<uuid>`，刷新后恢复输入与错误态。
+- 点击「新建」回到 `/forge`，不保留旧 session query。
+
+验证命令：
+  npm run lint
+  npm run typecheck
+  npm run build
+
+实测结果：
+- 自动验证通过。
+- 代码路径核对通过：I-21 复用既有 `/forge?session=` 预载逻辑；本票不新增数据库/API 面。
+```
+
 <details><summary>I-19 执行票（已完成，存档）</summary>
 
 ```text
@@ -247,7 +291,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-20）与 DSN-01 均已 Done。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）做到「第一次就显得懂」。V-01（拉测试用户）已挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。下一张票待 Owner/Codex 重新定边界。
+> M1 计划票（I-08~I-21）与 DSN-01 均已 Done。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）做到「第一次就显得懂」。V-01（拉测试用户）已挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。下一张票待 Owner/Codex 重新定边界。
 
 ## 每票模板
 

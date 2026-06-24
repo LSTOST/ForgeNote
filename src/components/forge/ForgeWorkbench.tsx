@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Compass, FilePlus2, Library, Settings2, UserRound } from "lucide-react";
 
@@ -102,6 +103,7 @@ export function ForgeWorkbench({
   initialSession = null,
   initialProfileAssumptions = [],
 }: ForgeWorkbenchProps) {
+  const router = useRouter();
   const [idea, setIdea] = useState(initialSession?.rawInput ?? "");
   const [accountPost, setAccountPost] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -202,6 +204,7 @@ export function ForgeWorkbench({
   function prepareDirection() {
     if (idea.trim().length === 0 || idea.length > MAX_INPUT_CHARS) return;
 
+    router.replace("/forge", { scroll: false });
     setAssumptions(
       buildDirectionAssumptions(
         idea,
@@ -267,11 +270,26 @@ export function ForgeWorkbench({
         setSessionId(nextData.sessionId ?? null);
         setAssumptions(nextAssumptions);
         setStatus("success");
+        if (nextData.sessionId) {
+          router.replace(`/forge?session=${nextData.sessionId}`, {
+            scroll: false,
+          });
+        }
       } else {
+        const draftSessionId =
+          typeof json?.draft?.sessionId === "string"
+            ? json.draft.sessionId
+            : null;
         // 失败时保留用户输入（idea 不清空），展示错误并允许重试（UIUX §7.4 / D-04）。
         setErrorMessage(json?.error?.message ?? copy.forge.generateFailed);
         setErrorCode(json?.error?.code ?? null);
+        setSessionId(draftSessionId);
         setStatus("error");
+        if (draftSessionId) {
+          router.replace(`/forge?session=${draftSessionId}`, {
+            scroll: false,
+          });
+        }
       }
     } catch {
       setErrorMessage(copy.common.networkError);
@@ -294,6 +312,7 @@ export function ForgeWorkbench({
     setRememberedKeys([]);
     setSavedAt(null);
     window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    router.replace("/forge", { scroll: false });
   }
 
   // I-11：把一条假设「记住为偏好」——upsert 到 profile_preferences，下次 /forge 自动带出。
