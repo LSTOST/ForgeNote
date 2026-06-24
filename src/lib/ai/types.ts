@@ -19,6 +19,9 @@ export type AssumptionState = "default" | "edited" | "dismissed";
 /** 假设条值类型。对齐 DATA-SCHEMA §4.1（扩展 bool / list）。 */
 export type AssumptionValueType = "text" | "number" | "enum" | "bool" | "list";
 
+/** 假设条置信度。DSN-01：用于区分高确定、推断、拿不准。 */
+export type AssumptionConfidence = "high" | "inferred" | "unsure";
+
 /** 单条假设。 */
 export interface Assumption {
   key: string;
@@ -29,6 +32,10 @@ export interface Assumption {
   state: AssumptionState;
   editable: boolean;
   highlight?: boolean;
+  /** 这条判断的依据，面向用户展示。 */
+  rationale?: string;
+  /** 这条判断的置信度，面向 UI 做轻提示。 */
+  confidence?: AssumptionConfidence;
 }
 
 /** 生成前可向用户追问的澄清问题。 */
@@ -51,6 +58,11 @@ export interface ForgeGenerationRequest {
    * 可选、nullable；缺省/为 null 时保持现有行为，不做多语言系统、不与国家/平台绑定、不是 enum。
    */
   outputLocale?: string | null;
+  /**
+   * DSN-01：冷启动账号上下文。用户可选粘贴一条过往帖，帮助推断本次假设。
+   * 不等于账号画像，不持久化为偏好；是否持久化另票决定。
+   */
+  accountPost?: string | null;
 }
 
 /** 卡片结构条目。对齐 DATA-SCHEMA §4.2 cardStructure。 */

@@ -46,6 +46,8 @@
 | I-17 | Done | UI copy resource extraction scaffold（src/lib/copy en+zh-Hans + typed helper，代表性接线，不改行为） | `docs/acceptance/I-17.md` |
 | I-18 | Done | 补齐 UI copy 资源覆盖（活跃页面剩余硬编码 chrome 文案收敛到 `src/lib/copy/{zh-Hans,en}.ts`，承接 I-17，默认 zh-Hans 行为不变） | `docs/acceptance/I-18.md` |
 | I-19 | Done | Production 上线就绪 + DB 指标读出（只读 `scripts/metrics.mjs`）；Gate 3 OAuth/基础设施实测 + Gate 4 生产指标读出；用户内容路径 Conditional Pass（Preview 同码已验，Owner 接受） | `docs/acceptance/I-19.md` |
+| DSN-01 | Done | Open Design POC：onboarding-first `/forge` + account-level assumption chips；Codex review Conditional Pass，允许拆 I-20 | `docs/design/dsn-01-open-design/codex-review.md` |
+| I-20 | Done | DSN-01 最小实现：onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` 数据锚点；OpenRouter 401 修复后真实生成成功 | `docs/acceptance/I-20.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -54,16 +56,16 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| DSN-01 | Ready | 支柱1设计先行：把「假设条」从表单默认值设计成「可见的账号级判断」，并设计支撑它的首屏冷启动体验，让首次用户在第一屏就感到「AI 已经懂我的账号」 | 写代码；改 prompt/schema/API；视觉渲染卡片；内容包重设计（支柱2）；配方/学习闭环；发布/日历 | `docs/ForgeNote_修订版方向.md`（已合入 main） |
+| — | — | 无当前唯一任务；I-20 已转 Done，下一张票待 Owner/Codex 重新定边界 | — | — |
 
-> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。支柱1=假设条，是第一次赢的关键。**设计先行**：Claude Design 产出 → Codex review 可实现性与边界 → Owner 拍板 → 之后才拆实现票。Claude Code 不参与本票。
+> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。
 
-### DSN-01 执行票（Codex 写给 Claude Design）
+### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
 ```text
 票号：DSN-01
-状态：Ready
-类型：设计票（Claude Design 主导；Codex review；Owner 拍板；不写代码）
+状态：Done（Open Design POC + Codex review Conditional Pass + Owner 指令推进 I-20）
+类型：设计票（Open Design POC 原型；Codex review；Owner 拍板；不写代码；Claude Design 保底）
 目标：设计「假设条 = 可见的账号级判断」的交互，以及支撑它的首屏冷启动体验，
       让首次用户在第一屏就感到「AI 已经懂我的账号，而且我几乎不用解释」。
       产出设计方向 / 原型 / 规格，供后续实现票落地。
@@ -81,7 +83,7 @@
    - 首屏信息架构、引导、空态 → 首个结果的过渡。
 3. 交付物：
    - 设计方向说明（为什么这样，对应北极星与支柱1）；
-   - 关键屏原型 / 线框（Figma 或等价可评审形式）；
+   - Open Design 高保真可点击原型（可导出 HTML 或截图/录屏作为评审证据）；若 POC 不达标，改用 Claude Design 产出同等原型；
    - 状态与边界标注：空态 / 加载 / 错误 / 无账号上下文时的 fallback；
    - 与现有 /forge 的差异点清单（哪些改、哪些留）。
 4. 顺带给「执行潦草」最小修正建议清单（供实现票处理）：
@@ -95,7 +97,9 @@
 - 不做过度账号建模（复杂画像、自动学习）——本票只要「第一次就显得懂」的最小可行形态。
 
 涉及文件：
-- 设计交付物（Figma / 图片 / 设计说明）位置由 Owner 指定；
+- 设计交付物（Open Design 项目 / 导出 HTML / 截图 / 设计说明）位置由 Owner 指定；
+- Open Design 执行 brief：`docs/design/DSN-01-brief.md`；
+- Open Design 运行/费用/交付协议：`docs/design/OPEN-DESIGN-DSN-01-RUNBOOK.md`；
 - 设计说明落 docs/（如 docs/design/DSN-01-assumptions.md，建库时定）。
 - 不改任何 src / 状态文档由后续实现票同步。
 
@@ -103,16 +107,79 @@
 - 假设条新交互（呈现 + 依据展示 + 纠偏方式）原型完成，Codex review 通过（可落地、不越界、最小可行），Owner 拍板。
 - 首屏冷启动路径设计完成，含「贴过往帖 → 账号画像 → 假设」的最小可行形态。
 - 明确哪些进下一张实现票、哪些延后。
+- Open Design 生成代码不直接进入 ForgeNote；后续由 Claude Code 按项目现有 Next.js / shadcn / Tailwind 结构重写实现。
+- Open Design POC 需先证明三件事：能稳定运行、能按 ForgeNote neutral/shadcn 风格出图、产物比直接用 Claude Design 不更慢/更差。否则不替代 Claude Design。
+- Open Design 的模型费用不走 Claude Pro；若用 Open Design，Owner 手动提供 BYOK/AMR，Codex 不读取、不粘贴、不保存 secret。
+- DSN-01 产物必须落 `docs/design/dsn-01-open-design/`，并包含 `handoff.md` 与 `codex-review.md` 后才能拆 I-20。
 
 风险：
 - 设计越界（要求图像生成 / 复杂账号建模 / 发布）会拖累实现——Codex review 守「最小可行」。
 - 「账号级判断」若只是换皮文案而无真实依据，会沦为噱头——设计须说明依据从哪来（输入 + 过往帖），为实现票的 prompt 设计定锚。
 
 下一步：
-- Owner 把本票交给 Claude Design 产出设计；
-- Codex review 可实现性与边界；Owner 拍板；
-- 之后 Codex 拆实现票（假设条交互 + 冷启动输入：prompt 调整 + UI），Claude Code 落地；
-- 内容包（支柱2）作为其后的设计/实现票，不抢占本票。
+- 已拆并落地 I-20 最小实现；内容包（支柱2）作为其后的设计/实现票，不抢占本票。
+```
+
+### I-20 执行票（已完成）
+
+```text
+票号：I-20
+状态：Done
+类型：实现票（DSN-01 最小落地）
+目标：让 `/forge` 首次路径从「表单生成器」变成 onboarding-first 内容工作台：
+      用户先输入模糊想法，可选贴一条过往帖；系统先给三条账号级方向假设，
+      用户低成本确认/修改后再进入既有生成链路。
+
+范围内：
+1. `/forge` 首屏 app shell：去掉营销 header，直达工作台。
+2. IdeaInput：模糊想法主输入；可选 account_post/过往帖冷启动；本地草稿 autosave。
+3. DirectionPanel：三条假设（受众 / 内容形式 / 表达角度），展示 rationale + confidence，可编辑并计数。
+4. API/type/prompt 数据锚点：
+   - `Assumption.rationale`
+   - `Assumption.confidence`
+   - `ForgeGenerationRequest.accountPost`
+   - `POST /api/forge` 兼容 `accountPost` / `account_post`
+5. 用户可见 copy 去内部 taxonomy：不把「内容包 / 小红书笔记 / 卡片 Prompt / Schema」作为主路径文案暴露。
+
+范围外：
+- 不直接复用 Open Design HTML/CSS/JS。
+- 不做工作台终态/terminal layout。
+- 不做内容包重设计、视觉渲染卡片、发布、日历、多账号。
+- 不做复杂账号画像/自动学习；过往帖只用于本次推断。
+- 不改 DB schema / RLS / `content_package` 底层契约。
+
+涉及文件：
+- `src/components/forge/ForgeWorkbench.tsx`
+- `src/components/forge/IdeaInput.tsx`
+- `src/components/forge/DirectionPanel.tsx`
+- `src/app/forge/page.tsx`
+- `src/app/api/forge/route.ts`
+- `src/lib/ai/types.ts`
+- `src/lib/ai/generate.ts`
+- `src/lib/ai/mock-generator.ts`
+- `src/lib/copy/zh-Hans.ts`
+- `src/lib/copy/en.ts`
+- `docs/acceptance/I-20.md`
+
+验收标准：
+- 自动验证：lint / typecheck / build 通过。
+- 登录态 Chrome：`/forge` 首屏直达工作台；输入想法后进入方向确认，而不是直接生成。
+- 方向确认只出现三条假设：受众 / 内容形式 / 表达角度。
+- 每条假设有置信度与依据；编辑任一条后 count 变 `1/3`，该条置信度变「确定」。
+- 点击最终生成时进入既有生成链路；若模型失败，错误态必须保留输入与假设并可重试。
+
+验证命令：
+  npm run lint
+  npm run typecheck
+  npm run build
+
+实测结果：
+- 自动验证通过。
+- 真实 Chrome 登录态通过：输入 → 方向确认 → 编辑「受众」为「新手父母」→ `已确认 1/3`。
+- 初次最终生成被 ForgeNote 本地 OpenRouter `401` 阻塞，错误态正常显示；Owner 恢复 ForgeNote runtime key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 路径生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；见 `docs/acceptance/I-20.md`。
+
+下一步：
+- I-20 Done。下一张票重新定边界；不要把视觉渲染、自动学习、内容包重设计塞回 I-20。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
@@ -180,7 +247,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-19）已全部 Done。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）做到「第一次就显得懂」。当前在途票为 **DSN-01（Ready，设计先行）**。V-01（拉测试用户）已挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票（I-08~I-20）与 DSN-01 均已 Done。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）做到「第一次就显得懂」。V-01（拉测试用户）已挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。下一张票待 Owner/Codex 重新定边界。
 
 ## 每票模板
 

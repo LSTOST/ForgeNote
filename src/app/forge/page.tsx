@@ -7,7 +7,6 @@ import {
 } from "@/components/forge/ForgeWorkbench";
 import { TopNav } from "@/components/layout/TopNav";
 import type { Assumption } from "@/lib/ai/types";
-import { POSITIONING, PRODUCT_NAME, SLOGAN } from "@/lib/constants";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 // 受保护页面：未登录（或未配置 Supabase）→ 跳 /login。
@@ -112,17 +111,7 @@ export default async function ForgePage({ searchParams }: ForgePageProps) {
   return (
     <>
       <TopNav />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <header className="mb-8 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {PRODUCT_NAME}
-          </h1>
-          <p className="text-muted-foreground">{SLOGAN}</p>
-          <p className="max-w-2xl text-sm text-muted-foreground/80">
-            {POSITIONING}
-          </p>
-        </header>
-
+      <main className="flex-1">
         <ForgeWorkbench
           // 切换预载 session 时重挂以重置内部状态（避免沿用上一条 session）。
           key={initialSession?.sessionId ?? "fresh"}

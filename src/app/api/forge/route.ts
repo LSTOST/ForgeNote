@@ -16,6 +16,7 @@ import type {
   IntentType,
 } from "@/lib/ai/types";
 import {
+  MAX_ACCOUNT_POST_CHARS,
   MAX_INPUT_CHARS,
   MAX_OUTPUT_LOCALE_CHARS,
   normalizeOutputLocale,
@@ -42,6 +43,8 @@ const assumptionSchema: z.ZodType<Assumption> = z.object({
   state: z.enum(["default", "edited", "dismissed"]),
   editable: z.boolean(),
   highlight: z.boolean().optional(),
+  rationale: z.string().optional(),
+  confidence: z.enum(["high", "inferred", "unsure"]).optional(),
 });
 
 // 入参 schema：仅 rawInput 必填；其余可选并有默认值。
@@ -52,6 +55,9 @@ const requestBodySchema = z.object({
   sourceRecipeId: z.string().uuid().nullish(),
   // I-16：可选 outputLocale（自由文本，超长 → VALIDATION_FAILED；旧请求不传仍可用）。
   outputLocale: z.string().max(MAX_OUTPUT_LOCALE_CHARS).nullish(),
+  // DSN-01：可选过往帖冷启动。兼容 camelCase 与 snake_case。
+  accountPost: z.string().max(MAX_ACCOUNT_POST_CHARS).nullish(),
+  account_post: z.string().max(MAX_ACCOUNT_POST_CHARS).nullish(),
 });
 
 /** route 层错误码：模型层错误码 + 校验/鉴权/数据库错误（API-CONTRACT §3）。 */
@@ -127,12 +133,16 @@ export async function POST(request: Request): Promise<Response> {
   // 4) 组装引擎请求：缺省 intentType=content_package、assumptions=[]。
   //    I-16：outputLocale 归一化（trim；空串→null），可选。
   const outputLocale = normalizeOutputLocale(parsed.data.outputLocale);
+  const accountPost =
+    normalizeOutputLocale(parsed.data.accountPost) ??
+    normalizeOutputLocale(parsed.data.account_post);
   const generationRequest: ForgeGenerationRequest = {
     rawInput,
     intentType: parsed.data.intentType ?? "content_package",
     assumptions: parsed.data.assumptions ?? [],
     sourceRecipeId: parsed.data.sourceRecipeId ?? null,
     outputLocale,
+    accountPost,
   };
   // I-16 additive：仅当 outputLocale 非空时才写 output_locale 列。
   //   这样未指定 locale 的既有流程，即使 0002 migration 尚未应用也不依赖该列、不回归。

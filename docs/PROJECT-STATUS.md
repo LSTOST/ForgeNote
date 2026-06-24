@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-无进行中开发票。**M1 计划票 I-08~I-19 已全部 Done。** I-19（Production readiness + read-only validation metrics）代码/文档侧已随 PR #4 squash merge 进 `main`（`acd94fe`）；2026-06-23 完成 Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返实测 + Gate 4 生产指标读出，用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，I-19 → Done。下一张唯一任务待 Codex 判断、Owner 拍板（不默认 runtime i18n / 观测 SDK）。
+无进行中票。**DSN-01 与 I-20 均已 Done**：DSN-01 Open Design POC 产物已落 `docs/design/dsn-01-open-design/`；I-20 最小实现已落地到 `/forge`，包括 onboarding-first shell、可选过往帖冷启动、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` / `rationale` / `confidence` 数据锚点。OpenRouter `401` 在 Owner 恢复 ForgeNote runtime key 后解除，真实生成成功。
 
 ## 当前分支
-无活跃功能分支。`main` 已是最新基线（`acd94fe`，含 PR #4 / I-19 代码文档侧交付）。
+当前工作分支：`codex/dsn-01-design-brief`。本分支包含 DSN-01 Open Design 文档收口与 I-20 最小实现；`main` 仍是最近合入的产品基线。
 
 ## 当前 PR
-无进行中产品 PR。PR #1（M1 workspace）、PR #2（I-18 copy coverage）、PR #3（OPS-01 operating model docs）、PR #4（I-19 production readiness + read-only validation metrics）均已 squash merge 进 `main`；`main` HEAD = `acd94fe`。I-19 仍未 Done，因为 Production Gate 3/4 证据未补齐。
+无进行中产品 PR。下一张票待 Owner/Codex 重新定边界。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -125,11 +125,15 @@ M1
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 进行中
-- **DSN-01（Ready，下一张唯一任务，设计先行）**：支柱1——把「假设条」设计成「可见的账号级判断」+ 首屏冷启动体验，让首次用户第一屏就感到「AI 已经懂我的账号」。Claude Design 产出 → Codex review → Owner 拍板 → 之后拆实现票。票面见 `docs/TICKETS.md`「DSN-01 执行票」。
+- 无进行中票。
+- **I-20（Done）**：DSN-01 最小实现已完成并通过自动验证 + 登录态 UI 验收 + 真实生成路径。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`。
+- **DSN-01（Done）**：Open Design POC 原型已落 `docs/design/dsn-01-open-design/prototype.html`，handoff/review 已补齐；Codex review Conditional Pass，允许 I-20 只落地 onboarding-first `/forge` shell + account-level assumption chips。
 - **产品方向已修订并合入 main**（`docs/ForgeNote_修订版方向.md`，PR #7 `7e41bf7`）：护城河=过程层不做视觉渲染；M1 重定义为三支柱（假设条 / 内容包 / 配方复用），学习闭环 / 观测 SDK / runtime i18n 延后；冷启动「第一次怎么赢」。V-01（拉测试用户）已挂起（PR #6 关闭，前提不成立）。
 - M1 计划票 I-08~I-19 全部 Done，已并入 `main`（`7e41bf7`）。
 
 ## 已通过验收
+- I-20：自动验证 `doctor` / `lint` / `typecheck` / `build` 通过；真实 Chrome 登录态 `/forge` UI 路径通过：输入模糊想法 → 方向确认 → 三条假设（受众 / 内容形式 / 表达角度）→ 编辑「受众」为「新手父母」→ `已确认 1/3`。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 真实生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；见 `docs/acceptance/I-20.md`。状态 Done。
+- DSN-01：Open Design BYOK 使用 OpenRouter / `deepseek/deepseek-chat` 跑通；最终 accepted artifact 为 `docs/design/dsn-01-open-design/prototype.html`；`handoff.md` 与 `codex-review.md` 已落库。Codex review: Conditional Pass，允许拆 I-20；不允许直接复用 Open Design HTML/CSS/JS。
 - I-19：Production 上线就绪 + 只读指标读出。Gate 2 实现正确性通过（自动验证 + 本地一次性库实证只读）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）完成并冒烟；生产 Google OAuth 登录往返实测通过；Gate 4 经 SQL Editor 从生产库读出 6 指标（2026-06-23，测试账号样本）；用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，进入 Done（见 `docs/acceptance/I-19.md`）。残余风险：Production 上尚无外部真实用户内容路径证据
 - I-18：UI copy 资源覆盖补齐（en/zh key parity 编译期保证 + 活跃页面接线 + 本地登录态 Chrome smoke 无泄漏）通过自动验证，进入 Done；已随 PR #2 squash merge 进 `main`（`b56cfa0`），远端分支 `i-18-copy-coverage` 已删除
 - I-17：UI copy 资源 scaffold（en/zh key parity 编译期保证 + 代表性接线 + Chrome smoke）通过，进入 Done
@@ -171,7 +175,7 @@ M1
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-19 全部 Done，无在途票。下一张唯一任务待 Codex 判断、Owner 拍板后写入。候选（均需另立、不默认）：① 观测真实 SDK 接入（待 Production 出现外部真实用户、指标有量后才有意义）；② runtime i18n（仍无证据需求）。当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
+M1 计划票 I-08~I-20 全部 Done；DSN-01 已 Done。下一张票待 Owner/Codex 重新定边界。不要把视觉渲染、自动学习、内容包重设计塞回 I-20。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -182,6 +186,7 @@ M1 计划票 I-08~I-19 全部 Done，无在途票。下一张唯一任务待 Cod
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-24 (DSN-01 收口 + I-20 最小实现：Open Design accepted artifact `prototype.html` 已落库，`handoff.md` / `codex-review.md` 完成，DSN-01 → Done；I-20 已实现 onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、rationale/confidence、编辑确认、draft autosave、`accountPost` API/type/prompt 锚点。`npm run doctor` / `npm run lint` / `npm run typecheck` / `npm run build` 通过；真实 Chrome 登录态验证 `/forge` 输入 → 方向确认 → 编辑「受众」为「新手父母」→ `已确认 1/3` 通过。初次最终生成被 ForgeNote runtime OpenRouter `401` 阻塞，Owner 恢复 key 后以 `OPENROUTER_MODEL=openai/gpt-4o-mini` 重跑成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；I-20 → Done)
 2026-06-23 (I-19 Production 验收收口 → **Done**：浏览器实操完成 Production 配置（Vercel 4 env→Production / Deployment Protection 关 / Supabase Production redirect URL + Google Client Secret），生产 `/login` 渲染、`/forge` 鉴权重定向、**Google OAuth 登录往返**实测通过；Gate 4 经 Supabase SQL Editor 从生产库读出 6 指标（测试账号样本：activation 2/2、assumption_edit 2/12、recipe_save 1/12、recipe_rerun 1/1、return_session 1/2、performance_fill 2/12）；用户内容路径以 Preview 同码已验为依据由 Owner 接受 Conditional Pass。直连生产库被本机代理 fake-ip 挡掉裸 5432，改走 SQL Editor。未改产品代码 / schema / RLS / prompt / API。残余风险：Production 尚无外部真实用户内容路径证据)
 2026-06-22 (OPS-02 状态同步：当前 `main`/`origin/main` HEAD = `acd94fe`，PR #4 / I-19 代码文档侧已 squash merge；修正 PROJECT-STATUS/TICKETS 中仍指向 `b56cfa0`、PR #2、I-19 Ready/下一张唯一任务的过期现状。I-19 当前状态定为 Review / Pending Production Acceptance：Gate 2 已交付，Gate 3 Production 真实用户路径与 Gate 4 Production DB metrics 待 Owner 配置后补证据。未改产品代码、脚本、API、DB、RLS、prompt)
 2026-06-22 (OPS-01 文档基线同步：基于 origin/main `b56cfa0`（PR #2 / I-18 已 squash merge），修正过期 live 状态——「当前分支 i-01-forge-workspace」「当前 PR PR #1 Draft」改为「无活跃功能分支 / main 已含 PR #2」；I-18 补入已完成、已通过验收、TICKETS Done 表；下一张唯一任务标注待 Owner 拍板、不默认进入 runtime i18n。新增 `docs/OPERATING-MODEL.md`，AGENTS/DECISIONS/RUNBOOK/PR 模板对齐角色·Gate·QA Agent 真实用户路径验收协议。仅文档改动，未触碰 src / package / API / DB / RLS / prompt)
