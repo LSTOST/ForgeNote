@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-无进行中票。**DSN-01、I-20、I-21 均已 Done**：DSN-01 Open Design POC 产物已落 `docs/design/dsn-01-open-design/`；I-20 最小实现已落地到 `/forge`，包括 onboarding-first shell、可选过往帖冷启动、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` / `rationale` / `confidence` 数据锚点。I-21 补齐生成后 `/forge?session=` 地址化，刷新后仍能回看成功结果或恢复草稿错误态。
+当前唯一下一票：**I-22 Ready，但不在 PR #9 里实现**。DSN-01、I-20、I-21 均已 Done：DSN-01 Open Design POC 产物已落 `docs/design/dsn-01-open-design/`；I-20 最小实现已落地到 `/forge`，包括 onboarding-first shell、可选过往帖冷启动、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` / `rationale` / `confidence` 数据锚点。I-21 补齐生成后 `/forge?session=` 地址化，刷新后仍能回看成功结果或恢复草稿错误态。I-22 将一次性攻支柱 2：第一份内容方案是否真的可用、值得保存。
 
 ## 当前分支
 当前工作分支：`codex/dsn-01-design-brief`。本分支包含 DSN-01 Open Design 文档收口、I-20 最小实现与 I-21 session URL 连续性修正；`main` 仍是最近合入的产品基线。
 
 ## 当前 PR
-Draft PR #9：`https://github.com/LSTOST/ForgeNote/pull/9`。状态：open draft，merge state clean；GitHub Actions `Doctor / Lint / Typecheck / Build` 通过，Vercel Preview Ready；PR body 已补合并证据。下一张票待 Owner/Codex 重新定边界。
+Draft PR #9：`https://github.com/LSTOST/ForgeNote/pull/9`。状态：open draft，merge state clean；GitHub Actions `Doctor / Lint / Typecheck / Build` 通过，Vercel Preview Ready；PR body 已补合并证据。Preview `/forge` hosted Gate 3 复测尝试被 Chrome 登录安全策略挡住：访问 `/forge` 会转 `/login`，Google 登录动作被拦截；未绕过。PR #9 暂不转 Ready。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -126,6 +126,7 @@ Draft PR #9：`https://github.com/LSTOST/ForgeNote/pull/9`。状态：open draft
 
 ## 进行中
 - 无进行中票。
+- **I-22（Ready / next）**：一次性完成「第一份内容方案可用性」升级，把结果从松散文案区推进到可直接复制发布的结构化初稿：发布正文、逐页卡片文案、配图方向、发布前检查、保存配方前的价值判断。阻塞：PR #9 先补 Preview 登录态 Gate 3 或由 Owner 接受当前 Draft 风险后合并。
 - **I-21（Done）**：生成成功后把返回的 `sessionId` 写入 `/forge?session=`；生成失败但草稿已落库时也写入草稿 session URL；「新建」与重新定方向会清理旧 session query，避免刷新丢失刚生成结果。
 - **I-20（Done）**：DSN-01 最小实现已完成并通过自动验证 + 登录态 UI 验收 + 真实生成路径。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`。
 - **DSN-01（Done）**：Open Design POC 原型已落 `docs/design/dsn-01-open-design/prototype.html`，handoff/review 已补齐；Codex review Conditional Pass，允许 I-20 只落地 onboarding-first `/forge` shell + account-level assumption chips。
@@ -133,7 +134,7 @@ Draft PR #9：`https://github.com/LSTOST/ForgeNote/pull/9`。状态：open draft
 - M1 计划票 I-08~I-21 全部 Done；I-08~I-19 已并入 `main`（`7e41bf7`），DSN-01/I-20/I-21 当前在 PR #9。
 
 ## 已通过验收
-- I-21：自动验证 `lint` / `typecheck` / `build` 通过；代码路径核对通过。`ForgeWorkbench` 在成功生成与草稿失败时更新 `/forge?session=`，刷新复用既有 Server Component 预载 session 逻辑；点击「新建」或重新进入方向确认清理旧 session query；见 `docs/acceptance/I-21.md`。状态 Done。
+- I-21：自动验证 `lint` / `typecheck` / `build` 通过；代码路径核对通过。`ForgeWorkbench` 在成功生成与草稿失败时更新 `/forge?session=`，刷新复用既有 Server Component 预载 session 逻辑；点击「新建」或重新进入方向确认清理旧 session query；Preview hosted 复测尝试被 Chrome 登录安全策略挡住，未绕过；见 `docs/acceptance/I-21.md`。状态 Done，但 PR #9 仍保持 Draft。
 - I-20：自动验证 `doctor` / `lint` / `typecheck` / `build` 通过；真实 Chrome 登录态 `/forge` UI 路径通过：输入模糊想法 → 方向确认 → 三条假设（受众 / 内容形式 / 表达角度）→ 编辑「受众」为「新手父母」→ `已确认 1/3`。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 真实生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；见 `docs/acceptance/I-20.md`。状态 Done。
 - DSN-01：Open Design BYOK 使用 OpenRouter / `deepseek/deepseek-chat` 跑通；最终 accepted artifact 为 `docs/design/dsn-01-open-design/prototype.html`；`handoff.md` 与 `codex-review.md` 已落库。Codex review: Conditional Pass，允许拆 I-20；不允许直接复用 Open Design HTML/CSS/JS。
 - I-19：Production 上线就绪 + 只读指标读出。Gate 2 实现正确性通过（自动验证 + 本地一次性库实证只读）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）完成并冒烟；生产 Google OAuth 登录往返实测通过；Gate 4 经 SQL Editor 从生产库读出 6 指标（2026-06-23，测试账号样本）；用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，进入 Done（见 `docs/acceptance/I-19.md`）。残余风险：Production 上尚无外部真实用户内容路径证据
@@ -177,7 +178,7 @@ Draft PR #9：`https://github.com/LSTOST/ForgeNote/pull/9`。状态：open draft
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-21 全部 Done；DSN-01 已 Done。下一张票待 Owner/Codex 重新定边界。不要把视觉渲染、自动学习、内容包重设计塞回当前 PR。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
+M1 计划票 I-08~I-21 全部 Done；DSN-01 已 Done。下一张票为 I-22：第一份内容方案可用性升级。不要把视觉渲染、资产库、自动学习塞回当前 PR。PR #9 在 Preview 登录态 Gate 3 被补证据前保持 Draft；I-22 不应在 PR #9 上继续堆代码。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -188,6 +189,7 @@ M1 计划票 I-08~I-21 全部 Done；DSN-01 已 Done。下一张票待 Owner/Cod
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-24 (大目标重定：目标从“继续补小票”调整为“PR #9 可合并收口 + I-22 大票边界”。PR #9 最新 head `2576793` checks/Vercel 全绿，但 Preview `/forge` hosted Gate 3 复测在 Chrome 中转 `/login` 后被 Google 登录安全策略挡住，未绕过，因此 PR #9 继续保持 Draft。I-22 已定为下一张唯一大票：一次性升级第一份内容方案可用性，覆盖发布正文、逐页卡片文案、配图方向、发布前检查与保存配方前价值判断；不做资产库/视觉渲染/视觉配方/自动学习。)
 2026-06-24 (PR #9 状态复核 + I-21 收口：PR #9 open draft / merge state clean / CI pass / Vercel Preview Ready / 无 review threads，PR body 已补合并证据；本地工作区仅有未跟踪 `原型图/`，按约束不纳入。I-21 已实现 `/forge` 生成成功/草稿失败后的 session URL 地址化，刷新可复用既有 `/forge?session=` 预载逻辑回看结果或恢复错误态；`npm run lint` / `npm run typecheck` / `npm run build` 通过。)
 2026-06-24 (DSN-01 收口 + I-20 最小实现：Open Design accepted artifact `prototype.html` 已落库，`handoff.md` / `codex-review.md` 完成，DSN-01 → Done；I-20 已实现 onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、rationale/confidence、编辑确认、draft autosave、`accountPost` API/type/prompt 锚点。`npm run doctor` / `npm run lint` / `npm run typecheck` / `npm run build` 通过；真实 Chrome 登录态验证 `/forge` 输入 → 方向确认 → 编辑「受众」为「新手父母」→ `已确认 1/3` 通过。初次最终生成被 ForgeNote runtime OpenRouter `401` 阻塞，Owner 恢复 key 后以 `OPENROUTER_MODEL=openai/gpt-4o-mini` 重跑成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；I-20 → Done)
 2026-06-23 (I-19 Production 验收收口 → **Done**：浏览器实操完成 Production 配置（Vercel 4 env→Production / Deployment Protection 关 / Supabase Production redirect URL + Google Client Secret），生产 `/login` 渲染、`/forge` 鉴权重定向、**Google OAuth 登录往返**实测通过；Gate 4 经 Supabase SQL Editor 从生产库读出 6 指标（测试账号样本：activation 2/2、assumption_edit 2/12、recipe_save 1/12、recipe_rerun 1/1、return_session 1/2、performance_fill 2/12）；用户内容路径以 Preview 同码已验为依据由 Owner 接受 Conditional Pass。直连生产库被本机代理 fake-ip 挡掉裸 5432，改走 SQL Editor。未改产品代码 / schema / RLS / prompt / API。残余风险：Production 尚无外部真实用户内容路径证据)
