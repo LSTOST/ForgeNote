@@ -135,6 +135,8 @@ export const zhHans = {
     copySummary: "复制配方摘要",
     saveRecipe: "保存配方",
     saved: "已保存到配方库",
+    viewRecipe: "查看配方",
+    savedReuseHint: "下一步去配方详情换一个输入重跑，确认这个判断真的能复用。",
     needSession: "需要先成功生成内容",
     namePlaceholder: "给这个配方起个名字",
     nameAria: "配方名称",
