@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `77e5b80`（PR #9 / DSN-01 + I-20 + I-21 已 squash merge）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `a9c0f44`（PR #10 / I-22 已 squash merge）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -49,18 +49,20 @@
 | DSN-01 | Done | Open Design POC：onboarding-first `/forge` + account-level assumption chips；Codex review Conditional Pass，允许拆 I-20 | `docs/design/dsn-01-open-design/codex-review.md` |
 | I-20 | Done | DSN-01 最小实现：onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` 数据锚点；OpenRouter 401 修复后真实生成成功 | `docs/acceptance/I-20.md` |
 | I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
+| I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
 > PR #9 已 squash merge 到 `main`（`77e5b80`），DSN-01 / I-20 / I-21 全部进入 `main`。
+> PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-22 | Review | 一次性完成「第一份内容方案可用性」升级：把生成结果从松散文案区推进到可直接复制发布的结构化初稿，包括正文、逐页卡片文案、配图方向、发布检查清单和保存配方前的价值判断 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化 | PR #10 CI/Vercel 绿；Preview Gate 3 通过 |
+| I-23 | Ready | 保存配方后的复用证据链：保存 I-22 结构化结果后，用户能直接进入配方详情并换输入重跑；新结果仍保留发布正文、逐页卡片、配图方向、发布前检查 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化、DB schema/RLS 改动 | I-22 已合入 main；`POST /api/recipes` 已返回 `recipeId`；I-10 配方详情/重跑路径已存在 |
 
-> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。I-21 补齐 I-20 后暴露的最短用户路径缺口：生成结果必须可刷新、可回看。I-22 不再补界面碎片，直接攻支柱 2：第一份内容方案是否真的值得保存和复用。
+> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-22 已把第一份结果推进到结构化、可复制、可判断是否保存；下一步不是继续美化输出，而是证明“值得保存”能进入真实复用：保存后到配方详情，再换输入重跑，仍得到 I-22 级别的内容方案。
 
 ### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
@@ -227,11 +229,11 @@
 - 代码路径核对通过：I-21 复用既有 `/forge?session=` 预载逻辑；本票不新增数据库/API 面。
 ```
 
-### I-22 执行票（下一张大票）
+### I-22 执行票（已完成）
 
 ```text
 票号：I-22
-状态：Review
+状态：Done
 类型：实现票（支柱 2：第一份内容方案可用性）
 目标：把 `/forge` 的首个生成结果从“看起来像 AI 文案输出”升级为“创作者能直接拿去改一遍就发布的结构化初稿”。
       本票一次性覆盖结果质量、结果呈现、复制动作和保存配方前的价值判断，不再拆成多个小 UI 补丁。
@@ -302,7 +304,76 @@
 实测结果：
 - 自动验证通过：doctor / lint / typecheck / build / smoke:api。
 - Preview Gate 3 通过：真实登录态 `dennisliu1225@gmail.com` 下输入 → 方向确认 → 编辑受众「新手父母」→ 生成成功 session `ee77c9d6-55d5-407e-a990-e7b9164520fc` → 结果含发布正文、5 页逐页卡片文案、每页配图方向、发布前检查 `全部通过`、复制逐页卡片文案、保存配方前价值判断 → 刷新 `/forge?session=` 后结果完整恢复。
-- PR #10 可转 Ready；I-22 待合并后进入 Done。
+- PR #10 已 squash merge 到 `main`（`a9c0f44`）；I-22 Done。
+```
+
+### I-23 执行票（下一张唯一任务）
+
+```text
+票号：I-23
+状态：Ready
+类型：实现票（保存配方后的复用证据链）
+目标：把 I-22 的“这次配方值不值得留”推进到真实复用路径：
+      用户保存结构化内容方案后，能立即进入配方详情，并用新输入重跑；
+      重跑后的 `/forge?session=` 仍呈现 I-22 的结构化结果，而不是退回松散 AI 输出。
+
+用户是谁：
+- 已在 `/forge` 得到一份可用内容方案的单人创作者。
+
+用户任务：
+- 判断这次结果值得保存 → 保存配方 → 查看配方 → 换一个新主题重跑 → 拿到同等结构的内容方案。
+
+本票改变的真实路径：
+  `/forge?session=<I-22结果>`
+  → 保存配方
+  → 保存成功后点击查看配方
+  → `/recipes/<id>` 输入新主题重跑
+  → `/forge?session=<newSessionId>`
+  → 结果仍包含发布正文、逐页卡片文案、配图方向、发布前检查
+
+范围内：
+1. `RecipePanel` 保存成功后保留 `POST /api/recipes` 返回的 `recipeId`，显示“查看配方”入口，跳到 `/recipes/<recipeId>`。
+2. 成功态文案明确这是进入复用路径，不只是一句“已保存”。
+3. 复核配方详情/重跑路径对 I-22 结构的兼容性；如仅需 UI 文案或小修，限定在保存→详情→重跑链路。
+4. 补 `docs/acceptance/I-23.md`：记录保存、进入详情、换输入重跑、`/forge?session=` 结构化结果恢复证据。
+
+范围外：
+- 不做资产库、视觉渲染、图片生成、视觉配方系统。
+- 不做自动学习、表现数据反推默认假设、配方评分。
+- 不改 DB schema / RLS / `content_package` 命名。
+- 不做配方库重设计、多账号、内容日历、自动发布。
+
+涉及文件（预计）：
+- `src/components/forge/RecipePanel.tsx`
+- `src/lib/copy/zh-Hans.ts`
+- `src/lib/copy/en.ts`
+- `docs/acceptance/I-23.md`
+- 状态同步：`docs/TICKETS.md`、`docs/PROJECT-STATUS.md`
+
+验收标准：
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- 登录态 `/forge?session=<I-22结果>` 可保存配方，保存成功后出现 `/recipes/<id>` 入口。
+- 点击入口进入配方详情，详情页可见来源 session / 核心字段 / 重跑表单。
+- 用新输入重跑成功后跳到 `/forge?session=<newSessionId>`。
+- 新 session 结果仍至少包含：发布正文、5-8 页逐页卡片文案、配图方向、发布前检查。
+- 原配方不被覆盖，`usage_count` 成功重跑后增加。
+
+验证命令：
+  npm run doctor
+  npm run lint
+  npm run typecheck
+  npm run build
+  FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api
+
+手工验收步骤：
+  真实登录态打开一条 I-22 completed session → 保存配方 → 点击查看配方
+  → 输入新主题重跑 → 落到新 `/forge?session=` → 检查 I-22 结构化结果与 usage_count。
+
+风险：
+- 旧配方 fields 可能只含旧版 `cardPrompts.prompt`；本票验收使用 I-22 后生成并保存的配方，旧数据兼容只做不白屏，不要求回填。
+
+下一步：
+- 完成 I-23 后，才有资格判断是否进入真实测试用户拉取；否则“保存配方”只是摆设，没有证明复用价值。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
@@ -370,7 +441,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-21 与 DSN-01 均已 Done。下一张唯一任务是 I-22：一次性升级第一份内容方案可用性。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）和支柱2（可用内容方案）做到「第一次就显得懂、生成后真能用」。V-01（拉测试用户）仍挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-22 与 DSN-01 均已 Done。下一张唯一任务是 I-23：保存配方后的复用证据链。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）、支柱2（可用内容方案）和支柱3（配方复用）串成一条真实路径。V-01（拉测试用户）仍挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
