@@ -16,7 +16,7 @@ import { PerformancePanel } from "@/components/forge/PerformancePanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { copy as uiCopy } from "@/lib/copy";
-import type { ContentPackage } from "@/lib/ai/types";
+import type { ContentPackage, Verification } from "@/lib/ai/types";
 
 const c = uiCopy.outcome;
 
@@ -30,6 +30,8 @@ interface OutcomePanelProps {
   sessionId?: string | null;
   /** I-16：本次生成的目标输出语言 / 表达偏好（无则不展示）。 */
   outputLocale?: string | null;
+  /** I-22：发布前检查项，成功态在主结果区展示。 */
+  verification?: Verification | null;
   onRetry: () => void;
   /** 新建：清空当前 session 回到空态（UIUX §7.5）。 */
   onNew: () => void;
@@ -42,15 +44,13 @@ function buildFullText(o: ContentPackage): string {
   lines.push(`# ${c.titles}`, ...o.titles.map((t) => `- ${t}`), "");
   lines.push(`# ${c.body}`, o.body, "");
   lines.push(
-    `# ${c.cardStructure}`,
-    ...o.cardStructure.map((card) => `${card.index}. [${card.type}] ${card.title}`),
+    `# ${c.cardPrompts}`,
+    ...o.cardPrompts.map((card) => formatCardCopy(o, card.index)),
     "",
   );
   lines.push(
-    `# ${c.cardPrompts}`,
-    ...o.cardPrompts.map(
-      (card) => `${c.cardNoBracket.replace("{n}", String(card.index))}\n${card.prompt}`,
-    ),
+    `# ${c.visualDirections}`,
+    ...o.cardPrompts.map((card) => formatVisualDirection(card.index, card.visualDirection ?? card.prompt)),
     "",
   );
   lines.push(`# ${c.hashtags}`, o.hashtags.map((t) => `#${t}`).join(" "), "");
@@ -66,6 +66,7 @@ export function OutcomePanel({
   authRequired = false,
   sessionId = null,
   outputLocale = null,
+  verification = null,
   onRetry,
   onNew,
 }: OutcomePanelProps) {
@@ -137,17 +138,6 @@ export function OutcomePanel({
 
     return (
       <Card className="min-h-72 space-y-6 p-6">
-        {sessionId && (
-          <p className="text-xs text-muted-foreground/70">
-            {c.sessionLabel}<span className="font-mono">{sessionId}</span>
-          </p>
-        )}
-        {outputLocale && (
-          <p className="text-xs text-muted-foreground/70">
-            {c.localeLabel}<span className="font-medium">{outputLocale}</span>
-          </p>
-        )}
-
         {/* 操作区（UIUX §7.5）。 */}
         <div className="flex flex-wrap gap-2 border-b pb-4">
           <Button
@@ -175,12 +165,7 @@ export function OutcomePanel({
             onClick={() =>
               copy(
                 "prompts",
-                outcome.cardPrompts
-                  .map(
-                    (card) =>
-                      `${c.cardNoBracket.replace("{n}", String(card.index))}\n${card.prompt}`,
-                  )
-                  .join("\n\n"),
+                outcome.cardPrompts.map((card) => formatCardCopy(outcome, card.index)).join("\n\n"),
               )
             }
           >
@@ -228,32 +213,58 @@ export function OutcomePanel({
           </p>
         </Section>
 
-        <Section title={c.cardStructure}>
-          <ol className="space-y-1 text-sm">
-            {outcome.cardStructure.map((card) => (
-              <li key={card.index} className="flex gap-2">
-                <span className="text-muted-foreground">#{card.index}</span>
-                <span className="text-muted-foreground">[{card.type}]</span>
-                <span className="whitespace-pre-wrap">{card.title}</span>
+        <Section title={c.cardPrompts}>
+          <ol className="space-y-3 text-sm">
+            {outcome.cardPrompts.map((card) => (
+              <li key={card.index} className="space-y-1.5 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+                <p className="font-medium text-foreground">
+                  {c.cardNo.replace("{n}", String(card.index))}
+                  {getCardTitle(outcome, card.index) ? `：${getCardTitle(outcome, card.index)}` : ""}
+                </p>
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {card.body ?? card.prompt}
+                </p>
               </li>
             ))}
           </ol>
         </Section>
 
-        <Section title={c.cardPrompts}>
-          <ol className="space-y-3 text-sm">
+        <Section title={c.visualDirections}>
+          <ol className="space-y-2 text-sm">
             {outcome.cardPrompts.map((card) => (
-              <li key={card.index} className="space-y-1">
-                <p className="font-medium text-muted-foreground">
+              <li key={card.index} className="flex gap-2">
+                <span className="shrink-0 text-muted-foreground">
                   {c.cardNo.replace("{n}", String(card.index))}
-                </p>
-                <p className="whitespace-pre-wrap leading-relaxed">
-                  {card.prompt}
-                </p>
+                </span>
+                <span className="leading-relaxed">
+                  {card.visualDirection ?? card.prompt}
+                </span>
               </li>
             ))}
           </ol>
         </Section>
+
+        {verification && (
+          <Section title={c.publishChecklist}>
+            <ul className="space-y-1.5 text-sm">
+              {verification.checks.map((check) => (
+                <li key={check.key} className="flex items-start gap-2">
+                  {check.passed ? (
+                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden />
+                  ) : (
+                    <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+                  )}
+                  <span>
+                    <span className="font-medium">{check.label}</span>
+                    {check.message ? (
+                      <span className="text-muted-foreground">：{check.message}</span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
 
         <Section title={c.hashtags}>
           <div className="flex flex-wrap gap-2">
@@ -274,6 +285,21 @@ export function OutcomePanel({
           </p>
         </Section>
 
+        {(sessionId || outputLocale) && (
+          <div className="space-y-1 border-t pt-3 text-xs text-muted-foreground/70">
+            {sessionId && (
+              <p>
+                {c.sessionLabel}<span className="font-mono">{sessionId}</span>
+              </p>
+            )}
+            {outputLocale && (
+              <p>
+                {c.localeLabel}<span className="font-medium">{outputLocale}</span>
+              </p>
+            )}
+          </div>
+        )}
+
         {/* I-12：F-16 表现回填 lite（仅成功且已落库 session 时可记录）。 */}
         {sessionId && <PerformancePanel sessionId={sessionId} />}
       </Card>
@@ -288,6 +314,23 @@ export function OutcomePanel({
       <p className="max-w-sm text-sm text-muted-foreground">{c.emptyBody}</p>
     </Card>
   );
+}
+
+function getCardTitle(outcome: ContentPackage, index: number): string {
+  return outcome.cardStructure.find((card) => card.index === index)?.title ?? "";
+}
+
+function formatCardCopy(outcome: ContentPackage, index: number): string {
+  const card = outcome.cardPrompts.find((item) => item.index === index);
+  if (!card) return "";
+  const title = getCardTitle(outcome, index);
+  const label = c.cardNoBracket.replace("{n}", String(index));
+  const body = card.body ?? card.prompt;
+  return [title ? `${label} ${title}` : label, body].join("\n");
+}
+
+function formatVisualDirection(index: number, text: string): string {
+  return `${c.cardNoBracket.replace("{n}", String(index))}\n${text}`;
 }
 
 function Section({

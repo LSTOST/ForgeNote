@@ -63,42 +63,56 @@ const CARD_STRUCTURE: CardStructureItem[] = [
   { index: 7, type: "ending", title: "先有底，再谈生活" },
 ];
 
-/** 固定 7 张卡片的 Prompt 文本。 */
+/** 固定 7 张卡片的逐页文案与配图方向。 */
 const CARD_PROMPTS: CardPromptItem[] = [
   {
     index: 1,
-    prompt:
-      "第 1 张（封面）：暖米白背景，深炭黑大标题「第一次独居 先留这笔钱」，低饱和橙色细节点缀，极简留白，无人物。",
+    prompt: "第一次独居，先留一笔能让你睡得着的钱。",
+    body: "先别急着买齐所有家具。\n真正让独居变稳的，是一笔随时能用的备用金。",
+    visualDirection:
+      "暖米白背景，深炭黑大标题，低饱和橙色细节点缀，极简留白，无人物。",
   },
   {
     index: 2,
-    prompt:
-      "第 2 张：标题「为什么要先留备用金」，三行短句说明独居突发开销，浅灰线稿小图标，排版整齐。",
+    prompt: "备用金不是为了变有钱，是为了遇到突发事不用慌。",
+    body: "家电突然坏了\n临时需要看病\n房租押金周转不开\n这些都不该靠临时借钱解决。",
+    visualDirection:
+      "三列清单排版，浅灰线稿小图标对应家电、医疗、搬家，文字留白充足。",
   },
   {
     index: 3,
-    prompt:
-      "第 3 张：标题「先留多少」，给出 3 个月基础开销的区间示意，数字清晰，避免焦虑话术。",
+    prompt: "第一次独居，先从 1 个月基础开销开始。",
+    body: "如果压力大，先留 1 个月。\n稳定后再慢慢补到 3 个月。\n不用一步到位，先有底最重要。",
+    visualDirection:
+      "阶梯式数字图示，从 1 个月到 3 个月，数字清晰，背景保持克制。",
   },
   {
     index: 4,
-    prompt:
-      "第 4 张：标题「这笔钱放哪里」，对比随取账户与定期，用简单图示，强调可随时取用。",
+    prompt: "这笔钱不要放在会让你舍不得动的地方。",
+    body: "备用金的第一要求是：急用时能拿出来。\n可以单独放一个随取账户，和日常消费分开。",
+    visualDirection:
+      "左右对比排版：日常花销账户与备用金账户，用细线分隔，配图方向偏账本/钱包抽象图标。",
   },
   {
     index: 5,
-    prompt:
-      "第 5 张：标题「哪些算紧急支出」，列出看病、修家电、临时搬家等，条目化呈现。",
+    prompt: "这些情况，才值得动用备用金。",
+    body: "看病买药\n维修必要家电\n临时搬家或押金周转\n影响生活安全的支出",
+    visualDirection:
+      "四个勾选项列表，配简单线性图标，重点突出“必要”和“紧急”。",
   },
   {
     index: 6,
-    prompt:
-      "第 6 张：标题「怎么慢慢攒」，给出每月固定划转的小习惯，温和鼓励，不制造压力。",
+    prompt: "攒备用金，最怕靠临时热情。",
+    body: "每次收入到账后，先划一小笔。\n哪怕每月只多一点，也比月底剩多少算多少更稳。",
+    visualDirection:
+      "月历和小额转账箭头组合，低饱和色块，画面温和不施压。",
   },
   {
     index: 7,
-    prompt:
-      "第 7 张（结尾）：标题「先有底，再谈生活」，一句收尾文案，引导收藏，风格与封面统一。",
+    prompt: "先有底，再谈生活。",
+    body: "独居不是一下子把生活过完美。\n先让自己有一点余地，后面的选择才会更从容。",
+    visualDirection:
+      "回到封面同款暖米白背景，中心短句排版，右下角放极简钥匙或小房子线稿。",
   },
 ];
 
@@ -170,7 +184,12 @@ export function generateMockContentPackage(
     visualStyle: "暖米白背景、深炭黑标题、低饱和橙强调、浅灰线稿、极简留白",
     negativeRules: ["不要广告感", "不要课程感", "不要焦虑营销", "不要引流话术"],
     variables: ["主题", "卡片数量", "目标人群", "核心建议"],
-    acceptance: ["标题清楚", "卡片风格统一", "正文可直接发布", "无引流词"],
+    acceptance: [
+      "发布正文能独立成文",
+      "逐页卡片文案可直接复制到设计稿",
+      "每页都有明确配图方向",
+      "没有焦虑营销和引流词",
+    ],
   };
 
   // 规则 5：验收结果（overallPassed + checks，对齐 DATA-SCHEMA §4.4）。
@@ -181,9 +200,33 @@ export function generateMockContentPackage(
       { key: "has_body", label: "有正文", passed: true, message: "已包含发布正文" },
       {
         key: "has_card_prompts",
-        label: "有画面说明",
+        label: "有逐页卡片文案",
         passed: true,
-        message: "已包含 7 张画面说明",
+        message: "已包含 7 页卡片文案",
+      },
+      {
+        key: "card_count",
+        label: "逐页卡片数量（5-8）",
+        passed: true,
+        message: "已规划 7 页",
+      },
+      {
+        key: "cards_aligned",
+        label: "卡片标题与文案一一对应",
+        passed: true,
+        message: "每页都有标题和文案",
+      },
+      {
+        key: "cards_have_copy",
+        label: "每页有可复制文案",
+        passed: true,
+        message: "每页都有正文/要点",
+      },
+      {
+        key: "cards_have_visual_direction",
+        label: "每页有配图方向",
+        passed: true,
+        message: "每页都有配图方向",
       },
       { key: "has_hashtags", label: "有话题", passed: true, message: "已包含发布话题" },
       {

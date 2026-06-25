@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `acd94fe`（PR #4 / I-19 代码文档侧已合入）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `77e5b80`（PR #9 / DSN-01 + I-20 + I-21 已 squash merge）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -52,12 +52,13 @@
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
+> PR #9 已 squash merge 到 `main`（`77e5b80`），DSN-01 / I-20 / I-21 全部进入 `main`。
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-22 | Ready | 一次性完成「第一份内容方案可用性」升级：把生成结果从松散文案区推进到可直接复制发布的结构化初稿，包括正文、逐页卡片文案、配图方向、发布检查清单和保存配方前的价值判断 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化 | PR #9 合并；Preview 登录态 Gate 3 补证据 |
+| I-22 | In Progress | 一次性完成「第一份内容方案可用性」升级：把生成结果从松散文案区推进到可直接复制发布的结构化初稿，包括正文、逐页卡片文案、配图方向、发布检查清单和保存配方前的价值判断 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化 | PR #9 已合并；当前在 `codex/i-22-content-plan-usability` 实现 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。I-21 补齐 I-20 后暴露的最短用户路径缺口：生成结果必须可刷新、可回看。I-22 不再补界面碎片，直接攻支柱 2：第一份内容方案是否真的值得保存和复用。
 
@@ -230,7 +231,7 @@
 
 ```text
 票号：I-22
-状态：Ready
+状态：In Progress
 类型：实现票（支柱 2：第一份内容方案可用性）
 目标：把 `/forge` 的首个生成结果从“看起来像 AI 文案输出”升级为“创作者能直接拿去改一遍就发布的结构化初稿”。
       本票一次性覆盖结果质量、结果呈现、复制动作和保存配方前的价值判断，不再拆成多个小 UI 补丁。
@@ -299,7 +300,7 @@
 - `/forge?session=<id>` 刷新后结果仍可见。
 
 阻塞：
-- PR #9 仍是 Draft；Preview 登录态刷新路径未补证据前，不应把 I-22 塞进同一 PR。
+- 无当前实现阻塞；完成后必须补 Preview 或本地登录态 Gate 3 证据。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>

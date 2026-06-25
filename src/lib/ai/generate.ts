@@ -51,6 +51,8 @@ const cardStructureSchema = z.object({
 const cardPromptSchema = z.object({
   index: z.number(),
   prompt: z.string(),
+  body: z.string().optional(),
+  visualDirection: z.string().optional(),
 });
 
 const outcomeSchema = z.object({
@@ -173,7 +175,7 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     '    "titles": string[],               // 标题备选，至少 2 条',
     '    "body": string,                   // 发布正文（可含换行）',
     '    "cardStructure": [ { "index": number, "type": string, "title": string } ],',
-    '    "cardPrompts": [ { "index": number, "prompt": string } ],',
+    '    "cardPrompts": [ { "index": number, "prompt": string, "body": string, "visualDirection": string } ],',
     `    "hashtags": string[],             // ${HASHTAG_MIN}-${HASHTAG_MAX} 个话题，不带 # 号`,
     '    "commentGuide": string            // 评论区引导句',
     "  },",
@@ -189,7 +191,10 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     '    "acceptance": string[]            // 验收标准',
     "  }",
     "}",
-    "cardStructure 与 cardPrompts 的条目数量必须一致且 index 一一对应。",
+    "cardStructure 与 cardPrompts 的条目数量必须一致且 index 一一对应，数量必须为 5-8 页。",
+    "cardPrompts.prompt 字段保留兼容，但现在必须写该页可直接上卡片的文案，不要写绘图提示词。",
+    "cardPrompts.body 必须写该页卡片正文/要点，适合直接复制到图文卡片；visualDirection 必须写该页配图方向。",
+    "结果要像可发布初稿：正文可直接作为发布文案起点，每页卡片有标题、正文/要点、配图方向，recipe.acceptance 写发布前检查项。",
     "assumptions 只输出 3 条：受众、内容形式、表达角度。每条必须有 rationale 和 confidence。",
     "如果用户已提供已确认假设，assumptions 要回显这些假设，不要擅自改写用户已改的值。",
     "正文与卡片禁止出现公众号 / 微信 / 私信领取等引流话术，禁止焦虑营销。",
@@ -280,8 +285,52 @@ function verifyOutcome(outcome: ContentPackage): Verification {
     passed: outcome.cardPrompts.length > 0,
     message:
       outcome.cardPrompts.length > 0
-        ? `已包含 ${outcome.cardPrompts.length} 张画面说明`
-        : "缺少画面说明",
+        ? `已包含 ${outcome.cardPrompts.length} 页卡片文案`
+        : "缺少逐页卡片文案",
+  });
+
+  const cardCount = outcome.cardPrompts.length;
+  const cardCountOk = cardCount >= 5 && cardCount <= 8;
+  checks.push({
+    key: "card_count",
+    label: "逐页卡片数量（5-8）",
+    passed: cardCountOk,
+    message: cardCountOk
+      ? `已规划 ${cardCount} 页`
+      : `当前 ${cardCount} 页，需在 5-8 页之间`,
+  });
+
+  const structureIndexes = new Set(outcome.cardStructure.map((card) => card.index));
+  const cardsAligned =
+    outcome.cardStructure.length === outcome.cardPrompts.length &&
+    outcome.cardPrompts.every((card) => structureIndexes.has(card.index));
+  checks.push({
+    key: "cards_aligned",
+    label: "卡片标题与文案一一对应",
+    passed: cardsAligned,
+    message: cardsAligned ? "每页都有标题和文案" : "卡片结构与逐页文案未对齐",
+  });
+
+  const cardsHaveBody = outcome.cardPrompts.every(
+    (card) => (card.body ?? card.prompt).trim().length > 0,
+  );
+  checks.push({
+    key: "cards_have_copy",
+    label: "每页有可复制文案",
+    passed: cardsHaveBody,
+    message: cardsHaveBody ? "每页都有正文/要点" : "存在缺少正文/要点的卡片",
+  });
+
+  const cardsHaveVisualDirection = outcome.cardPrompts.every((card) =>
+    hasVisualDirection(card.visualDirection ?? card.prompt),
+  );
+  checks.push({
+    key: "cards_have_visual_direction",
+    label: "每页有配图方向",
+    passed: cardsHaveVisualDirection,
+    message: cardsHaveVisualDirection
+      ? "每页都有配图方向"
+      : "存在缺少配图方向的卡片",
   });
 
   const hashtagCount = outcome.hashtags.length;
@@ -315,8 +364,21 @@ function findBannedWord(outcome: ContentPackage): string | null {
     outcome.body,
     outcome.commentGuide,
     ...outcome.titles,
+    ...outcome.cardPrompts.flatMap((card) => [
+      card.prompt,
+      card.body ?? "",
+      card.visualDirection ?? "",
+    ]),
   ].join("\n");
   return BANNED_WORDS.find((word) => haystack.includes(word)) ?? null;
+}
+
+function hasVisualDirection(value: string): boolean {
+  const text = value.trim();
+  if (text.length === 0) return false;
+  return ["配图", "画面", "视觉", "背景", "图标", "插图", "排版"].some((word) =>
+    text.includes(word),
+  );
 }
 
 /** 构造失败响应：保留输入与假设的 D-04 草稿。 */
