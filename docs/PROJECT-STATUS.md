@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**I-23 Review / Gate 3 Pass**。PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。I-23 已在 PR #12 完成实现、Gate 2 与 Preview Gate 3：保存 I-22 结构化结果后，保存成功态显示 `/recipes/<id>` 入口；进入配方详情换输入重跑后，新 `/forge?session=` 仍保留 I-22 结构。
+当前唯一票：**V-01 Ready**。PR #12 已 squash merge 到 `main`（`c62065f`），I-23 进入 Done。I-20/I-22/I-23 已串起假设条、可用内容方案、配方复用三段主路径；`docs/acceptance/V-01.md` 已准备测试脚本和记录模板，下一步不继续堆功能，直接让 1-3 个非构建者用户在 Production 走完首次生成、保存配方、配方重跑，并记录指标与阻塞点。
 
 ## 当前分支
-当前工作分支：`codex/i-23-recipe-reuse-proof`。分支基于 `main` / `origin/main` = `e12e1eb`（PR #11 状态同步合并后基线）。
+当前代码基线：`main` / `origin/main` = `c62065f`（PR #12 / I-23 squash merge 后）。本次只做状态同步分支，不改产品代码。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12`，状态：Draft，CI/Vercel 绿，Preview Gate 3 已通过，可转 Ready。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。当前无活跃产品实现 PR。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -19,7 +19,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 **权威记录**：`DECISIONS.md`「v5 选择性折叠」D-06 / D-07 / D-08；`TICKETS.md` I-15 / I-16；`PRD-M1.md` §2、§4.3。
 
 **边界（review / 验收须守住）**
-- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）+ I-18（UI copy 资源覆盖补齐）+ I-19（Production 就绪 + 指标读出）已完成；M1 计划票 I-08~I-22 全部 Done。
+- I-12 / I-13 / I-14（Batch D）+ I-17（i18n 资源 scaffold）+ I-18（UI copy 资源覆盖补齐）+ I-19（Production 就绪 + 指标读出）已完成；M1 计划票 I-08~I-23 全部 Done。
 - login / forge / recipes 已建代码不动。
 - **D-01 不变**：`content_package` 冻结，M1 不改名 `carousel_package`。
 - M1 不收费；Stripe / 去小红书化 / taxonomy 改名延后（D-08）。
@@ -125,15 +125,17 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 当前执行边界
-- **I-23（Review / Gate 3 Pass）**：保存配方后的复用证据链。分支实现只补 `/forge` 保存成功 → `/recipes/<id>` → 换输入重跑 → 新 `/forge?session=` 的连续性证据；`RecipePanel` 已保留 `POST /api/recipes` 返回的 `recipeId` 并显示“查看配方”入口。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；PR #12 Preview Gate 3 通过。不做资产库、视觉渲染、视觉配方、自动学习、DB schema/RLS 改动。
+- **V-01（Ready）**：小范围真实用户验证。让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录指标与阻塞点。范围外：新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历。
+- **I-23（Done）**：保存配方后的复用证据链。PR #12 已 squash merge 到 `main`（`c62065f`）。保存成功 → `/recipes/<id>` → 换输入重跑 → 新 `/forge?session=` 的连续性证据已在 Preview Gate 3 通过；`usage_count` 0→1，I-22 结构保留。
 - **I-22（Done）**：PR #10 已 squash merge 到 `main`（`a9c0f44`）；实现包含生成契约/prompt 最小升级、逐页卡片文案与配图方向、发布前检查、保存配方前价值判断。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过，Preview Gate 3 通过。
 - **I-21（Done）**：生成成功后把返回的 `sessionId` 写入 `/forge?session=`；生成失败但草稿已落库时也写入草稿 session URL；「新建」与重新定方向会清理旧 session query，避免刷新丢失刚生成结果。
 - **I-20（Done）**：DSN-01 最小实现已完成并通过自动验证 + 登录态 UI 验收 + 真实生成路径。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`。
 - **DSN-01（Done）**：Open Design POC 原型已落 `docs/design/dsn-01-open-design/prototype.html`，handoff/review 已补齐；Codex review Conditional Pass，允许 I-20 只落地 onboarding-first `/forge` shell + account-level assumption chips。
 - **产品方向已修订并合入 main**（`docs/ForgeNote_修订版方向.md`，PR #7 `7e41bf7`）：护城河=过程层不做视觉渲染；M1 重定义为三支柱（假设条 / 内容包 / 配方复用），学习闭环 / 观测 SDK / runtime i18n 延后；冷启动「第一次怎么赢」。V-01（拉测试用户）已挂起（PR #6 关闭，前提不成立）。
-- M1 计划票 I-08~I-22 全部 Done；I-22 已并入 `main`（`a9c0f44`）。
+- M1 计划票 I-08~I-23 全部 Done；I-23 已并入 `main`（`c62065f`）。
 
 ## 已通过验收
+- I-23：自动验证 `doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；PR #12 Preview Gate 3 真实登录态 `dennisliu1225@gmail.com` 下完成生成 → 保存配方 → 出现“查看配方”链接 → 进入 `/recipes/a59217cf-efbf-423e-965d-016f00c26d4e` → 换输入重跑 → 落 `/forge?session=ff4e94aa-4c1c-4395-9e62-e6938f7be132`，新结果仍含发布正文、5 页卡片文案、配图方向、发布前检查 `全部通过`；回详情页 `usage_count` 0→1。PR #12 已合并，状态 Done。
 - I-22：自动验证 `doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；Preview Gate 3 真实登录态 `dennisliu1225@gmail.com` 下输入 → 方向确认 → 编辑受众「新手父母」→ 生成成功 session `ee77c9d6-55d5-407e-a990-e7b9164520fc`。结果含发布正文、5 页逐页卡片文案、每页配图方向、发布前检查 `全部通过`、复制逐页卡片文案、保存配方前价值判断；刷新 `/forge?session=` 后完整恢复。PR #10 已合并，状态 Done。
 - I-21：自动验证 `lint` / `typecheck` / `build` 通过；Preview 登录态实测：`/forge` 渲染登录用户 `dennisliu1225@gmail.com`，输入 → 方向确认 → 编辑「受众」为「新手父母」→ `已确认 1/3`。Preview env refresh 后成功生成 session `5f6278be-0eae-4d5c-ae61-92d614cba15f`，URL 写入 `/forge?session=5f6278be-0eae-4d5c-ae61-92d614cba15f`，刷新后恢复完成结果、发布正文、配方区、受众与 session id。见 `docs/acceptance/I-21.md`。状态 Done。
 - I-20：自动验证 `doctor` / `lint` / `typecheck` / `build` 通过；真实 Chrome 登录态 `/forge` UI 路径通过：输入模糊想法 → 方向确认 → 三条假设（受众 / 内容形式 / 表达角度）→ 编辑「受众」为「新手父母」→ `已确认 1/3`。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 真实生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；见 `docs/acceptance/I-20.md`。状态 Done。
@@ -179,7 +181,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-22 全部 Done；DSN-01 已 Done；PR #10 / PR #11 已合并。当前唯一任务是 I-23：保存配方后的复用证据链。PR #12 已通过 CI/Vercel 与 Preview Gate 3，可转 Ready。不要把视觉渲染、资产库、自动学习塞进 I-23。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 已合并。当前唯一任务是 V-01：小范围真实用户验证。不要再把视觉渲染、资产库、自动学习塞进下一步；先拿真实用户是否能独立完成主路径、是否保存、是否重跑的证据。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -190,7 +192,8 @@ M1 计划票 I-08~I-22 全部 Done；DSN-01 已 Done；PR #10 / PR #11 已合并
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
-2026-06-25 (I-23 Preview Gate 3 通过：先在 Supabase Auth Redirect URLs 加 `https://forge-note-git-*-lstosts-projects.vercel.app/auth/callback` wildcard，确认 Total URLs=6，OAuth 正确回 PR #12 Preview。真实 Preview 登录态 `dennisliu1225@gmail.com` 下跑通：输入「想做一组第一次独居备用金清单的图文卡片」→ 编辑受众「新手父母」→ 生成 source session `5acdcb82-7956-4f89-aba9-3abe9a63890c`，结构含发布正文/5 页卡片/配图方向/发布前检查/全部通过；保存后出现“查看配方”链接 `/recipes/a59217cf-efbf-423e-965d-016f00c26d4e` 和复用提示；详情页来源 session 与 usage_count=0 可见；换输入「想做一组第一次给孩子准备家庭应急金的图文卡片」重跑后落 `/forge?session=ff4e94aa-4c1c-4395-9e62-e6938f7be132`，结构仍完整且全部通过；回详情页 usage_count=1。PR #12 可转 Ready。)
+2026-06-25 (PR #12 已 squash merge 到 `main`（`c62065f`），I-23 → Done。`docs/TICKETS.md` 已把下一张唯一任务切到 V-01，`docs/acceptance/V-01.md` 已准备测试脚本和记录模板：1-3 个非构建者用户在 Production 走完首次生成、保存配方、配方详情重跑，并读出 activation / assumption_edit / recipe_save / recipe_rerun 指标。继续写功能不是最短路径；当前最短路径是证明主闭环有没有真实用户能跑通。)
+2026-06-25 (I-23 Preview Gate 3 通过：先在 Supabase Auth Redirect URLs 加 `https://forge-note-git-*-lstosts-projects.vercel.app/auth/callback` wildcard，确认 Total URLs=6，OAuth 正确回 PR #12 Preview。真实 Preview 登录态 `dennisliu1225@gmail.com` 下跑通：输入「想做一组第一次独居备用金清单的图文卡片」→ 编辑受众「新手父母」→ 生成 source session `5acdcb82-7956-4f89-aba9-3abe9a63890c`，结构含发布正文/5 页卡片/配图方向/发布前检查/全部通过；保存后出现“查看配方”链接 `/recipes/a59217cf-efbf-423e-965d-016f00c26d4e` 和复用提示；详情页来源 session 与 usage_count=0 可见；换输入「想做一组第一次给孩子准备家庭应急金的图文卡片」重跑后落 `/forge?session=ff4e94aa-4c1c-4395-9e62-e6938f7be132`，结构仍完整且全部通过；回详情页 usage_count=1。随后 PR #12 已合并。)
 2026-06-25 (I-23 进入 Review / Gate 2 Pass：`codex/i-23-recipe-reuse-proof` 最小实现已落，`RecipePanel` 保存成功后保留 `recipeId` 并显示 `/recipes/<id>`“查看配方”入口，提示用户去配方详情换输入重跑；无 API / DB / RLS / prompt 改动。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过，Preview Gate 3 待验证。)
 2026-06-25 (PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 → Done。下一张唯一任务拆为 I-23：保存配方后的复用证据链，只补保存成功后进入配方详情、换输入重跑、返回 `/forge?session=` 后仍保留 I-22 结构化结果；继续排除资产库、视觉渲染、视觉配方、自动学习、DB schema/RLS 改动。)
 2026-06-25 (I-22 Preview Gate 3 通过：Supabase Redirect URL 修复后，真实 Preview 登录态 `dennisliu1225@gmail.com` 下跑通：输入「想做一组第一次独居备用金清单的图文卡片」→ 方向确认 → 编辑受众「新手父母」→ `已确认 1/3` → 生成成功 session `ee77c9d6-55d5-407e-a990-e7b9164520fc`。结果含发布正文、5 页逐页卡片文案、每页配图方向、发布前检查 `全部通过`、复制逐页卡片文案成功写入剪贴板、保存配方前价值判断；刷新 `/forge?session=` 后完成结果/受众/正文/卡片/配图方向/检查/配方判断/session id 均恢复。)
