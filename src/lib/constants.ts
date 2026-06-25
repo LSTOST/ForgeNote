@@ -19,6 +19,9 @@ export const MAX_INPUT_CHARS = 8000;
 /** I-16：输出语言 / 表达偏好的最大长度（自由文本防滥用，不是 enum、不与国家/平台绑定）。 */
 export const MAX_OUTPUT_LOCALE_CHARS = 120;
 
+/** DSN-01：可选过往帖冷启动输入上限。沿用主输入量级，避免复杂账号建模。 */
+export const MAX_ACCOUNT_POST_CHARS = 8000;
+
 /** I-16：归一化 outputLocale —— trim；空串视为 null。长度上限由各 route 的 schema 校验。 */
 export function normalizeOutputLocale(
   value: string | null | undefined,

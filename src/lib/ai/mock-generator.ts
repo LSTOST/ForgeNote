@@ -15,52 +15,40 @@ import type {
   Verification,
 } from "./types";
 
-/** 输入为空时补的最少 5 条固定假设。 */
+/** 输入为空时补的 3 条方向假设。 */
 const DEFAULT_ASSUMPTIONS: Assumption[] = [
-  {
-    key: "platform",
-    label: "平台",
-    value: "小红书",
-    valueType: "text",
-    source: "inferred",
-    state: "default",
-    editable: true,
-  },
-  {
-    key: "format",
-    label: "内容形式",
-    value: "7张卡片",
-    valueType: "text",
-    source: "inferred",
-    state: "default",
-    editable: true,
-  },
   {
     key: "audience",
     label: "受众",
-    value: "第一次独居的人",
+    value: "普通家庭财务新手",
     valueType: "text",
     source: "inferred",
     state: "default",
     editable: true,
+    rationale: "固定 mock 用通用财务新手作为默认读者。",
+    confidence: "inferred",
   },
   {
-    key: "style",
-    label: "风格",
-    value: "成熟生活手册感",
+    key: "content_form",
+    label: "内容形式",
+    value: "图文清单",
     valueType: "text",
     source: "inferred",
     state: "default",
     editable: true,
+    rationale: "备用金主题适合拆成可扫读清单。",
+    confidence: "inferred",
   },
   {
-    key: "tone",
-    label: "语气",
-    value: "清楚、温和、可收藏",
+    key: "angle",
+    label: "表达角度",
+    value: "先给判断再给做法",
     valueType: "text",
     source: "inferred",
     state: "default",
     editable: true,
+    rationale: "财务建议先给判断，再给执行步骤。",
+    confidence: "inferred",
   },
 ];
 
@@ -173,9 +161,9 @@ export function generateMockContentPackage(
     structure: [
       "内容定位",
       "标题备选",
-      "小红书正文",
+      "发布正文",
       "卡片结构",
-      "卡片 Prompt",
+      "画面说明",
       "发布话题",
       "评论区引导",
     ],
@@ -190,12 +178,12 @@ export function generateMockContentPackage(
     overallPassed: true,
     checks: [
       { key: "has_title", label: "有标题", passed: true, message: "已包含标题备选" },
-      { key: "has_body", label: "有正文", passed: true, message: "已包含小红书正文" },
+      { key: "has_body", label: "有正文", passed: true, message: "已包含发布正文" },
       {
         key: "has_card_prompts",
-        label: "有卡片 Prompt",
+        label: "有画面说明",
         passed: true,
-        message: "已包含 7 张卡片 Prompt",
+        message: "已包含 7 张画面说明",
       },
       { key: "has_hashtags", label: "有话题", passed: true, message: "已包含发布话题" },
       {

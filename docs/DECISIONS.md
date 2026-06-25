@@ -97,9 +97,9 @@ F-16 AC③「同 intentType 下高表现配方在库中优先识别/排序」依
 
 ---
 
-## UI 实现与设计交付流程（2026-06-20，2026-06-22 修订）
+## UI 实现与设计交付流程（2026-06-20，2026-06-23 修订）
 
-明确 Claude Design / Claude Code / Codex / GitHub Copilot / v0 的分工与边界，作为页面设计与落地的权威依据。本节只规范交付流程，不改产品功能、不改页面代码。
+明确 Claude Design / Open Design / Claude Code / Codex / GitHub Copilot / v0 的分工与边界，作为页面设计与落地的权威依据。本节只规范交付流程，不改产品功能、不改页面代码。
 
 完整角色与 gate 见 `docs/OPERATING-MODEL.md`。本节为设计/实现流程的决策摘要；如需判断验收、发布、反馈闭环，以 operating model 为准。
 
@@ -109,6 +109,7 @@ F-16 AC③「同 intentType 下高表现配方在库中优先识别/排序」依
 |---|---|---|
 | Codex | 定义正确性：读文档、判断下一票、写执行指令、架构审查；票进入 Review 后切换为 QA Agent | 不做主力实现；不把外部工具输出、代码 review 或 CI 通过直接视为验收依据 |
 | Claude Design | 生成页面视觉方向、交互原型、设计系统线索 | 不直接作为代码来源；不定义业务状态、接口、认证、数据库或验收标准 |
+| Open Design | 本地优先的设计原型工具；可替代 Claude Design 生成 DSN 类原型、HTML artifact、截图/录屏与 handoff | 只作为设计工具；不安装进 ForgeNote 仓库；不直接并入生成代码；不接管业务状态、接口、认证、数据库或验收标准 |
 | Claude Code | 按票改真实 Next.js 项目，并补齐状态、交互、响应式与可访问性 | 必须遵守 Codex 票据、`UIUX-M1.md`、`DATA-SCHEMA.md`、`API-CONTRACT.md` |
 | QA Agent（Codex 角色切换） | 按真实用户路径验收，记录证据与残余风险 | 不只读代码；不以“构建通过”替代用户路径跑通 |
 | Vercel + CI | 发布与运行保障：CI、Preview、env、deployment、auth 边界 | 不替代产品验收；Preview 能打开不等于用户路径可用 |
@@ -120,7 +121,7 @@ F-16 AC③「同 intentType 下高表现配方在库中优先识别/排序」依
 
 页面分两类：
 
-1. 核心体验页面：先用 Claude Design 出视觉方向/原型，再由 Codex 转成票据，Claude Code 接入项目
+1. 核心体验页面：先用 Claude Design 或 Open Design 出视觉方向/原型，再由 Codex 转成票据，Claude Code 接入项目
    - `/forge`
    - `/recipes/[id]`（后续配方详情页）
 
@@ -132,13 +133,26 @@ F-16 AC③「同 intentType 下高表现配方在库中优先识别/排序」依
 
 ### 设计输出使用规则
 
-1. Claude Design 输出只作为视觉和交互参考，不直接覆盖现有仓库。
+1. Claude Design / Open Design 输出只作为视觉和交互参考，不直接覆盖现有仓库。
 2. 每次只设计一个页面或一个关键组件。
 3. Codex 必须把设计结果转成明确票据：目标、非目标、允许改动范围、验收标准、验证命令。
 4. 设计确认后，Claude Code 参考设计输出重写为项目内组件。
 5. 所有业务状态、按钮行为、错误态、加载态，以 `UIUX-M1.md` 为唯一准则。
-6. Claude Design / v0 生成的文案、假数据、API、认证逻辑均不作为实现依据。
+6. Claude Design / Open Design / v0 生成的文案、假数据、API、认证逻辑均不作为实现依据。
 7. v0 仅在需要独立组件草稿时使用；任何 v0 代码进入仓库前，都必须由 Claude Code 按项目结构重写，并由 Codex review 是否越界。
+
+### D-09 DSN-01 Open Design POC（2026-06-23）
+
+DSN-01 先用 **Open Design** 做「新用户引导态 + 账号级假设条」原型 POC；若 POC 不达标，则回退 Owner 已具备的 **Claude Pro / Claude Design** 路径。
+
+- 目标不变：让首次用户第一屏感到「AI 已经懂我的账号」。
+- POC 判定：Open Design 必须能稳定运行、能按 ForgeNote neutral/shadcn 风格出原型、且产物/速度不明显弱于 Claude Design；否则不替代。
+- 工具边界不变：Open Design 或 Claude Design 只交付原型、视觉/交互方向、差异点清单与 handoff；不直接修改 ForgeNote 源码。
+- 运行事实：本机 Docker 源码构建可跑通 Open Design `0.11.1`，`http://127.0.0.1:7456` 返回 200，`/api/health` 返回 `{"ok":true,"version":"0.11.1"}`；官方镜像直拉当前返回 unauthorized，采用源码 build fallback。
+- 费用事实：Docker 模式不能直接消费 Claude Pro；若用 Open Design 生成，模型走 Owner BYOK/AMR。Codex 不读取、不粘贴、不保存 secret。
+- 实现边界不变：后续由 Codex 拆实现票（预计 I-20），Claude Code 按现有 Next.js / shadcn / Tailwind 结构重写实现。
+- 执行 brief：`docs/design/DSN-01-brief.md`。
+- 运行/费用/交付协议：`docs/design/OPEN-DESIGN-DSN-01-RUNBOOK.md`。
 
 ### 验收与发布规则
 

@@ -13,6 +13,8 @@ import {
   type ChatMessage,
 } from "./openrouter-client";
 import type {
+  Assumption,
+  AssumptionConfidence,
   ContentPackage,
   ForgeGenerationDraft,
   ForgeGenerationRequest,
@@ -73,7 +75,16 @@ const recipeSchema = z.object({
   acceptance: z.array(z.string()),
 });
 
+const modelAssumptionSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  value: z.string(),
+  rationale: z.string().optional(),
+  confidence: z.enum(["high", "inferred", "unsure"]).optional(),
+});
+
 const modelOutputSchema = z.object({
+  assumptions: z.array(modelAssumptionSchema).optional(),
   outcome: outcomeSchema,
   recipe: recipeSchema,
 });
@@ -123,8 +134,7 @@ export async function generateContentPackage(
   return {
     ok: true,
     intentType: request.intentType,
-    // I-02B 不做 classifyIntent / buildAssumptions（属 I-09/I-10），原样回传输入假设。
-    assumptions: request.assumptions,
+    assumptions: normalizeAssumptions(request, parsed.assumptions),
     questions: [],
     outcome,
     recipe,
@@ -138,19 +148,30 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     request.assumptions.length > 0
       ? request.assumptions
           .filter((a) => a.state !== "dismissed")
-          .map((a) => `- ${a.label}：${a.value}`)
+          .map((a) => {
+            const confidence = a.confidence ? `；置信度：${a.confidence}` : "";
+            const rationale = a.rationale ? `；依据：${a.rationale}` : "";
+            return `- ${a.label}：${a.value}${confidence}${rationale}`;
+          })
           .join("\n")
       : "（无显式假设，请基于输入合理推断）";
 
+  const accountPostLine = request.accountPost
+    ? `\n\n用户贴过的一条过往帖（只用于本次账号语气/受众推断，不要在结果中逐字复述）：\n${request.accountPost}`
+    : "";
+
   const system = [
-    "你是 ForgeNote 的内容锻造引擎，把模糊想法整理成可直接发布的小红书图文内容包。",
+    "你是 ForgeNote 的内容锻造引擎，把模糊想法整理成可直接发布的图文内容方案。",
     "只输出一个 JSON 对象，不要输出 JSON 以外的任何文字、解释或 markdown 代码块围栏。",
     "JSON 结构必须严格为：",
     "{",
+    '  "assumptions": [',
+    '    { "key": string, "label": string, "value": string, "rationale": string, "confidence": "high" | "inferred" | "unsure" }',
+    "  ],",
     '  "outcome": {',
     '    "positioning": string,            // 内容定位',
     '    "titles": string[],               // 标题备选，至少 2 条',
-    '    "body": string,                   // 小红书正文（可含换行）',
+    '    "body": string,                   // 发布正文（可含换行）',
     '    "cardStructure": [ { "index": number, "type": string, "title": string } ],',
     '    "cardPrompts": [ { "index": number, "prompt": string } ],',
     `    "hashtags": string[],             // ${HASHTAG_MIN}-${HASHTAG_MAX} 个话题，不带 # 号`,
@@ -169,6 +190,8 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     "  }",
     "}",
     "cardStructure 与 cardPrompts 的条目数量必须一致且 index 一一对应。",
+    "assumptions 只输出 3 条：受众、内容形式、表达角度。每条必须有 rationale 和 confidence。",
+    "如果用户已提供已确认假设，assumptions 要回显这些假设，不要擅自改写用户已改的值。",
     "正文与卡片禁止出现公众号 / 微信 / 私信领取等引流话术，禁止焦虑营销。",
   ].join("\n");
 
@@ -180,6 +203,7 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
 
   const user = [
     `用户原始想法：\n${request.rawInput}`,
+    accountPostLine,
     "",
     `内容类型：${request.intentType}`,
     "",
@@ -191,6 +215,41 @@ function buildMessages(request: ForgeGenerationRequest): ChatMessage[] {
     { role: "system", content: system },
     { role: "user", content: user },
   ];
+}
+
+function normalizeAssumptions(
+  request: ForgeGenerationRequest,
+  modelAssumptions:
+    | Array<{
+        key: string;
+        label: string;
+        value: string;
+        rationale?: string;
+        confidence?: AssumptionConfidence;
+      }>
+    | undefined,
+): Assumption[] {
+  if (request.assumptions.length > 0) {
+    return request.assumptions.map((a) => ({
+      ...a,
+      rationale: a.rationale ?? `${a.label} 来自本次生成前的方向确认。`,
+      confidence: a.confidence ?? (a.source === "manual" ? "high" : "inferred"),
+    }));
+  }
+
+  if (!modelAssumptions || modelAssumptions.length === 0) return [];
+
+  return modelAssumptions.slice(0, 3).map((a) => ({
+    key: a.key,
+    label: a.label,
+    value: a.value,
+    valueType: "text",
+    source: "inferred",
+    state: "default",
+    editable: true,
+    rationale: a.rationale,
+    confidence: a.confidence ?? "inferred",
+  }));
 }
 
 /**
@@ -212,17 +271,17 @@ function verifyOutcome(outcome: ContentPackage): Verification {
     key: "has_body",
     label: "有正文",
     passed: outcome.body.trim().length > 0,
-    message: outcome.body.trim().length > 0 ? "已包含小红书正文" : "缺少正文",
+    message: outcome.body.trim().length > 0 ? "已包含发布正文" : "缺少正文",
   });
 
   checks.push({
     key: "has_card_prompts",
-    label: "有卡片 Prompt",
+    label: "有画面说明",
     passed: outcome.cardPrompts.length > 0,
     message:
       outcome.cardPrompts.length > 0
-        ? `已包含 ${outcome.cardPrompts.length} 张卡片 Prompt`
-        : "缺少卡片 Prompt",
+        ? `已包含 ${outcome.cardPrompts.length} 张画面说明`
+        : "缺少画面说明",
   });
 
   const hashtagCount = outcome.hashtags.length;

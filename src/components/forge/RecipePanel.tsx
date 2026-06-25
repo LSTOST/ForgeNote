@@ -7,7 +7,7 @@ import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { copy } from "@/lib/copy";
-import type { RecipeDraft, Verification } from "@/lib/ai/types";
+import type { IntentType, RecipeDraft, Verification } from "@/lib/ai/types";
 
 const c = copy.recipePanel;
 
@@ -23,7 +23,7 @@ interface RecipePanelProps {
 function buildRecipeSummary(r: RecipeDraft): string {
   const lines: string[] = [
     `${c.summaryName}：${r.name}`,
-    `${c.summaryIntent}：${r.intentType}`,
+    `${c.summaryIntent}：${formatIntentType(r.intentType)}`,
     `${c.summaryAudience}：${r.audience}`,
     `${c.summaryGoal}：${r.goal}`,
     `${c.summaryTone}：${r.tone}`,
@@ -199,7 +199,7 @@ export function RecipePanel({
         </div>
 
         <Field label={c.summaryName} value={recipe.name} />
-        <Field label={c.summaryIntent} value={recipe.intentType} />
+        <Field label={c.summaryIntent} value={formatIntentType(recipe.intentType)} />
         <Field label={c.summaryAudience} value={recipe.audience} />
         <Field label={c.summaryGoal} value={recipe.goal} />
         <Field label={c.summaryTone} value={recipe.tone} />
@@ -222,6 +222,10 @@ export function RecipePanel({
       <p className="max-w-sm text-sm text-muted-foreground">{c.emptyBody}</p>
     </Card>
   );
+}
+
+function formatIntentType(intentType: IntentType): string {
+  return copy.intentTypes[intentType] ?? intentType;
 }
 
 function Field({ label, value }: { label: string; value: string }) {

@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeNote - 创作工作台</title>
+  <style>
+    :root {
+      /* 暖色调色板 */
+      --paper: #f8f4ee;
+      --ink: #5c5550;
+      --accent: #d97757;
+      --muted: #a8a095;
+      --border: #e5dfd8;
+      --surface: #ffffff;
+      --success: #7d9d78;
+
+      /* 间距系统 */
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+
+      /* 字体栈 */
+      --font-sans: "Geist", "SF Pro Text", -apple-system, system-ui, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      line-height: 1.8;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* 顶栏样式 */
+    .app-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .save-indicator {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* 左侧导航 - 初始极简状态 */
+    .nav-sidebar {
+      width: 72px;
+      padding: var(--space-md);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .nav-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: default;
+      position: relative;
+    }
+
+    /* 纯CSS图标 */
+    .nav-icon::before {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: currentColor;
+      box-shadow:
+        0 -6px 0 currentColor,
+        0 6px 0 currentColor;
+    }
+
+    .nav-icon:nth-child(2)::before {
+      box-shadow:
+        0 -5px 0 currentColor,
+        0 0 0 currentColor,
+        0 5px 0 currentColor;
+      width: 24px;
+    }
+
+    .nav-icon:nth-child(3)::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      box-shadow:
+        8px 0 0 currentColor,
+        16px 0 0 currentColor;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      padding: var(--space-xl);
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* 首屏输入区 */
+    .hero-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      margin-top: 20vh;
+    }
+
+    .hero-title {
+      font-size: 1.75rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .input-container {
+      position: relative;
+    }
+
+    .idea-input {
+      width: 100%;
+      padding: var(--space-md);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 1rem;
+      resize: none;
+      min-height: 120px;
+      transition: border-color 0.2s;
+    }
+
+    .idea-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.2);
+    }
+
+    .submit-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: var(--space-md) var(--space-lg);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    .submit-btn:hover {
+      background: #c4694c;
+    }
+
+    .submit-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.5);
+    }
+
+    .context-link {
+      color: var(--muted);
+      font-size: 0.875rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .context-link:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* 理解中骨架 */
+    .thinking-state {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      margin-top: 10vh;
+    }
+
+    .skeleton-block {
+      background: var(--border);
+      border-radius: 6px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 方案态核心 */
+    .direction-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+
+    .direction-header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .direction-title {
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .essence-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      font-size: 1.125rem;
+      margin-bottom: var(--space-lg);
+    }
+
+    .essence-item {
+      display: flex;
+      align-items: center;
+    }
+
+    .essence-item:not(:last-child):after {
+      content: "·";
+      margin: 0 var(--space-sm);
+      color: var(--muted);
+    }
+
+    /* 假设标签样式 */
+    .assumptions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .assumption-tag {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.875rem;
+      gap: var(--space-sm);
+    }
+
+    .assumption-label {
+      font-weight: 500;
+    }
+
+    .assumption-value {
+      color: var(--ink);
+    }
+
+    .edit-tag-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.875rem;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .edit-tag-btn:hover {
+      background: rgba(217, 119, 87, 0.1);
+    }
+
+    .progress-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-xl);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--border);
+    }
+
+    .progress-text {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    /* 轻提示 */
+    .context-hint {
+      background: rgba(217, 119, 87, 0.05);
+      border-radius: 6px;
+      padding: var(--space-sm);
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: var(--space-lg);
+      text-align: center;
+    }
+
+    /* 弹窗编辑器 */
+    .editor-popover {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: var(--space-lg);
+      width: 90%;
+      max-width: 400px;
+      z-index: 100;
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .editor-title {
+      font-weight: 500;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .option-grid {
+      display: grid;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .option-item {
+      padding: var(--space-sm);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .option-item:hover, .option-item.selected {
+      border-color: var(--accent);
+      background: rgba(217, 119, 87, 0.05);
+    }
+
+    .popover-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+    }
+
+    /* 错误状态 */
+    .error-state {
+      background: #fdf6f5;
+      border: 1px solid #f8d7da;
+      border-radius: 8px;
+      padding: var(--space-lg);
+      text-align: center;
+    }
+
+    .error-icon {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      position: relative;
+      margin-bottom: var(--space-md);
+    }
+
+    .error-icon::before, .error-icon::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: #dc3545;
+    }
+
+    .error-icon::before {
+      width: 16px;
+      height: 2px;
+      margin: -1px 0 0 -8px;
+    }
+
+    .error-icon::after {
+      width: 2px;
+      height: 16px;
+      margin: -8px 0 0 -1px;
+    }
+
+    .retry-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: var(--space-sm) var(--space-md);
+      margin-top: var(--space-md);
+      cursor: pointer;
+    }
+
+    /* 工作台终态示意 - 响应式调整 */
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+
+    @media (min-width: 768px) {
+      .workspace-layout {
+        grid-template-columns: 240px 1fr 320px;
+        height: 80vh;
+      }
+    }
+
+    .assets-panel, .control-panel, .content-panel {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: var(--space-md);
+      border: 1px solid var(--border);
+      margin-bottom: var(--space-md);
+    }
+
+    .content-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-panel {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: var(--space-md);
+      border: 1px solid var(--border);
+    }
+
+    /* 测试面板 - 移到右上角 */
+    .test-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-sm);
+      font-size: 0.75rem;
+      z-index: 1000;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .test-panel:hover {
+      opacity: 1;
+    }
+
+    .test-link {
+      color: var(--muted);
+      text-decoration: none;
+      display: block;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .test-link:hover {
+      background: rgba(217, 119, 87, 0.1);
+      color: var(--accent);
+    }
+
+    /* 工具类 */
+    .hidden {
+      display: none !important;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-center {
+      justify-content: center;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-muted {
+      color: var(--muted);
+    }
+
+    .mt-auto {
+      margin-top: auto;
+    }
+
+    /* 焦点环 */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- App 外壳 -->
+  <header class="app-bar">
+    <div class="task-name">新内容方案</div>
+    <div class="save-indicator">已自动保存 <span id="save-time">15:27</span></div>
+    <div class="account-menu">
+      <button class="edit-tag-btn">账号</button>
+    </div>
+  </header>
+
+  <aside class="nav-sidebar">
+    <div class="nav-icon"></div>
+    <div class="nav-icon"></div>
+    <div class="nav-icon"></div>
+  </aside>
+
+  <main class="main-content">
+    <!-- 状态1: 首屏输入 -->
+    <section id="state-input" class="hero-section">
+      <h1 class="hero-title">把一个模糊想法，变成可以直接开始做的内容方案</h1>
+      <div class="input-container">
+        <textarea
+          id="idea-input"
+          class="idea-input"
+          placeholder="想到什么就写什么，不用整理得很有条理..."></textarea>
+      </div>
+      <button id="submit-btn" class="submit-btn">生成内容方案 →</button>
+      <div>
+        <a href="#" id="context-link" class="context-link">
+          <span>想更准？贴一条你发过的帖</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 状态2: 贴过往帖展开态 -->
+    <section id="state-paste" class="hidden">
+      <div class="input-container">
+        <textarea
+          id="context-input"
+          class="idea-input"
+          placeholder="粘贴你发过的帖文或内容链接..."></textarea>
+      </div>
+      <div class="flex justify-center mt-auto">
+        <button id="back-btn" class="edit-tag-btn">← 返回</button>
+        <button id="submit-with-context" class="submit-btn">生成内容方案 →</button>
+      </div>
+    </section>
+
+    <!-- 状态3: 理解中骨架 -->
+    <section id="state-thinking" class="hidden thinking-state">
+      <div class="skeleton-block" style="height: 24px; width: 60%;"></div>
+      <div class="skeleton-block" style="height: 16px; width: 80%;"></div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); margin-top: var(--space-lg);">
+        <div class="skeleton-block" style="height: 120px;"></div>
+        <div class="skeleton-block" style="height: 120px;"></div>
+        <div class="skeleton-block" style="height: 120px;"></div>
+      </div>
+    </section>
+
+    <!-- 状态4: 方案态 (有账号上下文) -->
+    <section id="state-direction" class="hidden direction-section">
+      <div class="direction-header">
+        <h2 class="direction-title">我先帮你定了这次的方向，改不对的就行</h2>
+        <div class="essence-summary">
+          <span class="essence-item">这次我会替你讲清：要不要存</span>
+          <span class="essence-item">存多少</span>
+          <span class="essence-item">放在哪</span>
+          <span class="essence-item">什么时候能动</span>
+        </div>
+      </div>
+
+      <div class="assumptions-row">
+        <div class="assumption-tag" data-key="audience">
+          <span class="assumption-label">受众：</span>
+          <span class="assumption-value" id="audience-value">30-45岁有理财需求的职场父母</span>
+          <button class="edit-tag-btn" data-target="audience">改</button>
+        </div>
+
+        <div class="assumption-tag" data-key="format">
+          <span class="assumption-label">内容形式：</span>
+          <span class="assumption-value" id="format-value">图文清单</span>
+          <button class="edit-tag-btn" data-target="format">改</button>
+        </div>
+
+        <div class="assumption-tag" data-key="tone">
+          <span class="assumption-label">表达角度：</span>
+          <span class="assumption-value" id="tone-value">实用建议+个人故事</span>
+          <button class="edit-tag-btn" data-target="tone">改</button>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-text">已确认 <span id="confirmed-count">0</span>/3 项 · 没改的我按默认理解来</div>
+        <button id="generate-btn" class="submit-btn">生成内容方案 →</button>
+      </div>
+    </section>
+
+    <!-- 状态5: 方案态 (无账号上下文) -->
+    <section id="state-direction-no-context" class="hidden direction-section">
+      <div class="direction-header">
+        <h2 class="direction-title">我先帮你定了这次的方向，改不对的就行</h2>
+        <div class="essence-summary">
+          <span class="essence-item">这次我会替你讲清：要不要存</span>
+          <span class="essence-item">存多少</span>
+          <span class="essence-item">放在哪</span>
+          <span class="essence-item">什么时候能动</span>
+        </div>
+      </div>
+
+      <div class="assumptions-row">
+        <div class="assumption-tag" data-key="audience">
+          <span class="assumption-label">受众：</span>
+          <span class="assumption-value" id="audience-value-nc">25-40岁城市居民</span>
+          <button class="edit-tag-btn" data-target="audience">改</button>
+        </div>
+
+        <div class="assumption-tag" data-key="format">
+          <span class="assumption-label">内容形式：</span>
+          <span class="assumption-value" id="format-value-nc">图文结构</span>
+          <button class="edit-tag-btn" data-target="format">改</button>
+        </div>
+
+        <div class="assumption-tag" data-key="tone">
+          <span class="assumption-label">表达角度：</span>
+          <span class="assumption-value" id="tone-value-nc">实用建议导向</span>
+          <button class="edit-tag-btn" data-target="tone">改</button>
+        </div>
+      </div>
+
+      <div class="context-hint">
+        贴一条过往帖会更准
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-text">已确认 <span id="confirmed-count-nc">0</span>/3 项 · 没改的我按默认理解来</div>
+        <button id="generate-btn-nc" class="submit-btn">生成内容方案 →</button>
+      </div>
+    </section>
+
+    <!-- 状态6: 编辑弹窗 -->
+    <section id="editor-popover" class="editor-popover hidden">
+      <div class="editor-header">
+        <h3 class="editor-title" id="editor-title">编辑受众</h3>
+        <button class="close-btn" id="close-editor">×</button>
+      </div>
+      <div class="option-grid" id="option-container">
+        <!-- 选项会动态生成 -->
+      </div>
+      <div class="popover-actions">
+        <button class="edit-tag-btn" id="cancel-editor">取消</button>
+        <button class="submit-btn" id="confirm-editor">确认</button>
+      </div>
+    </section>
+
+    <!-- 状态7: 错误状态 -->
+    <section id="state-error" class="hidden error-state">
+      <div class="error-icon"></div>
+      <p>理解你的想法时出了点问题</p>
+      <button class="retry-btn">再试一次</button>
+    </section>
+
+    <!-- 状态8: 工作台终态示意 -->
+    <section id="state-workspace" class="hidden">
+      <div class="workspace-layout">
+        <div class="assets-panel">
+          <h3>账号与内容资产</h3>
+          <p>随着使用积累的内容资产区</p>
+        </div>
+        <div class="content-panel">
+          <h3>当前内容任务</h3>
+          <p>内容创作核心工作区</p>
+        </div>
+        <div class="control-panel">
+          <h3>本次假设与配方</h3>
+          <p>调整生成参数的控件区</p>
+        </div>
+      </div>
+      <div class="history-panel">
+        <h3>历史版本与表现</h3>
+        <p>内容迭代记录和效果反馈</p>
+      </div>
+      <div class="flex justify-center mt-4">
+        <button id="back-to-main" class="edit-tag-btn">返回主流程</button>
+      </div>
+    </section>
+
+    <!-- 状态9: 生成占位 -->
+    <section id="state-next" class="hidden direction-section">
+      <div class="direction-header">
+        <h2 class="direction-title">下一步将生成内容方案</h2>
+        <p>根据你的输入和调整，系统正在准备完整的内容方案</p>
+      </div>
+      <div class="flex justify-center mt-8">
+        <button id="view-workspace" class="submit-btn">查看工作台终态示意</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 测试面板 - 移到右上角 -->
+  <div class="test-panel">
+    <a href="#" class="test-link" id="test-failure">模拟失败</a>
+    <a href="#" class="test-link" id="test-workspace">查看工作台终态</a>
+  </div>
+
+  <script>
+    // 状态管理
+    const states = {
+      INPUT: 'state-input',
+      PASTE: 'state-paste',
+      THINKING: 'state-thinking',
+      DIRECTION: 'state-direction',
+      DIRECTION_NO_CONTEXT: 'state-direction-no-context',
+      NEXT: 'state-next',
+      ERROR: 'state-error',
+      WORKSPACE: 'state-workspace'
+    };
+
+    let currentState = states.INPUT;
+    let confirmedCount = 0;
+    let currentEditingTag = null;
+    let confirmedTags = {
+      audience: false,
+      format: false,
+      tone: false
+    };
+
+    // 不同标签的选项数据
+    const tagOptions = {
+      audience: [
+        "普通家庭财务新手",
+        "新手父母",
+        "月光族职场人",
+        "自由职业者"
+      ],
+      format: [
+        "图文清单",
+        "问答拆解",
+        "三步行动指南",
+        "案例复盘"
+      ],
+      tone: [
+        "先给判断再给做法",
+        "反常识提醒",
+        "风险边界说明",
+        "生活化故事切入"
+      ]
+    };
+
+    // DOM 元素
+    const stateElements = {
+      [states.INPUT]: document.getElementById('state-input'),
+      [states.PASTE]: document.getElementById('state-paste'),
+      [states.THINKING]: document.getElementById('state-thinking'),
+      [states.DIRECTION]: document.getElementById('state-direction'),
+      [states.DIRECTION_NO_CONTEXT]: document.getElementById('state-direction-no-context'),
+      [states.NEXT]: document.getElementById('state-next'),
+      [states.ERROR]: document.getElementById('state-error'),
+      [states.WORKSPACE]: document.getElementById('state-workspace')
+    };
+
+    const contextLink = document.getElementById('context-link');
+    const submitBtn = document.getElementById('submit-btn');
+    const backBtn = document.getElementById('back-btn');
+    const submitWithContext = document.getElementById('submit-with-context');
+    const editorPopover = document.getElementById('editor-popover');
+    const closeEditor = document.getElementById('close-editor');
+    const cancelEditor = document.getElementById('cancel-editor');
+    const confirmEditor = document.getElementById('confirm-editor');
+    const optionContainer = document.getElementById('option-container');
+    const generateBtn = document.getElementById('generate-btn');
+    const generateBtnNC = document.getElementById('generate-btn-nc');
+    const confirmedCountEl = document.getElementById('confirmed-count');
+    const confirmedCountNCEl = document.getElementById('confirmed-count-nc');
+    const ideaInput = document.getElementById('idea-input');
+    const contextInput = document.getElementById('context-input');
+    const viewWorkspaceBtn = document.getElementById('view-workspace');
+    const backToMainBtn = document.getElementById('back-to-main');
+    const testFailure = document.getElementById('test-failure');
+    const testWorkspace = document.getElementById('test-workspace');
+
+    // 切换状态函数
+    function switchState(newState) {
+      // 隐藏所有状态
+      Object.values(stateElements).forEach(el => {
+        if (el) el.classList.add('hidden');
+      });
+
+      // 显示新状态
+      if (stateElements[newState]) {
+        stateElements[newState].classList.remove('hidden');
+        currentState = newState;
+      }
+
+      // 特殊状态处理
+      if (newState === states.THINKING) {
+        // 模拟处理时间
+        setTimeout(() => {
+          const hasContext = contextInput && contextInput.value.trim() !== '';
+          switchState(hasContext ? states.DIRECTION : states.DIRECTION_NO_CONTEXT);
+        }, 2000);
+      }
+    }
+
+    // 打开编辑弹窗
+    function openEditor(targetType) {
+      currentEditingTag = targetType;
+      document.getElementById('editor-title').textContent = `编辑${getTargetName(targetType)}`;
+
+      // 清空选项容器
+      optionContainer.innerHTML = '';
+
+      // 添加选项
+      tagOptions[targetType].forEach(option => {
+        const optionItem = document.createElement('div');
+        optionItem.className = 'option-item';
+        optionItem.textContent = option;
+        optionItem.addEventListener('click', () => {
+          // 移除所有选中状态
+          document.querySelectorAll('.option-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+          // 添加当前选中状态
+          optionItem.classList.add('selected');
+        });
+        optionContainer.appendChild(optionItem);
+      });
+
+      editorPopover.classList.remove('hidden');
+    }
+
+    // 确认编辑
+    function confirmEdit() {
+      if (!currentEditingTag) return;
+
+      const selectedOption = document.querySelector('.option-item.selected');
+      if (!selectedOption) {
+        closeEditorPopup();
+        return;
+      }
+
+      const newValue = selectedOption.textContent;
+      const hasContext = currentState === states.DIRECTION;
+
+      // 更新标签值
+      if (currentEditingTag === 'audience') {
+        if (hasContext) {
+          document.getElementById('audience-value').textContent = newValue;
+        } else {
+          document.getElementById('audience-value-nc').textContent = newValue;
+        }
+      } else if (currentEditingTag === 'format') {
+        if (hasContext) {
+          document.getElementById('format-value').textContent = newValue;
+        } else {
+          document.getElementById('format-value-nc').textContent = newValue;
+        }
+      } else if (currentEditingTag === 'tone') {
+        if (hasContext) {
+          document.getElementById('tone-value').textContent = newValue;
+        } else {
+          document.getElementById('tone-value-nc').textContent = newValue;
+        }
+      }
+
+      // 更新计数（如果之前未确认）
+      if (!confirmedTags[currentEditingTag]) {
+        confirmedTags[currentEditingTag] = true;
+
+        // 计算已确认数量
+        const confirmedCount = Object.values(confirmedTags).filter(v => v).length;
+
+        if (hasContext) {
+          confirmedCountEl.textContent = confirmedCount;
+        } else {
+          confirmedCountNCEl.textContent = confirmedCount;
+        }
+      }
+
+      closeEditorPopup();
+    }
+
+    // 关闭编辑弹窗
+    function closeEditorPopup() {
+      editorPopover.classList.add('hidden');
+      currentEditingTag = null;
+    }
+
+    function getTargetName(target) {
+      switch(target) {
+        case 'audience': return '受众';
+        case 'format': return '内容形式';
+        case 'tone': return '表达角度';
+        default: return '';
+      }
+    }
+
+    // 事件监听
+    contextLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchState(states.PASTE);
+    });
+
+    submitBtn.addEventListener('click', () => {
+      if (ideaInput.value.trim()) {
+        switchState(states.THINKING);
+      } else {
+        ideaInput.focus();
+      }
+    });
+
+    backBtn.addEventListener('click', () => {
+      switchState(states.INPUT);
+    });
+
+    submitWithContext.addEventListener('click', () => {
+      if (contextInput.value.trim()) {
+        switchState(states.THINKING);
+      } else {
+        contextInput.focus();
+      }
+    });
+
+    // 生成按钮事件 (有上下文)
+    generateBtn.addEventListener('click', () => {
+      switchState(states.NEXT);
+    });
+
+    // 生成按钮事件 (无上下文)
+    generateBtnNC.addEventListener('click', () => {
+      switchState(states.NEXT);
+    });
+
+    // 编辑按钮事件
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('edit-tag-btn') && e.target.dataset.target) {
+        const target = e.target.dataset.target;
+        openEditor(target);
+      }
+    });
+
+    // 关闭编辑器
+    closeEditor.addEventListener('click', closeEditorPopup);
+    cancelEditor.addEventListener('click', closeEditorPopup);
+
+    // 确认编辑
+    confirmEditor.addEventListener('click', confirmEdit);
+
+    // 查看工作台终态
+    viewWorkspaceBtn.addEventListener('click', () => {
+      switchState(states.WORKSPACE);
+    });
+
+    // 返回主流程
+    backToMainBtn.addEventListener('click', () => {
+      switchState(states.INPUT);
+    });
+
+    // 测试面板事件
+    testFailure.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchState(states.ERROR);
+    });
+
+    testWorkspace.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchState(states.WORKSPACE);
+    });
+
+    // 自动保存指示器
+    function updateSaveTime() {
+      const now = new Date();
+      document.getElementById('save-time').textContent =
+        `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+
+    // 初始化
+    updateSaveTime();
+    setInterval(updateSaveTime, 30000); // 每30秒更新
+
+    // 键盘导航支持
+    document.addEventListener('keydown', (e) => {
+      // Enter 前进
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (currentState === states.INPUT) {
+          submitBtn.click();
+        } else if (currentState === states.PASTE) {
+          submitWithContext.click();
+        } else if (currentState === states.DIRECTION || currentState === states.DIRECTION_NO_CONTEXT) {
+          if (currentState === states.DIRECTION) {
+            generateBtn.click();
+          } else {
+            generateBtnNC.click();
+          }
+        } else if (currentState === states.NEXT) {
+          viewWorkspaceBtn.click();
+        }
+      }
+
+      // Esc 返回
+      if (e.key === 'Escape') {
+        if (currentState === states.PASTE) {
+          backBtn.click();
+        } else if (currentState === states.DIRECTION || currentState === states.DIRECTION_NO_CONTEXT) {
+          switchState(states.INPUT);
+        } else if (!editorPopover.classList.contains('hidden')) {
+          closeEditorPopup();
+        } else if (currentState === states.WORKSPACE) {
+          switchState(states.INPUT);
+        } else if (currentState === states.ERROR) {
+          switchState(states.INPUT);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

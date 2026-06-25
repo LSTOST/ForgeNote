@@ -46,6 +46,9 @@
 | I-17 | Done | UI copy resource extraction scaffold（src/lib/copy en+zh-Hans + typed helper，代表性接线，不改行为） | `docs/acceptance/I-17.md` |
 | I-18 | Done | 补齐 UI copy 资源覆盖（活跃页面剩余硬编码 chrome 文案收敛到 `src/lib/copy/{zh-Hans,en}.ts`，承接 I-17，默认 zh-Hans 行为不变） | `docs/acceptance/I-18.md` |
 | I-19 | Done | Production 上线就绪 + DB 指标读出（只读 `scripts/metrics.mjs`）；Gate 3 OAuth/基础设施实测 + Gate 4 生产指标读出；用户内容路径 Conditional Pass（Preview 同码已验，Owner 接受） | `docs/acceptance/I-19.md` |
+| DSN-01 | Done | Open Design POC：onboarding-first `/forge` + account-level assumption chips；Codex review Conditional Pass，允许拆 I-20 | `docs/design/dsn-01-open-design/codex-review.md` |
+| I-20 | Done | DSN-01 最小实现：onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` 数据锚点；OpenRouter 401 修复后真实生成成功 | `docs/acceptance/I-20.md` |
+| I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -54,16 +57,16 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| DSN-01 | Ready | 支柱1设计先行：把「假设条」从表单默认值设计成「可见的账号级判断」，并设计支撑它的首屏冷启动体验，让首次用户在第一屏就感到「AI 已经懂我的账号」 | 写代码；改 prompt/schema/API；视觉渲染卡片；内容包重设计（支柱2）；配方/学习闭环；发布/日历 | `docs/ForgeNote_修订版方向.md`（已合入 main） |
+| I-22 | Ready | 一次性完成「第一份内容方案可用性」升级：把生成结果从松散文案区推进到可直接复制发布的结构化初稿，包括正文、逐页卡片文案、配图方向、发布检查清单和保存配方前的价值判断 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化 | PR #9 合并；Preview 登录态 Gate 3 补证据 |
 
-> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。支柱1=假设条，是第一次赢的关键。**设计先行**：Claude Design 产出 → Codex review 可实现性与边界 → Owner 拍板 → 之后才拆实现票。Claude Code 不参与本票。
+> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。DSN-01 已通过 Open Design POC + Codex review Conditional Pass 收口；I-20 已实现并通过自动验证、登录态 UI 验收与真实生成路径，状态 Done。I-21 补齐 I-20 后暴露的最短用户路径缺口：生成结果必须可刷新、可回看。I-22 不再补界面碎片，直接攻支柱 2：第一份内容方案是否真的值得保存和复用。
 
-### DSN-01 执行票（Codex 写给 Claude Design）
+### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
 ```text
 票号：DSN-01
-状态：Ready
-类型：设计票（Claude Design 主导；Codex review；Owner 拍板；不写代码）
+状态：Done（Open Design POC + Codex review Conditional Pass + Owner 指令推进 I-20）
+类型：设计票（Open Design POC 原型；Codex review；Owner 拍板；不写代码；Claude Design 保底）
 目标：设计「假设条 = 可见的账号级判断」的交互，以及支撑它的首屏冷启动体验，
       让首次用户在第一屏就感到「AI 已经懂我的账号，而且我几乎不用解释」。
       产出设计方向 / 原型 / 规格，供后续实现票落地。
@@ -81,7 +84,7 @@
    - 首屏信息架构、引导、空态 → 首个结果的过渡。
 3. 交付物：
    - 设计方向说明（为什么这样，对应北极星与支柱1）；
-   - 关键屏原型 / 线框（Figma 或等价可评审形式）；
+   - Open Design 高保真可点击原型（可导出 HTML 或截图/录屏作为评审证据）；若 POC 不达标，改用 Claude Design 产出同等原型；
    - 状态与边界标注：空态 / 加载 / 错误 / 无账号上下文时的 fallback；
    - 与现有 /forge 的差异点清单（哪些改、哪些留）。
 4. 顺带给「执行潦草」最小修正建议清单（供实现票处理）：
@@ -95,7 +98,9 @@
 - 不做过度账号建模（复杂画像、自动学习）——本票只要「第一次就显得懂」的最小可行形态。
 
 涉及文件：
-- 设计交付物（Figma / 图片 / 设计说明）位置由 Owner 指定；
+- 设计交付物（Open Design 项目 / 导出 HTML / 截图 / 设计说明）位置由 Owner 指定；
+- Open Design 执行 brief：`docs/design/DSN-01-brief.md`；
+- Open Design 运行/费用/交付协议：`docs/design/OPEN-DESIGN-DSN-01-RUNBOOK.md`；
 - 设计说明落 docs/（如 docs/design/DSN-01-assumptions.md，建库时定）。
 - 不改任何 src / 状态文档由后续实现票同步。
 
@@ -103,16 +108,198 @@
 - 假设条新交互（呈现 + 依据展示 + 纠偏方式）原型完成，Codex review 通过（可落地、不越界、最小可行），Owner 拍板。
 - 首屏冷启动路径设计完成，含「贴过往帖 → 账号画像 → 假设」的最小可行形态。
 - 明确哪些进下一张实现票、哪些延后。
+- Open Design 生成代码不直接进入 ForgeNote；后续由 Claude Code 按项目现有 Next.js / shadcn / Tailwind 结构重写实现。
+- Open Design POC 需先证明三件事：能稳定运行、能按 ForgeNote neutral/shadcn 风格出图、产物比直接用 Claude Design 不更慢/更差。否则不替代 Claude Design。
+- Open Design 的模型费用不走 Claude Pro；若用 Open Design，Owner 手动提供 BYOK/AMR，Codex 不读取、不粘贴、不保存 secret。
+- DSN-01 产物必须落 `docs/design/dsn-01-open-design/`，并包含 `handoff.md` 与 `codex-review.md` 后才能拆 I-20。
 
 风险：
 - 设计越界（要求图像生成 / 复杂账号建模 / 发布）会拖累实现——Codex review 守「最小可行」。
 - 「账号级判断」若只是换皮文案而无真实依据，会沦为噱头——设计须说明依据从哪来（输入 + 过往帖），为实现票的 prompt 设计定锚。
 
 下一步：
-- Owner 把本票交给 Claude Design 产出设计；
-- Codex review 可实现性与边界；Owner 拍板；
-- 之后 Codex 拆实现票（假设条交互 + 冷启动输入：prompt 调整 + UI），Claude Code 落地；
-- 内容包（支柱2）作为其后的设计/实现票，不抢占本票。
+- 已拆并落地 I-20 最小实现；内容包（支柱2）作为其后的设计/实现票，不抢占本票。
+```
+
+### I-20 执行票（已完成）
+
+```text
+票号：I-20
+状态：Done
+类型：实现票（DSN-01 最小落地）
+目标：让 `/forge` 首次路径从「表单生成器」变成 onboarding-first 内容工作台：
+      用户先输入模糊想法，可选贴一条过往帖；系统先给三条账号级方向假设，
+      用户低成本确认/修改后再进入既有生成链路。
+
+范围内：
+1. `/forge` 首屏 app shell：去掉营销 header，直达工作台。
+2. IdeaInput：模糊想法主输入；可选 account_post/过往帖冷启动；本地草稿 autosave。
+3. DirectionPanel：三条假设（受众 / 内容形式 / 表达角度），展示 rationale + confidence，可编辑并计数。
+4. API/type/prompt 数据锚点：
+   - `Assumption.rationale`
+   - `Assumption.confidence`
+   - `ForgeGenerationRequest.accountPost`
+   - `POST /api/forge` 兼容 `accountPost` / `account_post`
+5. 用户可见 copy 去内部 taxonomy：不把「内容包 / 小红书笔记 / 卡片 Prompt / Schema」作为主路径文案暴露。
+
+范围外：
+- 不直接复用 Open Design HTML/CSS/JS。
+- 不做工作台终态/terminal layout。
+- 不做内容包重设计、视觉渲染卡片、发布、日历、多账号。
+- 不做复杂账号画像/自动学习；过往帖只用于本次推断。
+- 不改 DB schema / RLS / `content_package` 底层契约。
+
+涉及文件：
+- `src/components/forge/ForgeWorkbench.tsx`
+- `src/components/forge/IdeaInput.tsx`
+- `src/components/forge/DirectionPanel.tsx`
+- `src/app/forge/page.tsx`
+- `src/app/api/forge/route.ts`
+- `src/lib/ai/types.ts`
+- `src/lib/ai/generate.ts`
+- `src/lib/ai/mock-generator.ts`
+- `src/lib/copy/zh-Hans.ts`
+- `src/lib/copy/en.ts`
+- `docs/acceptance/I-20.md`
+
+验收标准：
+- 自动验证：lint / typecheck / build 通过。
+- 登录态 Chrome：`/forge` 首屏直达工作台；输入想法后进入方向确认，而不是直接生成。
+- 方向确认只出现三条假设：受众 / 内容形式 / 表达角度。
+- 每条假设有置信度与依据；编辑任一条后 count 变 `1/3`，该条置信度变「确定」。
+- 点击最终生成时进入既有生成链路；若模型失败，错误态必须保留输入与假设并可重试。
+
+验证命令：
+  npm run lint
+  npm run typecheck
+  npm run build
+
+实测结果：
+- 自动验证通过。
+- 真实 Chrome 登录态通过：输入 → 方向确认 → 编辑「受众」为「新手父母」→ `已确认 1/3`。
+- 初次最终生成被 ForgeNote 本地 OpenRouter `401` 阻塞，错误态正常显示；Owner 恢复 ForgeNote runtime key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 路径生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`；见 `docs/acceptance/I-20.md`。
+
+下一步：
+- I-20 Done。下一张票重新定边界；不要把视觉渲染、自动学习、内容包重设计塞回 I-20。
+```
+
+### I-21 执行票（已完成）
+
+```text
+票号：I-21
+状态：Done
+类型：实现票（I-20 用户路径连续性修正）
+目标：补齐 onboarding-first `/forge` 生成后的持久化回看路径：
+      生成成功后当前 URL 必须变成 `/forge?session=<id>`，用户刷新页面仍能看到刚生成的结果；
+      生成失败但草稿已落库时，也要把草稿 session 写进 URL，刷新后恢复输入与错误态。
+
+范围内：
+1. `ForgeWorkbench` 在 `POST /api/forge` 成功后用返回的 `sessionId` 更新 URL。
+2. `POST /api/forge` 返回草稿失败时读取 `draft.sessionId`，更新 URL 并保留错误态。
+3. 用户点击「新建」或重新进入方向确认时清理旧 `?session=`，避免把新任务误绑定到旧结果。
+4. 利用既有 `/forge?session=` Server Component 预载逻辑，不新增 API / DB / RLS。
+
+范围外：
+- 不改 prompt / schema / RLS / `content_package` 契约。
+- 不做 session history、版本列表、资产库、视觉配方、内容包重设计。
+- 不引入新依赖，不扩大 DSN-01 / I-20 范围。
+
+涉及文件：
+- `src/components/forge/ForgeWorkbench.tsx`
+- `docs/acceptance/I-21.md`
+- `docs/TICKETS.md`
+- `docs/PROJECT-STATUS.md`
+
+验收标准：
+- 生成成功后浏览器地址栏从 `/forge` 变成 `/forge?session=<uuid>`。
+- 刷新该 URL 后，服务端预载 session，结果区、配方区和 session id 仍可见。
+- 生成失败且 API 返回 draft session 时，URL 也变成 `/forge?session=<uuid>`，刷新后恢复输入与错误态。
+- 点击「新建」回到 `/forge`，不保留旧 session query。
+
+验证命令：
+  npm run lint
+  npm run typecheck
+  npm run build
+
+实测结果：
+- 自动验证通过。
+- 代码路径核对通过：I-21 复用既有 `/forge?session=` 预载逻辑；本票不新增数据库/API 面。
+```
+
+### I-22 执行票（下一张大票）
+
+```text
+票号：I-22
+状态：Ready
+类型：实现票（支柱 2：第一份内容方案可用性）
+目标：把 `/forge` 的首个生成结果从“看起来像 AI 文案输出”升级为“创作者能直接拿去改一遍就发布的结构化初稿”。
+      本票一次性覆盖结果质量、结果呈现、复制动作和保存配方前的价值判断，不再拆成多个小 UI 补丁。
+
+用户是谁：
+- 登录后的单人创作者，第一次或第二次使用 ForgeNote。
+
+用户任务：
+- 输入一个模糊想法，确认方向后，拿到一份能直接用于图文卡片/carousel 发布准备的内容方案。
+
+本票改变的真实路径：
+  新用户进入 Forge Workspace
+  → 输入模糊想法
+  → 看懂假设条并改一项默认假设
+  → 成功生成内容方案
+  → 复制正文或逐页卡片文案
+  → 判断是否值得保存为配方
+  → 刷新后仍能找回结果
+
+范围内：
+1. 生成契约与 prompt 最小升级（不改 DB schema）：
+   - 让 `cardStructure` / `cardPrompts` 从“提示词”更接近逐页卡片文案；
+   - 每页至少包含：页面标题、页面正文/要点、配图方向；
+   - `acceptance` / `verification` 更明确地检查“可发布初稿”而不是只检查字段存在。
+2. 结果区呈现升级：
+   - 主结果按「发布正文」「逐页卡片」「配图方向」「发布前检查」组织；
+   - 复制动作从“复制卡片 Prompt”改成更用户向的“复制逐页卡片文案”；
+   - session id 等内部调试信息不作为主视觉信息。
+3. 保存配方前的价值判断：
+   - 保存区提示用户这次会保存哪些可复用判断（受众 / 形式 / 角度 / 结构），而不是只给一个名字输入框；
+   - 不做复杂评分，不做自动学习，只让用户能判断“这个值得不值得留”。
+4. 验收证据：
+   - 至少一条真实登录态生成样例；
+   - 记录生成后的正文、逐页卡片、配图方向是否可用；
+   - 记录复制动作和保存配方入口是否仍可用；
+   - 刷新 `/forge?session=` 后结果仍在。
+
+范围外：
+- 不做资产库。
+- 不做视觉渲染 / 图片生成 / Canva 式编辑器。
+- 不做视觉配方系统。
+- 不做自动学习 / 表现数据反推默认假设。
+- 不改 `content_package` 表层命名、DB schema、RLS。
+- 不做多账号、发布日历、自动发布。
+
+涉及文件（预计）：
+- `src/lib/ai/types.ts`
+- `src/lib/ai/generate.ts`
+- `src/lib/ai/mock-generator.ts`
+- `src/components/forge/OutcomePanel.tsx`
+- `src/components/forge/RecipePanel.tsx`
+- `src/lib/copy/zh-Hans.ts`
+- `src/lib/copy/en.ts`
+- `docs/acceptance/I-22.md`
+- 状态同步：`docs/TICKETS.md`、`docs/PROJECT-STATUS.md`
+
+验收标准：
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- 登录态生成成功，结果至少包含：
+  - 一段可直接作为发布正文起点的正文；
+  - 5–8 页逐页卡片文案；
+  - 每页或整体明确配图方向；
+  - 发布前检查项。
+- 用户可复制发布正文和逐页卡片文案。
+- 用户看得出保存配方会保存哪些可复用判断。
+- `/forge?session=<id>` 刷新后结果仍可见。
+
+阻塞：
+- PR #9 仍是 Draft；Preview 登录态刷新路径未补证据前，不应把 I-22 塞进同一 PR。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
@@ -180,7 +367,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票（I-08~I-19）已全部 Done。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）做到「第一次就显得懂」。当前在途票为 **DSN-01（Ready，设计先行）**。V-01（拉测试用户）已挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-21 与 DSN-01 均已 Done。下一张唯一任务是 I-22：一次性升级第一份内容方案可用性。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）和支柱2（可用内容方案）做到「第一次就显得懂、生成后真能用」。V-01（拉测试用户）仍挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
