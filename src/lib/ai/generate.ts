@@ -321,9 +321,12 @@ function verifyOutcome(outcome: ContentPackage): Verification {
     message: cardsHaveBody ? "每页都有正文/要点" : "存在缺少正文/要点的卡片",
   });
 
-  const cardsHaveVisualDirection = outcome.cardPrompts.every((card) =>
-    hasVisualDirection(card.visualDirection ?? card.prompt),
-  );
+  const cardsHaveVisualDirection = outcome.cardPrompts.every((card) => {
+    if (card.visualDirection !== undefined) {
+      return card.visualDirection.trim().length > 0;
+    }
+    return hasVisualDirection(card.prompt);
+  });
   checks.push({
     key: "cards_have_visual_direction",
     label: "每页有配图方向",
