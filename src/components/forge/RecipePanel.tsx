@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { BookMarked, Check, CircleAlert, CircleCheck, Copy, Save } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BookMarked,
+  Check,
+  CircleAlert,
+  CircleCheck,
+  Copy,
+  Save,
+} from "lucide-react";
 
 import type { ForgeStatus } from "@/components/forge/ForgeWorkbench";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { copy } from "@/lib/copy";
 import type { IntentType, RecipeDraft, Verification } from "@/lib/ai/types";
@@ -52,6 +61,7 @@ export function RecipePanel({
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [recipeName, setRecipeName] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
   // 切换 session（新生成 / 新建）时由父组件以 key 重挂本组件来重置上述状态，
   // 避免沿用上一条的保存反馈（见 ForgeWorkbench 的 key={sessionId}）。
 
@@ -69,6 +79,7 @@ export function RecipePanel({
   function startNaming(defaultName: string) {
     setRecipeName(defaultName);
     setSaveError(null);
+    setSavedRecipeId(null);
     setSaveState("naming");
   }
 
@@ -86,7 +97,10 @@ export function RecipePanel({
         body: JSON.stringify({ sessionId, name: trimmed }),
       });
       const json = await res.json().catch(() => null);
-      if (json?.ok) {
+      const recipeId =
+        typeof json?.data?.recipeId === "string" ? json.data.recipeId : null;
+      if (json?.ok && recipeId) {
+        setSavedRecipeId(recipeId);
         setSaveState("saved");
       } else {
         // 失败：保留命名 UI 与已生成结果，显示 inline error，可重试（UIUX §9.2）。
@@ -173,7 +187,24 @@ export function RecipePanel({
                 {c.saved}
               </span>
             )}
+
+            {saveState === "saved" && savedRecipeId && (
+              <Link
+                href={`/recipes/${savedRecipeId}`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <BookMarked className="size-3.5" aria-hidden />
+                {c.viewRecipe}
+                <ArrowRight className="size-3.5" aria-hidden />
+              </Link>
+            )}
           </div>
+
+          {saveState === "saved" && savedRecipeId && (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {c.savedReuseHint}
+            </p>
+          )}
 
           {/* 命名 UI（UIUX §9.1）：默认值为配方名，名称为空禁用保存，保存中 loading。 */}
           {(saveState === "naming" ||

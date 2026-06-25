@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**I-23 Ready**。PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。I-23 的目标是补齐保存配方后的复用证据链：保存 I-22 结构化结果后，用户能直接进入配方详情并换输入重跑；新结果仍保留发布正文、逐页卡片、配图方向、发布前检查。
+当前唯一票：**I-23 Review / Gate 2 Pass**。PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。I-23 已在 `codex/i-23-recipe-reuse-proof` 完成最小实现：保存 I-22 结构化结果后，保存成功态显示 `/recipes/<id>` 入口，引导用户进入配方详情并换输入重跑；Gate 2 已通过，Preview Gate 3 待验证。
 
 ## 当前分支
-当前工作分支：`codex/i-22-done-i-23-ticket`。分支基于 `main` / `origin/main` = `a9c0f44`（PR #10 合并后基线）。本分支只做状态同步与下一票拆解，不改产品行为。
+当前工作分支：`codex/i-23-recipe-reuse-proof`。分支基于 `main` / `origin/main` = `e12e1eb`（PR #11 状态同步合并后基线）。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。下一步打开状态同步 PR，把 I-22 Done 与 I-23 Ready 合入 main；合入后即可执行 I-23。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。I-23 PR 待创建。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -125,7 +125,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。下一
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 当前执行边界
-- **I-23（Ready）**：保存配方后的复用证据链。实现时只补 `/forge` 保存成功 → `/recipes/<id>` → 换输入重跑 → 新 `/forge?session=` 的连续性证据；不做资产库、视觉渲染、视觉配方、自动学习、DB schema/RLS 改动。
+- **I-23（Review / Gate 2 Pass）**：保存配方后的复用证据链。分支实现只补 `/forge` 保存成功 → `/recipes/<id>` → 换输入重跑 → 新 `/forge?session=` 的连续性证据；`RecipePanel` 已保留 `POST /api/recipes` 返回的 `recipeId` 并显示“查看配方”入口。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过。不做资产库、视觉渲染、视觉配方、自动学习、DB schema/RLS 改动。
 - **I-22（Done）**：PR #10 已 squash merge 到 `main`（`a9c0f44`）；实现包含生成契约/prompt 最小升级、逐页卡片文案与配图方向、发布前检查、保存配方前价值判断。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过，Preview Gate 3 通过。
 - **I-21（Done）**：生成成功后把返回的 `sessionId` 写入 `/forge?session=`；生成失败但草稿已落库时也写入草稿 session URL；「新建」与重新定方向会清理旧 session query，避免刷新丢失刚生成结果。
 - **I-20（Done）**：DSN-01 最小实现已完成并通过自动验证 + 登录态 UI 验收 + 真实生成路径。Owner 恢复 ForgeNote runtime OpenRouter key 后，`OPENROUTER_MODEL=openai/gpt-4o-mini` 生成成功，session `63ec12d9-2f8c-4b76-9ed1-6474b837e5a4`。
@@ -179,7 +179,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。下一
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-22 全部 Done；DSN-01 已 Done；PR #10 已合并。下一步唯一任务是 I-23：保存配方后的复用证据链。不要把视觉渲染、资产库、自动学习塞进 I-23。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
+M1 计划票 I-08~I-22 全部 Done；DSN-01 已 Done；PR #10 / PR #11 已合并。当前唯一任务是 I-23：保存配方后的复用证据链。不要把视觉渲染、资产库、自动学习塞进 I-23。观测真实 SDK / runtime i18n 不默认进入；当 Production 出现外部真实用户后，应回填 `docs/acceptance/I-19.md` 的 Gate 3 表并复核 Gate 4 指标。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -190,6 +190,7 @@ M1 计划票 I-08~I-22 全部 Done；DSN-01 已 Done；PR #10 已合并。下一
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-25 (I-23 进入 Review / Gate 2 Pass：`codex/i-23-recipe-reuse-proof` 最小实现已落，`RecipePanel` 保存成功后保留 `recipeId` 并显示 `/recipes/<id>`“查看配方”入口，提示用户去配方详情换输入重跑；无 API / DB / RLS / prompt 改动。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过，Preview Gate 3 待验证。)
 2026-06-25 (PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 → Done。下一张唯一任务拆为 I-23：保存配方后的复用证据链，只补保存成功后进入配方详情、换输入重跑、返回 `/forge?session=` 后仍保留 I-22 结构化结果；继续排除资产库、视觉渲染、视觉配方、自动学习、DB schema/RLS 改动。)
 2026-06-25 (I-22 Preview Gate 3 通过：Supabase Redirect URL 修复后，真实 Preview 登录态 `dennisliu1225@gmail.com` 下跑通：输入「想做一组第一次独居备用金清单的图文卡片」→ 方向确认 → 编辑受众「新手父母」→ `已确认 1/3` → 生成成功 session `ee77c9d6-55d5-407e-a990-e7b9164520fc`。结果含发布正文、5 页逐页卡片文案、每页配图方向、发布前检查 `全部通过`、复制逐页卡片文案成功写入剪贴板、保存配方前价值判断；刷新 `/forge?session=` 后完成结果/受众/正文/卡片/配图方向/检查/配方判断/session id 均恢复。)
 2026-06-25 (I-22 Preview 登录 blocker 更新：Owner 在精确 PR #10 Preview `https://forge-note-git-codex-i-22-content-plan-eee8bc-lstosts-projects.vercel.app/forge` 登录后被重定向到 Production `https://forge-note-gold.vercel.app/forge`。代码复核：`LoginForm` 使用 `window.location.origin + /auth/callback`，无生产域名硬编码。结论：Supabase Auth Redirect URLs 缺 PR #10 Preview callback；需添加 `https://forge-note-git-codex-i-22-content-plan-eee8bc-lstosts-projects.vercel.app/auth/callback` 或 Preview wildcard 后再跑 Gate 3。)

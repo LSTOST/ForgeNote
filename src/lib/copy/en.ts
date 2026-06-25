@@ -130,6 +130,9 @@ export const en: Copy = {
     copySummary: "Copy recipe summary",
     saveRecipe: "Save recipe",
     saved: "Saved to recipes",
+    viewRecipe: "View recipe",
+    savedReuseHint:
+      "Next, open the recipe detail and rerun it with new input to prove this judgment is reusable.",
     needSession: "Generate content successfully first",
     namePlaceholder: "Name this recipe",
     nameAria: "Recipe name",
