@@ -279,7 +279,9 @@ create table usage_events (
   "cardPrompts": [
     {
       "index": 1,
-      "prompt": "第 1 张卡片完整 prompt"
+      "prompt": "兼容字段；I-22 起写逐页卡片文案",
+      "body": "该页可直接上卡片的正文 / 要点",
+      "visualDirection": "该页配图方向"
     }
   ],
   "hashtags": ["独居生活", "第一次独居"],

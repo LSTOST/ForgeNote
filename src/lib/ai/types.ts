@@ -72,10 +72,15 @@ export interface CardStructureItem {
   title: string;
 }
 
-/** 单张卡片的生成 Prompt。对齐 DATA-SCHEMA §4.2 cardPrompts。 */
+/** 单张卡片的逐页文案。字段名沿用 DATA-SCHEMA §4.2 cardPrompts；I-22 起语义改为可发布初稿。 */
 export interface CardPromptItem {
   index: number;
+  /** 兼容旧契约：I-22 起这里应写逐页卡片文案，而不是绘图 prompt。 */
   prompt: string;
+  /** I-22：该页可直接放进卡片的正文 / 要点。旧 session 可为空。 */
+  body?: string;
+  /** I-22：该页配图方向。旧 session 可为空，UI 会回退展示 prompt。 */
+  visualDirection?: string;
 }
 
 /**

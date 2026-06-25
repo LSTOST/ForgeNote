@@ -466,6 +466,7 @@ export function ForgeWorkbench({
                 outputLocale={
                   status === "success" ? outputLocale.trim() || null : null
                 }
+                verification={data?.verification ?? null}
                 onRetry={runForge}
                 onNew={handleNew}
               />

@@ -116,8 +116,17 @@
       "positioning": "...",
       "titles": [],
       "body": "...",
-      "cardStructure": [],
-      "cardPrompts": [],
+      "cardStructure": [
+        { "index": 1, "type": "cover", "title": "..." }
+      ],
+      "cardPrompts": [
+        {
+          "index": 1,
+          "prompt": "兼容字段；I-22 起写逐页卡片文案",
+          "body": "该页可直接上卡片的正文 / 要点",
+          "visualDirection": "该页配图方向"
+        }
+      ],
       "hashtags": [],
       "commentGuide": "..."
     },

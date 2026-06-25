@@ -115,6 +115,26 @@ export function RecipePanel({
   if (status === "success" && recipe) {
     return (
       <Card className="min-h-72 space-y-5 p-6">
+        <div className="space-y-3 border-b pb-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold tracking-tight">
+              {c.saveValueTitle}
+            </h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {c.saveValueBody}
+            </p>
+          </div>
+          <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            <SaveValue label={c.summaryAudience} value={recipe.audience} />
+            <SaveValue label={c.summaryGoal} value={recipe.goal} />
+            <SaveValue label={c.summaryTone} value={recipe.tone} />
+            <SaveValue
+              label={c.summaryStructure}
+              value={recipe.structure.slice(0, 3).join("、")}
+            />
+          </dl>
+        </div>
+
         {/* 操作区（UIUX §8.3 / §9）。复制摘要 + 保存配方闭环（I-08）。 */}
         <div className="space-y-3 border-b pb-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -233,6 +253,16 @@ function Field({ label, value }: { label: string; value: string }) {
     <div className="space-y-1">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="text-sm leading-relaxed text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function SaveValue({ label, value }: { label: string; value: string }) {
+  if (!value) return null;
+  return (
+    <div className="rounded-md bg-muted/55 px-3 py-2">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-sm text-foreground">{value}</dd>
     </div>
   );
 }
