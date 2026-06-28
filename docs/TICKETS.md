@@ -52,6 +52,7 @@
 | I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
 | I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
 | V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
+| V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -64,15 +65,15 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-02 | Review | 修复 Owner 二次 dry run 暴露的 `/forge` 入口理解阻塞：清理无意义空态“新建”、降低主文案压迫感、让方向确认明显响应本次输入、统一温暖工作台按钮/图标语义 | 新功能开发、prompt 重写、API/DB/RLS 改动、资产库、视觉渲染、自动学习、价格/Stripe、runtime i18n、内容日历 | Gate 2 pass；Preview Gate 3 待跑 |
+| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | V-01-FIX-01 + V-01-FIX-02 Gate 2 / Preview Gate 3 pass；Production 技术平台层已就绪；metrics SQL 已备 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
-### V-01-FIX-02 执行票（当前唯一任务）
+### V-01-FIX-02 执行票（已完成）
 
 ```text
 票号：V-01-FIX-02
-状态：Review
+状态：Done
 类型：V-01 前置入口理解修复（只改前端交互，不改产品范围）
 目标：修复 Owner 二次 dry run 暴露的 /forge 入口理解问题：
       用户必须在第一屏看懂怎么开始；点击“先确认方向”后必须看见输入内容带来的变化；
@@ -101,8 +102,8 @@
 
 下一步：
 - Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
-- 下一步：开 PR，跑 Preview Gate 3。
-- 合入后恢复 V-01 真实非构建者用户 Production 主路径验证。
+- Preview Gate 3 已通过：PR #16 Preview 登录态完成输入 → 先确认方向 → 方向区反馈 → 生成内容方案 → `/forge?session=4b73c107-f22e-42e3-b156-624704b7b109`。
+- 下一步：恢复 V-01，安排真实非构建者用户跑 Production 主路径。
 ```
 
 ### V-01-FIX-01 执行票（已完成）
