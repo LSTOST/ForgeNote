@@ -76,6 +76,7 @@ export const en: Copy = {
     outputLocalePresetInstagram: "Instagram carousel",
     outputLocalePresetLinkedIn: "LinkedIn carousel",
     outputLocaleClear: "Clear",
+    clearDraft: "Clear and rewrite",
     generateFailed: "Generation failed, please try again",
   },
   shell: {
@@ -88,10 +89,11 @@ export const en: Copy = {
   direction: {
     ready: "Direction pending",
     title: "I drafted the direction first. Fix what feels off.",
+    focusLabel: "This idea: ",
     summaryWithPost:
-      "This run uses your input and previous post to clarify whether to save, how much, where it lives, and when it can move.",
+      "This run uses your idea and previous post to confirm the reader, format, and angle.",
     summaryWithoutPost:
-      "This run starts from a common-reader assumption to clarify whether to save, how much, where it lives, and when it can move.",
+      "This run starts from your idea to confirm the reader, format, and angle.",
     confirmed: "{n}/3 confirmed",
     defaultNotice: "Unchanged items use the default read",
     rationale: "Why",

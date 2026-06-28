@@ -52,6 +52,7 @@
 | I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
 | I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
 | V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
+| V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -64,9 +65,46 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | V-01-FIX-01 Gate 2 + Preview Gate 3 pass；Production 技术平台层已就绪；metrics SQL 已备 |
+| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | V-01-FIX-01 + V-01-FIX-02 Gate 2 / Preview Gate 3 pass；Production 技术平台层已就绪；metrics SQL 已备 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-02 执行票（已完成）
+
+```text
+票号：V-01-FIX-02
+状态：Done
+类型：V-01 前置入口理解修复（只改前端交互，不改产品范围）
+目标：修复 Owner 二次 dry run 暴露的 /forge 入口理解问题：
+      用户必须在第一屏看懂怎么开始；点击“先确认方向”后必须看见输入内容带来的变化；
+      按钮和图标必须匹配当前温暖文字工作台风格。
+
+范围内：
+1. 空态不展示无意义的“新建”；有草稿/结果后改为更明确的“清空重写”。
+2. 降低首屏主文案字号，避免压迫工作台输入区。
+3. 方向确认区展示“本次想法”，并让三条默认方向围绕当前输入生成，避免看起来像内置模板。
+4. 粘贴过往帖入口使用粘贴语义图标，不使用附件/上传感图标。
+5. 主 CTA、生成按钮、输出偏好快捷项改为同一套温暖动作色，降低冷 SaaS 割裂感。
+
+范围外：
+- 不改 /api/forge、prompt、DB、RLS。
+- 不做资产库、视觉渲染、自动学习、runtime i18n、内容日历。
+- 不改变 I-20/I-22/I-23 的生成契约。
+
+验收标准：
+- 空白 /forge 首屏不出现“新建”按钮。
+- 主标题不再以 hero 级字号压过输入任务。
+- 输入“第一次养猫预算清单”后点“先确认方向”，方向区必须显示本次想法，并出现围绕该主题的受众/内容形式/表达角度。
+- “贴一条你发过的帖”入口图标语义是粘贴，不是上传/附件。
+- 主要动作按钮视觉与温暖工作台背景一致。
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- Preview Gate 3 跑 `/forge` 输入 → 先确认方向 → 方向区反馈 → 生成内容方案。
+
+下一步：
+- Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
+- Preview Gate 3 已通过：PR #16 Preview 登录态完成输入 → 先确认方向 → 方向区反馈 → 生成内容方案 → `/forge?session=4b73c107-f22e-42e3-b156-624704b7b109`。
+- 下一步：恢复 V-01，安排真实非构建者用户跑 Production 主路径。
+```
 
 ### V-01-FIX-01 执行票（已完成）
 
@@ -481,6 +519,8 @@
   (1) 约到至少 1 名真实非构建者用户跑 Production 登录→生成→保存→详情重跑并由观察者记录；
   (2) Owner 在 SQL Editor 读出 activation / assumption_edit / recipe_save / recipe_rerun 指标。
 - 在拿到真实用户证据前，V-01 不得标 Done，结论暂不出 Pass / Conditional Pass / Fail。
+- 2026-06-28 V-01-FIX-01 已合入并上线：Owner dry run 发现的 `/forge` 入口交互阻塞由 Codex 定义为 V-01 前置修复，PR #15 已 squash merge 到 `main`（`cf9d631`），Vercel 主线自动部署 Production。FIX-01 后 Production 就绪复核（Claude Code）：`doctor` 0/0、Production `smoke:api` 全通过、`/login` 200、`/forge`/`/recipes`/`/recipes/<uuid>` 均 307→`/login`。`docs/acceptance/V-01.md` 已补「Owner 真实用户执行清单」。
+- 当前结论：**继续收集用户**。唯一缺口=至少 1 名真实非构建者用户在 Production 跑完登录→生成→保存→详情重跑并记录证据（+ Owner SQL Editor 指标读出）。无可由 Claude Code 修的代码阻塞。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>

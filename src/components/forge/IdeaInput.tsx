@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, LoaderCircle, Paperclip } from "lucide-react";
+import { ArrowRight, ClipboardPaste, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export function IdeaInput({
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
           {copy.idea.kicker}
         </p>
-        <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
           {copy.idea.title}
         </h1>
       </div>
@@ -86,7 +86,12 @@ export function IdeaInput({
           )}
         </div>
 
-        <Button type="button" disabled={!canForge} onClick={onForge}>
+        <Button
+          type="button"
+          disabled={!canForge}
+          onClick={onForge}
+          className="bg-[#9b4a24] text-white shadow-sm hover:bg-[#823d1d] focus-visible:ring-[#d8a06f]/45"
+        >
           {pending ? (
             <LoaderCircle className="size-4 animate-spin" aria-hidden />
           ) : (
@@ -105,7 +110,7 @@ export function IdeaInput({
           aria-expanded={accountPostOpen}
           className="px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
-          <Paperclip className="size-4" aria-hidden />
+          <ClipboardPaste className="size-4" aria-hidden />
           {copy.idea.accountPostToggle}
         </Button>
         {accountPostOpen && (

@@ -40,6 +40,7 @@ const CONFIDENCE_LABEL: Record<AssumptionConfidence, string> = {
 
 interface DirectionPanelProps {
   assumptions: Assumption[];
+  focusedIdea: string;
   hasAccountPost: boolean;
   pending: boolean;
   rememberedKeys: string[];
@@ -50,6 +51,7 @@ interface DirectionPanelProps {
 
 export function DirectionPanel({
   assumptions,
+  focusedIdea,
   hasAccountPost,
   pending,
   rememberedKeys,
@@ -75,6 +77,12 @@ export function DirectionPanel({
           <h2 className="text-xl font-semibold tracking-tight text-stone-950">
             {copy.direction.title}
           </h2>
+          <div className="max-w-2xl rounded-md border border-amber-200 bg-amber-50/70 px-3 py-2 text-sm leading-6 text-stone-800">
+            <span className="font-medium text-stone-950">
+              {copy.direction.focusLabel}
+            </span>
+            {focusedIdea.trim()}
+          </div>
           <p className="max-w-2xl text-sm leading-6 text-stone-600">
             {hasAccountPost
               ? copy.direction.summaryWithPost
@@ -165,6 +173,7 @@ export function DirectionPanel({
                     onClick={() => onRemember(assumption)}
                     disabled={pending || remembered}
                     title={copy.assumptions.rememberTitle}
+                    className="text-stone-600 hover:bg-amber-50 hover:text-stone-950"
                   >
                     {remembered ? (
                       <Check className="size-3.5" aria-hidden />
@@ -215,7 +224,7 @@ export function DirectionPanel({
           type="button"
           onClick={onGenerate}
           disabled={pending || visibleAssumptions.length === 0}
-          className="min-w-36"
+          className="min-w-36 bg-[#9b4a24] text-white shadow-sm hover:bg-[#823d1d] focus-visible:ring-[#d8a06f]/45"
         >
           {pending ? (
             <LoaderCircle className="size-4 animate-spin" aria-hidden />
