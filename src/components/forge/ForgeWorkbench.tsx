@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Compass, FilePlus2, Library, Settings2, UserRound } from "lucide-react";
 
 import { DirectionPanel } from "@/components/forge/DirectionPanel";
@@ -74,6 +74,12 @@ type StoredDraft = {
 };
 
 const DRAFT_STORAGE_KEY = "forgenote.forge.draft.v1";
+const OUTPUT_LOCALE_PRESETS = [
+  { value: "zh-Hans", copyKey: "outputLocalePresetZh" },
+  { value: "English", copyKey: "outputLocalePresetEn" },
+  { value: "English for Instagram carousel", copyKey: "outputLocalePresetInstagram" },
+  { value: "English for LinkedIn carousel", copyKey: "outputLocalePresetLinkedIn" },
+] as const;
 
 const DIRECTION_DEFINITIONS: DirectionDefinition[] = [
   {
@@ -104,6 +110,7 @@ export function ForgeWorkbench({
   initialProfileAssumptions = [],
 }: ForgeWorkbenchProps) {
   const router = useRouter();
+  const directionPanelRef = useRef<HTMLDivElement | null>(null);
   const [idea, setIdea] = useState(initialSession?.rawInput ?? "");
   const [accountPost, setAccountPost] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -218,6 +225,12 @@ export function ForgeWorkbench({
     setErrorCode(null);
     setSessionId(null);
     setStatus("review");
+    window.setTimeout(() => {
+      directionPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
   }
 
   async function runForge() {
@@ -422,14 +435,50 @@ export function ForgeWorkbench({
               pending={status === "loading"}
             />
 
-            <details className="mt-5 border-t border-stone-200 pt-4">
-              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-stone-700 marker:hidden">
-                <Settings2 className="size-4" aria-hidden />
-                {copy.forge.outputLocaleLabel}
-                <span className="font-normal text-stone-500">
-                  {copy.common.optionalSuffix}
-                </span>
-              </summary>
+            <div className="mt-5 border-t border-stone-200 pt-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-stone-700">
+                    <Settings2 className="size-4" aria-hidden />
+                    {copy.forge.outputLocaleLabel}
+                    <span className="font-normal text-stone-500">
+                      {copy.common.optionalSuffix}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-stone-500">
+                    {copy.forge.outputLocaleHint}
+                  </p>
+                </div>
+                {outputLocale.trim().length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setOutputLocale("")}
+                    disabled={status === "loading"}
+                    className="self-start"
+                  >
+                    {copy.forge.outputLocaleClear}
+                  </Button>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {OUTPUT_LOCALE_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.value}
+                    type="button"
+                    variant={
+                      outputLocale === preset.value ? "secondary" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setOutputLocale(preset.value)}
+                    disabled={status === "loading"}
+                    aria-pressed={outputLocale === preset.value}
+                  >
+                    {copy.forge[preset.copyKey]}
+                  </Button>
+                ))}
+              </div>
               <input
                 id="output-locale"
                 type="text"
@@ -440,19 +489,21 @@ export function ForgeWorkbench({
                 disabled={status === "loading"}
                 className="mt-3 h-9 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none transition-colors placeholder:text-stone-400 focus-visible:border-stone-500 focus-visible:ring-3 focus-visible:ring-stone-300/60 disabled:opacity-60"
               />
-            </details>
+            </div>
           </section>
 
           {hasDirection && (
-            <DirectionPanel
-              assumptions={assumptions}
-              hasAccountPost={accountPost.trim().length > 0}
-              onEdit={editAssumption}
-              onGenerate={runForge}
-              onRemember={rememberAssumption}
-              rememberedKeys={rememberedKeys}
-              pending={status === "loading"}
-            />
+            <div ref={directionPanelRef} className="scroll-mt-20">
+              <DirectionPanel
+                assumptions={assumptions}
+                hasAccountPost={accountPost.trim().length > 0}
+                onEdit={editAssumption}
+                onGenerate={runForge}
+                onRemember={rememberAssumption}
+                rememberedKeys={rememberedKeys}
+                pending={status === "loading"}
+              />
+            </div>
           )}
 
           {showResults && (
