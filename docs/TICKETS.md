@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `c62065f`（PR #12 / I-23 已 squash merge）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `b42a33b`（PR #13 / I-23 Done + V-01 Ready 状态同步已 squash merge）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -57,6 +57,7 @@
 > PR #9 已 squash merge 到 `main`（`77e5b80`），DSN-01 / I-20 / I-21 全部进入 `main`。
 > PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。
 > PR #12 已 squash merge 到 `main`（`c62065f`），I-23 进入 Done。
+> PR #13 已 squash merge 到 `main`（`b42a33b`），I-23 Done / V-01 Ready 状态同步进入 `main`。
 
 ## 下一张唯一任务
 
@@ -438,6 +439,11 @@
 
 下一步：
 - `docs/acceptance/V-01.md` 测试脚本和记录模板已准备；下一步安排真实用户执行并记录结果。
+- 2026-06-28 技术就绪复核（Claude Code）：`doctor` 0/0；Production `/login` 200、`/forge` 307→`/login`、Production `smoke:api` 全通过 → 平台层具备真实用户测试条件。`metrics` 本地 SKIP；直连 Production 库被本机代理 + guardrail 双挡，指标读出须 Owner 走 Supabase SQL Editor（V-01.md 已备等价只读 SQL）。
+- 剩余两项均非 Claude Code 可独立完成、也非可修代码阻塞，是 Owner 决策点：
+  (1) 约到至少 1 名真实非构建者用户跑 Production 登录→生成→保存→详情重跑并由观察者记录；
+  (2) Owner 在 SQL Editor 读出 activation / assumption_edit / recipe_save / recipe_rerun 指标。
+- 在拿到真实用户证据前，V-01 不得标 Done，结论暂不出 Pass / Conditional Pass / Fail。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
