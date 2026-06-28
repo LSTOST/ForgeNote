@@ -82,6 +82,7 @@ export const zhHans = {
     outputLocalePresetInstagram: "Instagram carousel",
     outputLocalePresetLinkedIn: "LinkedIn carousel",
     outputLocaleClear: "清空",
+    clearDraft: "清空重写",
     generateFailed: "生成失败，请重试",
   },
   shell: {
@@ -94,10 +95,11 @@ export const zhHans = {
   direction: {
     ready: "方向待确认",
     title: "我先帮你定了这次的方向，改不对的就行",
+    focusLabel: "本次想法：",
     summaryWithPost:
-      "这次我会参考你的输入和过往帖，替你讲清：要不要存、存多少、放在哪、什么时候能动。",
+      "我会结合这次想法和你贴过的帖，先确认读者、内容形式和表达角度。",
     summaryWithoutPost:
-      "这次我会先按常见读者理解，替你讲清：要不要存、存多少、放在哪、什么时候能动。",
+      "我会先根据这次想法确认读者、内容形式和表达角度。",
     confirmed: "已确认 {n}/3",
     defaultNotice: "没改的我按默认理解来",
     rationale: "依据",

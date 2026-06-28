@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Compass, FilePlus2, Library, Settings2, UserRound } from "lucide-react";
+import { CheckCircle2, Compass, Eraser, Library, Settings2, UserRound } from "lucide-react";
 
 import { DirectionPanel } from "@/components/forge/DirectionPanel";
 import { IdeaInput } from "@/components/forge/IdeaInput";
@@ -199,6 +199,12 @@ export function ForgeWorkbench({
   const authRequired = status === "error" && errorCode === "AUTH_REQUIRED";
   const showResults =
     status === "loading" || status === "success" || status === "error";
+  const canClearDraft =
+    idea.trim().length > 0 ||
+    accountPost.trim().length > 0 ||
+    outputLocale.trim().length > 0 ||
+    status !== "idle" ||
+    Boolean(sessionId);
 
   const shellStatus = useMemo(() => {
     if (status === "loading") return copy.shell.generating;
@@ -217,7 +223,7 @@ export function ForgeWorkbench({
         idea,
         accountPost,
         initialProfileAssumptions,
-        assumptions,
+        [],
       ),
     );
     setData(null);
@@ -417,10 +423,18 @@ export function ForgeWorkbench({
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
               {savedAt && <span>{copy.idea.savedAt.replace("{time}", savedAt)}</span>}
-              <Button type="button" variant="ghost" size="sm" onClick={handleNew}>
-                <FilePlus2 className="size-3.5" aria-hidden />
-                {copy.outcome.new}
-              </Button>
+              {canClearDraft && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleNew}
+                  className="text-stone-600 hover:bg-amber-50 hover:text-stone-950"
+                >
+                  <Eraser className="size-3.5" aria-hidden />
+                  {copy.forge.clearDraft}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -474,6 +488,11 @@ export function ForgeWorkbench({
                     onClick={() => setOutputLocale(preset.value)}
                     disabled={status === "loading"}
                     aria-pressed={outputLocale === preset.value}
+                    className={
+                      outputLocale === preset.value
+                        ? "border-amber-300 bg-amber-100 text-stone-950 hover:bg-amber-200"
+                        : "border-stone-300 bg-white/70 text-stone-700 hover:border-amber-300 hover:bg-amber-50 hover:text-stone-950"
+                    }
                   >
                     {copy.forge[preset.copyKey]}
                   </Button>
@@ -496,6 +515,7 @@ export function ForgeWorkbench({
             <div ref={directionPanelRef} className="scroll-mt-20">
               <DirectionPanel
                 assumptions={assumptions}
+                focusedIdea={idea}
                 hasAccountPost={accountPost.trim().length > 0}
                 onEdit={editAssumption}
                 onGenerate={runForge}
@@ -551,7 +571,10 @@ function buildDirectionAssumptions(
     const profile = findAssumption(profileAssumptions, definition);
     const seed = existing ?? profile;
     const source = seed?.source ?? (profile ? "profile" : "inferred");
-    const value = seed?.value ?? definition.fallback;
+    const value =
+      seed?.value ??
+      buildIdeaAwareFallback(definition.key, idea) ??
+      definition.fallback;
 
     return {
       key: definition.key,
@@ -570,6 +593,28 @@ function buildDirectionAssumptions(
         (profile ? "high" : hasAccountPost || hasIdea ? "inferred" : "unsure"),
     };
   });
+}
+
+function buildIdeaAwareFallback(
+  key: DirectionDefinition["key"],
+  idea: string,
+): string | null {
+  const topic = summarizeIdea(idea);
+  if (!topic) return null;
+
+  if (key === "audience") {
+    return `对「${topic}」有现实需求的读者`;
+  }
+  if (key === "content_form") {
+    return `围绕「${topic}」的图文清单`;
+  }
+  return `先回应「${topic}」的具体困惑，再给可执行做法`;
+}
+
+function summarizeIdea(idea: string): string {
+  const normalized = idea.trim().replace(/\s+/g, " ");
+  if (normalized.length <= 18) return normalized;
+  return `${normalized.slice(0, 18)}…`;
 }
 
 function findAssumption(
@@ -597,12 +642,12 @@ function buildRationale(
   if (key === "audience") {
     return hasIdea
       ? "从这次输入的主题推断目标读者。"
-      : "这次输入还没说清读者，先按常见财务新手处理。";
+      : "这次输入还没说清读者，先按常见创作者场景处理。";
   }
   if (key === "content_form") {
-    return "这类题更适合先拆成可扫读的清单。";
+    return "先拆成可扫读的图文结构，用户更容易判断能不能继续做。";
   }
-  return "财务内容先给判断，再给做法，读者更容易开始行动。";
+  return "先回应具体困惑，再给做法，读者更容易开始行动。";
 }
 
 function readStoredDraft(): StoredDraft | null {
