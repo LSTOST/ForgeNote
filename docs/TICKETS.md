@@ -54,6 +54,7 @@
 | V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-03 | Done | 修复 V-01 页面形态阻塞：/forge 桌面端重排为左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
+| V-01-FIX-04 | Done | 修复 V-01 非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用；Preview Gate 3 Conditional Pass 后随 PR #18 合入 | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -66,15 +67,15 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-04 | Review | 修复非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用，避免每次登录都必须去邮箱点确认 | 新 OAuth、MFA/passkey、重置密码、账号合并、Supabase 后台配置变更、业务表/API/RLS/prompt 改动 | Gate 2 pass；Preview Gate 3 Conditional Pass |
+| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03/04 均已通过；非 Google 用户测试前先补一个已确认邮箱密码账号登录证据 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
-### V-01-FIX-04 执行票（当前唯一任务）
+### V-01-FIX-04 执行票（已完成）
 
 ```text
 票号：V-01-FIX-04
-状态：Review
+状态：Done
 类型：V-01 前置登录摩擦修复（只改 /login 前端，不改业务范围）
 目标：修复真实用户反馈：
       没有 Google 账号时，每次登录都要去邮箱点确认，入口不人性化。
@@ -109,7 +110,7 @@
 - Local visual acceptance 未计入：Playwright 被 macOS sandbox 阻止，Chrome 本地导航被当前工具额度阻止。
 - Preview Gate 3 Conditional Pass：PR #18 Preview 匿名 `/login` 渲染出 Google + 邮箱密码主路径 + Magic Link 备用提示；Preview `smoke:api` 通过。
 - 残余风险：缺少已确认 email-password 测试账号，未跑真实邮箱密码登录到 `/forge`。
-- 下一步：合入 PR #18；上线后 Owner/Codex 用一个已确认邮箱密码账号补跑 Production `/login` → `/forge`，再恢复 V-01 真实用户验证。
+- 下一步：Owner/Codex 用一个已确认邮箱密码账号补跑 Production `/login` → `/forge`，然后恢复 V-01 真实用户验证。
 ```
 
 ### V-01-FIX-03 执行票（已完成）
