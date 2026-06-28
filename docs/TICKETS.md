@@ -51,6 +51,7 @@
 | I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
 | I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
 | I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
+| V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -63,9 +64,45 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | I-23 已合入 main；Preview OAuth wildcard 已配置；Production 已可登录；metrics 脚本存在 |
+| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | V-01-FIX-01 Gate 2 + Preview Gate 3 pass；Production 技术平台层已就绪；metrics SQL 已备 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-01 执行票（已完成）
+
+```text
+票号：V-01-FIX-01
+状态：Done
+类型：V-01 前置阻塞修复（只改前端交互，不改产品范围）
+目标：修复 Owner dry run 暴露的 /forge 入口混乱：
+      用户输入想法后，必须清楚知道第一步是确认方向，第二步才是真生成；
+      空态不能显示“正在写”；输出语言/表达偏好必须可见、有快捷选项、输入有反馈。
+
+范围内：
+1. 顶部 idle 状态从“正在写这次的想法”改为“输入一个想法开始”。
+2. 首屏主按钮从“生成内容方案”改为“先确认方向”，避免误导。
+3. 点击首屏主按钮后自动滚到方向确认区，让真正的“生成内容方案”按钮露出。
+4. “输出语言 / 表达偏好”从折叠 details 改为可见控件，并提供快捷选项：
+   中文 / English / Instagram carousel / LinkedIn carousel / 清空。
+
+范围外：
+- 不改 /api/forge、prompt、DB、RLS。
+- 不做资产库、视觉渲染、自动学习、runtime i18n、内容日历。
+- 不改变 I-20/I-22/I-23 的生成契约。
+
+验收标准：
+- 空态顶部不再显示“正在写这次的想法”。
+- 用户填入想法后，首屏按钮明确为“先确认方向”。
+- 点击后方向确认区出现并进入视野；用户能看到第二步“生成内容方案”。
+- 输出语言/表达偏好区域默认可见；点击快捷选项会填入输入框；清空可用。
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- Preview 或 Production 上再跑 V-01 主路径。
+
+下一步：
+- Gate 2 已通过：doctor / lint / typecheck / build / smoke:api。
+- Preview Gate 3 已通过：PR #15 Preview 登录态完成输入 → 先确认方向 → 方向确认 → 生成内容方案 → `/forge?session=c9a89de2-149a-401f-b6c8-cc689f9e7ae7`，结果含发布正文、5 页卡片文案、配图方向、发布前检查、全部通过。
+- 下一步：恢复 V-01，安排真实非构建者用户跑 Production 主路径。
+```
 
 ### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
