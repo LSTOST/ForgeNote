@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `b42a33b`（PR #13 / I-23 Done + V-01 Ready 状态同步已 squash merge）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `f5f76a0`（PR #17 / V-01-FIX-03 已合入并同步 V-01 Ready 状态）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -66,9 +66,50 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03 均已通过 Preview Gate 3；待 Production 真实用户证据 |
+| V-01-FIX-04 | Review | 修复非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用，避免每次登录都必须去邮箱点确认 | 新 OAuth、MFA/passkey、重置密码、账号合并、Supabase 后台配置变更、业务表/API/RLS/prompt 改动 | Gate 2 pass；Preview Gate 3 待跑 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-04 执行票（当前唯一任务）
+
+```text
+票号：V-01-FIX-04
+状态：Review
+类型：V-01 前置登录摩擦修复（只改 /login 前端，不改业务范围）
+目标：修复真实用户反馈：
+      没有 Google 账号时，每次登录都要去邮箱点确认，入口不人性化。
+      非 Google 用户必须有一个不用每次打开邮箱的登录路径。
+
+范围内：
+1. `/login` 邮箱登录主路径从 Magic Link 改为邮箱 + 密码：
+   - 已注册用户：输入邮箱和密码后直接进入 `/forge`。
+   - 新用户：可创建邮箱密码账号；如 Supabase 要求确认邮箱，只需首次确认一次。
+2. Google 登录保留。
+3. Magic Link 保留为备用入口，明确提示它仍需要打开邮箱。
+4. 登录页文案解释清楚：确认过邮箱后，下次直接用密码，不用每次去邮箱点链接。
+5. 只改客户端登录表单与 copy 资源。
+
+范围外：
+- 不新增 GitHub/Apple/微信等 OAuth。
+- 不做 MFA/passkey、忘记密码/重置密码、账号合并。
+- 不改 `/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+- 不改 Supabase 后台策略；若 Production 禁用 Email password，本票在 Preview/Production Gate 3 记录为外部配置阻塞。
+
+验收标准：
+- `/login` 第一屏仍有 Google 登录。
+- 邮箱区域默认呈现“登录 / 注册”切换、邮箱、密码；Magic Link 不再是邮箱主路径。
+- 已注册且邮箱已确认用户可通过邮箱 + 密码登录后进入 `/forge`。
+- 新用户注册后若需要确认邮箱，页面明确提示“首次确认一次，之后用密码直接登录”。
+- Magic Link 入口文案明确为备用，并说明仍需打开邮箱。
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- Preview Gate 3：匿名打开 `/login`，确认新登录入口；若有可用测试邮箱密码，跑通登录到 `/forge`；否则记录 Supabase/测试账号阻塞。
+
+下一步：
+- Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
+- Local visual acceptance 未计入：Playwright 被 macOS sandbox 阻止，Chrome 本地导航被当前工具额度阻止。
+- 下一步：开 PR，跑 Preview Gate 3。
+- 合入后恢复 V-01 Production 真实用户验证。
+```
 
 ### V-01-FIX-03 执行票（已完成）
 
