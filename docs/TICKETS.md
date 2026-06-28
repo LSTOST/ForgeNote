@@ -66,7 +66,7 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-04 | Review | 修复非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用，避免每次登录都必须去邮箱点确认 | 新 OAuth、MFA/passkey、重置密码、账号合并、Supabase 后台配置变更、业务表/API/RLS/prompt 改动 | Gate 2 pass；Preview Gate 3 待跑 |
+| V-01-FIX-04 | Review | 修复非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用，避免每次登录都必须去邮箱点确认 | 新 OAuth、MFA/passkey、重置密码、账号合并、Supabase 后台配置变更、业务表/API/RLS/prompt 改动 | Gate 2 pass；Preview Gate 3 Conditional Pass |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
@@ -107,8 +107,9 @@
 下一步：
 - Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
 - Local visual acceptance 未计入：Playwright 被 macOS sandbox 阻止，Chrome 本地导航被当前工具额度阻止。
-- 下一步：开 PR，跑 Preview Gate 3。
-- 合入后恢复 V-01 Production 真实用户验证。
+- Preview Gate 3 Conditional Pass：PR #18 Preview 匿名 `/login` 渲染出 Google + 邮箱密码主路径 + Magic Link 备用提示；Preview `smoke:api` 通过。
+- 残余风险：缺少已确认 email-password 测试账号，未跑真实邮箱密码登录到 `/forge`。
+- 下一步：合入 PR #18；上线后 Owner/Codex 用一个已确认邮箱密码账号补跑 Production `/login` → `/forge`，再恢复 V-01 真实用户验证。
 ```
 
 ### V-01-FIX-03 执行票（已完成）
