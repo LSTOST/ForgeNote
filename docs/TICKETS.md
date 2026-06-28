@@ -53,6 +53,7 @@
 | I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
 | V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
+| V-01-FIX-03 | Done | 修复 V-01 页面形态阻塞：/forge 桌面端重排为左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -65,9 +66,49 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | V-01-FIX-01 + V-01-FIX-02 Gate 2 / Preview Gate 3 pass；Production 技术平台层已就绪；metrics SQL 已备 |
+| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03 均已合入前通过 Preview Gate 3；待 Production 真实用户证据 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-03 执行票（已完成）
+
+```text
+票号：V-01-FIX-03
+状态：Done
+类型：V-01 前置页面形态修复（只改前端布局，不改产品范围）
+目标：修复 Owner 真实用户试用暴露的页面形态错位：
+      当前 /forge 仍是上到下的纵向流，不是此前讨论的左 / 中 / 右 / 底工作台。
+      用户进入后必须感到这是内容工作台，而不是纵向表单。
+
+范围内：
+1. 桌面端 `/forge` 改为最小工作台壳：
+   - 左：账号与内容资产入口（当前任务 / 配方库 / 账号偏好 + 轻量资产说明）。
+   - 中：当前内容任务与内容方案（输入框、生成结果）。
+   - 右：方向假设、输出语言/表达偏好、生成控制、保存配方。
+   - 底：当前 session、复用、表现回填的连续性状态条。
+2. 移动端保留自然纵向降级，不让桌面工作台硬挤小屏。
+3. 只重排现有组件：IdeaInput、DirectionPanel、OutcomePanel、RecipePanel、output_locale 控件。
+4. DirectionPanel 支持右栏 compact 模式，假设条纵向排列。
+
+范围外：
+- 不改 /api/forge、prompt、DB、RLS。
+- 不做资产库真实列表、完整历史版本列表、多面板拖拽、视觉渲染、自动学习、runtime i18n、内容日历。
+- 不改变 I-20/I-22/I-23 的生成契约。
+
+验收标准：
+- 桌面首屏必须清楚呈现左 / 中 / 右 / 底四区，而不是单列上到下。
+- 中区只承载当前任务输入与内容方案；方向判断和配方保存不再并排或堆在中区下方。
+- 右区在输入前有方向占位，输入并「先确认方向」后出现 compact 假设条与生成按钮。
+- 生成成功后内容方案仍在中区，保存配方区在右区，底部显示当前 session 连续性。
+- 移动端不溢出、不重叠，按合理纵向顺序降级。
+- 自动验证：doctor / lint / typecheck / build / smoke:api 通过。
+- Preview Gate 3 跑 `/forge` 输入 → 先确认方向 → 右区方向反馈 → 中区生成内容方案 → 右区保存配方可用。
+
+下一步：
+- Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
+- Preview Gate 3 已通过：PR #17 Preview 登录态 `nb19870729@gmail.com` 完成 `/forge` 宽屏布局确认 → 输入 `first cat budget checklist carousel` → 先确认方向 → 右栏 compact 方向反馈 → 生成内容方案 → `/forge?session=e83a0f3d-24f7-4350-b62a-af756ab07ca5`。
+- 下一步：合入 PR #17 后恢复 V-01，安排真实非构建者用户跑 Production 主路径。
+```
 
 ### V-01-FIX-02 执行票（已完成）
 

@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Compass, Eraser, Library, Settings2, UserRound } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  Compass,
+  Eraser,
+  Library,
+  Settings2,
+  UserRound,
+} from "lucide-react";
 
 import { DirectionPanel } from "@/components/forge/DirectionPanel";
 import { IdeaInput } from "@/components/forge/IdeaInput";
@@ -380,77 +389,132 @@ export function ForgeWorkbench({
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#f2f0e8]">
-      <div className="mx-auto grid max-w-7xl gap-5 px-3 py-4 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="hidden rounded-lg bg-[#18322f] p-4 text-white shadow-sm lg:block">
-          <div className="sticky top-20 space-y-5">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/55">
-                ForgeNote
-              </p>
-              <p className="mt-2 text-lg font-semibold">内容工作台</p>
-            </div>
-            <nav className="space-y-1 text-sm">
-              <Link
-                href="/forge"
-                className="flex items-center gap-2 rounded-md bg-white/12 px-3 py-2 font-medium text-white"
-              >
-                <Compass className="size-4" aria-hidden />
-                今天的方案
-              </Link>
-              <Link
-                href="/recipes"
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-white/72 transition hover:bg-white/10 hover:text-white"
-              >
-                <Library className="size-4" aria-hidden />
-                配方库
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-white/72 transition hover:bg-white/10 hover:text-white"
-              >
-                <UserRound className="size-4" aria-hidden />
-                偏好
-              </Link>
-            </nav>
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-3 py-4 sm:px-5">
+        <div className="flex flex-col gap-3 rounded-lg border border-stone-300 bg-white/82 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-sm font-medium text-stone-800">
+            <CheckCircle2 className="size-4 text-emerald-700" aria-hidden />
+            {shellStatus}
           </div>
-        </aside>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+            {savedAt && <span>{copy.idea.savedAt.replace("{time}", savedAt)}</span>}
+            {sessionId && (
+              <span className="rounded-full bg-stone-100 px-2 py-1 font-mono text-[11px] text-stone-600">
+                {sessionId.slice(0, 8)}
+              </span>
+            )}
+            {canClearDraft && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleNew}
+                className="text-stone-600 hover:bg-amber-50 hover:text-stone-950"
+              >
+                <Eraser className="size-3.5" aria-hidden />
+                {copy.forge.clearDraft}
+              </Button>
+            )}
+          </div>
+        </div>
 
-        <main className="min-w-0 space-y-4">
-          <div className="flex flex-col gap-3 rounded-lg border border-stone-300 bg-white/80 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-stone-800">
-              <CheckCircle2 className="size-4 text-emerald-700" aria-hidden />
-              {shellStatus}
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
-              {savedAt && <span>{copy.idea.savedAt.replace("{time}", savedAt)}</span>}
-              {canClearDraft && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleNew}
-                  className="text-stone-600 hover:bg-amber-50 hover:text-stone-950"
+        <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)_380px] xl:items-start">
+          <aside className="hidden rounded-lg bg-[#18322f] p-4 text-white shadow-sm xl:block">
+            <div className="sticky top-20 space-y-5">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/55">
+                  ForgeNote
+                </p>
+                <p className="mt-2 text-lg font-semibold">内容工作台</p>
+              </div>
+              <nav className="space-y-1 text-sm">
+                <Link
+                  href="/forge"
+                  className="flex items-center gap-2 rounded-md bg-white/12 px-3 py-2 font-medium text-white"
                 >
-                  <Eraser className="size-3.5" aria-hidden />
-                  {copy.forge.clearDraft}
-                </Button>
-              )}
+                  <Compass className="size-4" aria-hidden />
+                  当前任务
+                </Link>
+                <Link
+                  href="/recipes"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-white/72 transition hover:bg-white/10 hover:text-white"
+                >
+                  <Library className="size-4" aria-hidden />
+                  配方库
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-white/72 transition hover:bg-white/10 hover:text-white"
+                >
+                  <UserRound className="size-4" aria-hidden />
+                  账号偏好
+                </Link>
+              </nav>
+              <div className="space-y-3 border-t border-white/12 pt-4 text-sm text-white/72">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-white/45">
+                    账号资产
+                  </p>
+                  <p className="mt-2 leading-6">
+                    已保存偏好会自动带入右侧方向判断。
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-white/45">
+                    内容资产
+                  </p>
+                  <p className="mt-2 leading-6">
+                    保存配方后，从这里回到配方库复用。
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          </aside>
 
-          <section className="rounded-lg border border-stone-300 bg-[#fffaf2] p-4 shadow-sm sm:p-6">
-            <IdeaInput
-              value={idea}
-              onChange={setIdea}
-              accountPost={accountPost}
-              onAccountPostChange={setAccountPost}
-              savedAt={savedAt}
-              onForge={prepareDirection}
-              pending={status === "loading"}
-            />
+          <section className="min-w-0 space-y-4">
+            <section className="rounded-lg border border-stone-300 bg-[#fffaf2] p-4 shadow-sm sm:p-6">
+              <IdeaInput
+                value={idea}
+                onChange={setIdea}
+                accountPost={accountPost}
+                onAccountPostChange={setAccountPost}
+                savedAt={savedAt}
+                onForge={prepareDirection}
+                pending={status === "loading"}
+              />
+            </section>
 
-            <div className="mt-5 border-t border-stone-200 pt-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            {showResults ? (
+              <OutcomePanel
+                status={status}
+                outcome={data?.outcome ?? null}
+                errorMessage={errorMessage}
+                authRequired={authRequired}
+                sessionId={sessionId}
+                outputLocale={
+                  status === "success" ? outputLocale.trim() || null : null
+                }
+                verification={data?.verification ?? null}
+                onRetry={runForge}
+                onNew={handleNew}
+              />
+            ) : (
+              <section className="rounded-lg border border-dashed border-stone-300 bg-white/55 p-5 text-sm leading-6 text-stone-600">
+                <div className="flex items-start gap-3">
+                  <BookOpen className="mt-0.5 size-4 text-stone-500" aria-hidden />
+                  <div>
+                    <p className="font-medium text-stone-900">内容方案会在这里展开</p>
+                    <p className="mt-1">
+                      中区只放当前任务和生成结果；方向判断、输出偏好和保存配方放在右侧。
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+          </section>
+
+          <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1">
+            <section className="rounded-lg border border-stone-300 bg-white/80 p-4 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between xl:flex-col">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-medium text-stone-700">
                     <Settings2 className="size-4" aria-hidden />
@@ -508,39 +572,32 @@ export function ForgeWorkbench({
                 disabled={status === "loading"}
                 className="mt-3 h-9 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none transition-colors placeholder:text-stone-400 focus-visible:border-stone-500 focus-visible:ring-3 focus-visible:ring-stone-300/60 disabled:opacity-60"
               />
-            </div>
-          </section>
+            </section>
 
-          {hasDirection && (
-            <div ref={directionPanelRef} className="scroll-mt-20">
-              <DirectionPanel
-                assumptions={assumptions}
-                focusedIdea={idea}
-                hasAccountPost={accountPost.trim().length > 0}
-                onEdit={editAssumption}
-                onGenerate={runForge}
-                onRemember={rememberAssumption}
-                rememberedKeys={rememberedKeys}
-                pending={status === "loading"}
-              />
-            </div>
-          )}
+            {hasDirection ? (
+              <div ref={directionPanelRef} className="scroll-mt-20">
+                <DirectionPanel
+                  compact
+                  assumptions={assumptions}
+                  focusedIdea={idea}
+                  hasAccountPost={accountPost.trim().length > 0}
+                  onEdit={editAssumption}
+                  onGenerate={runForge}
+                  onRemember={rememberAssumption}
+                  rememberedKeys={rememberedKeys}
+                  pending={status === "loading"}
+                />
+              </div>
+            ) : (
+              <section className="rounded-lg border border-stone-300 bg-white/70 p-4 text-sm leading-6 text-stone-600 shadow-sm">
+                <p className="font-medium text-stone-900">右侧会先生成方向判断</p>
+                <p className="mt-1">
+                  输入想法后，这里显示受众、内容形式和表达角度；改完再生成。
+                </p>
+              </section>
+            )}
 
-          {showResults && (
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <OutcomePanel
-                status={status}
-                outcome={data?.outcome ?? null}
-                errorMessage={errorMessage}
-                authRequired={authRequired}
-                sessionId={sessionId}
-                outputLocale={
-                  status === "success" ? outputLocale.trim() || null : null
-                }
-                verification={data?.verification ?? null}
-                onRetry={runForge}
-                onNew={handleNew}
-              />
+            {showResults && (
               <RecipePanel
                 // 切换 session 时重挂以重置保存态（成功保存反馈不跨 session 残留）。
                 key={sessionId ?? "idle"}
@@ -549,9 +606,27 @@ export function ForgeWorkbench({
                 verification={data?.verification ?? null}
                 sessionId={sessionId}
               />
-            </section>
-          )}
-        </main>
+            )}
+          </aside>
+        </div>
+
+        <section className="grid gap-3 rounded-lg border border-stone-300 bg-white/75 px-4 py-3 text-sm text-stone-700 shadow-sm md:grid-cols-[1fr_1fr_1fr]">
+          <div className="flex items-center gap-2">
+            <Clock3 className="size-4 text-stone-500" aria-hidden />
+            <span className="font-medium text-stone-900">版本</span>
+            <span>{sessionId ? `当前 session ${sessionId.slice(0, 8)}` : "生成后记录本次 session"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Library className="size-4 text-stone-500" aria-hidden />
+            <span className="font-medium text-stone-900">复用</span>
+            <span>{data?.recipe ? "右侧可保存为配方" : "生成后判断是否值得保存"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-stone-500" aria-hidden />
+            <span className="font-medium text-stone-900">表现</span>
+            <span>{status === "success" ? "可在结果区记录发布表现" : "发布后再回填表现"}</span>
+          </div>
+        </section>
       </div>
     </div>
   );
