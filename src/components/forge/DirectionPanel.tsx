@@ -44,6 +44,7 @@ interface DirectionPanelProps {
   hasAccountPost: boolean;
   pending: boolean;
   rememberedKeys: string[];
+  compact?: boolean;
   onEdit: (key: string, value: string) => void;
   onGenerate: () => void;
   onRemember?: (assumption: Assumption) => void;
@@ -55,6 +56,7 @@ export function DirectionPanel({
   hasAccountPost,
   pending,
   rememberedKeys,
+  compact = false,
   onEdit,
   onGenerate,
   onRemember,
@@ -68,7 +70,12 @@ export function DirectionPanel({
 
   return (
     <section className="rounded-lg border border-stone-300 bg-white/88 p-5 shadow-sm">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div
+        className={cn(
+          "flex flex-col gap-4",
+          !compact && "lg:flex-row lg:items-start lg:justify-between",
+        )}
+      >
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-700">
             <Check className="size-3.5" aria-hidden />
@@ -89,7 +96,7 @@ export function DirectionPanel({
               : copy.direction.summaryWithoutPost}
           </p>
         </div>
-        <div className="text-sm text-stone-600 lg:text-right">
+        <div className={cn("text-sm text-stone-600", !compact && "lg:text-right")}>
           <p className="font-medium text-stone-900">
             {copy.direction.confirmed.replace("{n}", String(confirmedCount))}
           </p>
@@ -97,7 +104,7 @@ export function DirectionPanel({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className={cn("mt-5 grid gap-3", compact ? "grid-cols-1" : "md:grid-cols-3")}>
         {visibleAssumptions.map((assumption) => {
           const options = VALUE_OPTIONS[assumption.key] ?? [];
           const isEditing = editingKey === assumption.key;
@@ -219,12 +226,15 @@ export function DirectionPanel({
         })}
       </div>
 
-      <div className="mt-5 flex justify-end">
+      <div className={cn("mt-5 flex", compact ? "justify-stretch" : "justify-end")}>
         <Button
           type="button"
           onClick={onGenerate}
           disabled={pending || visibleAssumptions.length === 0}
-          className="min-w-36 bg-[#9b4a24] text-white shadow-sm hover:bg-[#823d1d] focus-visible:ring-[#d8a06f]/45"
+          className={cn(
+            "min-w-36 bg-[#9b4a24] text-white shadow-sm hover:bg-[#823d1d] focus-visible:ring-[#d8a06f]/45",
+            compact && "w-full",
+          )}
         >
           {pending ? (
             <LoaderCircle className="size-4 animate-spin" aria-hidden />
