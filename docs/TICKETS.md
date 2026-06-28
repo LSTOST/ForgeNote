@@ -66,7 +66,7 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03 均已合入前通过 Preview Gate 3；待 Production 真实用户证据 |
+| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03 均已通过 Preview Gate 3；待 Production 真实用户证据 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
@@ -107,7 +107,7 @@
 下一步：
 - Gate 2 已通过：doctor / lint / typecheck / build / smoke:api / diff check。
 - Preview Gate 3 已通过：PR #17 Preview 登录态 `nb19870729@gmail.com` 完成 `/forge` 宽屏布局确认 → 输入 `first cat budget checklist carousel` → 先确认方向 → 右栏 compact 方向反馈 → 生成内容方案 → `/forge?session=e83a0f3d-24f7-4350-b62a-af756ab07ca5`。
-- 下一步：合入 PR #17 后恢复 V-01，安排真实非构建者用户跑 Production 主路径。
+- 下一步：恢复 V-01，安排真实非构建者用户跑 Production 主路径。
 ```
 
 ### V-01-FIX-02 执行票（已完成）
