@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**V-01-FIX-03 Review / Gate 2 Pass**。Owner 自己扮演真实用户试用后判定：当前 `/forge` 仍是上到下的纵向流，不是此前讨论的左 / 中 / 右 / 底工作台形态。已把现有 `/forge` 组件重排为最小工作台壳，不改 API / prompt / DB / RLS；Preview Gate 3 待跑。
+当前唯一票：**V-01 Ready**。V-01-FIX-03 已在 PR #17 Preview 登录态通过：桌面 `/forge` 已呈现左=账号/内容资产、中=当前任务与内容方案、右=方向假设/生成控制/配方、底=当前 session/复用/表现的最小工作台形态。下一步回到 Production 真实非构建者用户验证，不再继续补 UI 小修。
 
 ## 当前分支
-当前代码基线：`codex/v-01-fix-03-workbench-layout` 基于 `main` / `origin/main` = `2ca9da8`（PR #16 / V-01-FIX-02 已 squash merge）。本次 V-01-FIX-03 改 `/forge` 前端布局与验收/状态文档，不改 API / prompt / DB / RLS。
+当前代码基线：`codex/v-01-fix-03-workbench-layout` 基于 `main` / `origin/main` = `2ca9da8`（PR #16 / V-01-FIX-02 已 squash merge）。本次 V-01-FIX-03 改 `/forge` 前端布局与验收/状态文档，不改 API / prompt / DB / RLS；PR #17 已开并通过 Preview Gate 3，待合并。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。V-01-FIX-03 PR 待开。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已通过 CI / Vercel / Preview Gate 3，待合并。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -125,8 +125,8 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 当前执行边界
-- **V-01-FIX-03（Review / Gate 2 Pass）**：修复 `/forge` 页面形态错位。范围只限把现有功能重排成左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现连续性的最小工作台壳；不改生成链路、prompt、API、DB、RLS、资产库、视觉渲染。
-- **V-01（Blocked by V-01-FIX-03）**：小范围真实用户验证。让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录指标与阻塞点。FIX-03 合入前不继续拉真实用户。
+- **V-01（Ready）**：小范围真实用户验证。让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录指标与阻塞点。不要再把 Owner dry run 当作真实用户验证。
+- **V-01-FIX-03（Done / PR #17 待合并）**：修复 `/forge` 页面形态错位。范围只限把现有功能重排成左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现连续性的最小工作台壳；不改生成链路、prompt、API、DB、RLS、资产库、视觉渲染。Gate 2 + Preview Gate 3 已通过。
 - **V-01-FIX-02（Done）**：修复 Owner 二次 dry run 暴露的 `/forge` 入口理解阻塞。范围只限首屏清晰度、方向确认的输入反馈、按钮/图标一致性；不改生成链路、prompt、API、DB、RLS、资产库、视觉渲染。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；PR #16 Preview Gate 3 通过。
 - **V-01-FIX-01（Done）**：修复 V-01 前置入口阻塞。范围只限 `/forge` 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；不改 API / prompt / DB / RLS。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；Preview Gate 3 通过。
 - **I-23（Done）**：保存配方后的复用证据链。PR #12 已 squash merge 到 `main`（`c62065f`）。保存成功 → `/recipes/<id>` → 换输入重跑 → 新 `/forge?session=` 的连续性证据已在 Preview Gate 3 通过；`usage_count` 0→1，I-22 结构保留。
@@ -184,7 +184,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 已合并。当前唯一任务是 V-01-FIX-03：Gate 2 已过，下一步开 PR 并跑 Preview Gate 3；合入后再恢复 V-01 真实用户 Production 主路径，不要把视觉渲染、资产库、自动学习塞进下一步。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 已合并。PR #17 已通过 CI / Vercel / Preview Gate 3，下一步合并 PR #17，然后恢复 V-01 Production 真实非构建者用户主路径验证；不要把视觉渲染、资产库、自动学习塞进下一步。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -195,6 +195,7 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-28 (V-01-FIX-03 Preview Gate 3 通过：PR #17 Preview `https://forge-note-git-codex-v-01-fix-03-workbe-c68956-lstosts-projects.vercel.app`，Google OAuth 用户 `nb19870729@gmail.com` 回到 Preview `/forge`。宽屏下左栏显示当前任务/配方库/账号偏好与资产说明，中区承载输入和内容方案，右栏承载输出语言/方向假设/生成控制/保存配方，底栏显示版本/复用/表现。输入 `first cat budget checklist carousel` → `先确认方向` 后右栏出现 compact 方向假设 → `生成内容方案` 成功，落 `/forge?session=e83a0f3d-24f7-4350-b62a-af756ab07ca5`，结果含内容定位、标题备选、发布正文、5 页卡片、配图方向、发布前检查、话题、评论区引导；右栏出现保存配方区；未见可见应用错误。V-01-FIX-03 结论 Pass，当前唯一任务恢复 V-01。)
 2026-06-28 (V-01-FIX-03 进入 Review / Gate 2 Pass：桌面 `/forge` 已改为左=账号/内容资产入口，中=当前任务输入与内容方案，右=输出语言/方向假设/生成控制/保存配方，底=当前 session/复用/表现状态条；移动端自然纵向降级；DirectionPanel 增 compact 右栏模式。未改 API / prompt / DB / RLS。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` 通过；登录态布局目视需 PR Preview Gate 3。)
 2026-06-28 (Owner 以真实用户视角试用后指出：当前 `/forge` UI 形态和工作流仍是上到下的纵向形式，不是此前讨论的左 / 中 / 右 / 底工作台布局。Codex 判定 V-01 继续被页面形态阻塞，切 V-01-FIX-03：只把现有 `/forge` 功能重排为左=账号/内容资产、中=当前任务与内容方案、右=方向假设/生成控制/配方、底=当前 session/复用/表现连续性的最小工作台壳；不改 API / prompt / DB / RLS，不做资产库/视觉渲染/自动学习。)
 2026-06-28 (V-01-FIX-02 Preview Gate 3 通过：PR #16 Preview `https://forge-note-git-codex-v-01-fix-02-entry-clarity-lstosts-projects.vercel.app`，真实登录态 `dennisliu1225@gmail.com` 下完成 `/forge` 输入 → 先确认方向 → 方向区显示「本次想法：想做一组第一次养猫预算清单的图文卡片」→ 三条方向均围绕该主题 → 生成内容方案成功，落 `/forge?session=4b73c107-f22e-42e3-b156-624704b7b109`。空态无「新建」；有输入后显示「清空重写」；粘贴过往帖入口为剪贴板图标；主 CTA/生成按钮为暖色动作样式；浏览器 console 无 error/exception。V-01-FIX-02 结论 Pass，当前唯一任务恢复 V-01。)
