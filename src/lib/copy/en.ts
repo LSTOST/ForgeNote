@@ -34,13 +34,36 @@ export const en: Copy = {
   login: {
     googleButton: "Continue with Google",
     emailDivider: "or use email",
-    sendMagicLink: "Send login link",
+    passwordSignInTab: "Sign in",
+    passwordSignUpTab: "Create account",
+    passwordSignInButton: "Sign in with email and password",
+    passwordSignUpButton: "Create email password account",
+    passwordSubmitting: "Working…",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Password (at least 8 characters)",
+    passwordConfirmLabel: "Confirm password",
+    passwordConfirmPlaceholder: "Enter the password again",
+    passwordSignInHint:
+      "After the email is confirmed, use your password next time without opening email.",
+    passwordSignUpHint:
+      "New accounts may need one email confirmation; after that, sign in with your password.",
+    passwordAuthFailed: "Email/password sign-in failed. Please check and retry.",
+    passwordNetworkError: "Sign-in failed. Check your network and retry.",
+    invalidCredentials: "Email or password is incorrect.",
+    emailNotConfirmed:
+      "This email is not confirmed yet. Confirm it once, then sign in with your password.",
+    signupSentTitle: "Confirmation email sent",
+    signupSentBodyPrefix: "We sent a confirmation email to ",
+    signupSentBodySuffix:
+      " Confirm it once; after that, use email and password to sign in.",
+    magicBackupHint: "Use a login link only if you do not want a password; it still requires email.",
+    sendMagicLink: "Backup: send login link",
     sending: "Sending…",
     footerNote: "Sign in to save recipes and preferences.",
     notConfiguredTitle: "Sign-in unavailable: Supabase not configured",
     notConfiguredBody:
       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY; please set them in the environment and retry.",
-    googleUnavailable: "Google sign-in is unavailable; please use the email magic link instead.",
+    googleUnavailable: "Google sign-in is unavailable; please use email and password instead.",
     googleInitFailed: "Could not start Google sign-in; please retry or use email.",
     magicSendFailed: "Failed to send, please try again.",
     magicSendNetworkError: "Failed to send; check your network and retry.",
