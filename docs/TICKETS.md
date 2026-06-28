@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `a9c0f44`（PR #10 / I-22 已 squash merge）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `c62065f`（PR #12 / I-23 已 squash merge）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -50,19 +50,21 @@
 | I-20 | Done | DSN-01 最小实现：onboarding-first `/forge` shell、可选过往帖、三条账号级方向假设、依据/置信度、编辑确认、`accountPost` 数据锚点；OpenRouter 401 修复后真实生成成功 | `docs/acceptance/I-20.md` |
 | I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
 | I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
+| I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
 > PR #9 已 squash merge 到 `main`（`77e5b80`），DSN-01 / I-20 / I-21 全部进入 `main`。
 > PR #10 已 squash merge 到 `main`（`a9c0f44`），I-22 进入 Done。
+> PR #12 已 squash merge 到 `main`（`c62065f`），I-23 进入 Done。
 
 ## 下一张唯一任务
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| I-23 | Review | 保存配方后的复用证据链：保存 I-22 结构化结果后，用户能直接进入配方详情并换输入重跑；新结果仍保留发布正文、逐页卡片、配图方向、发布前检查 | 资产库、视觉渲染、视觉配方、多账号、自动学习、内容日历、发布自动化、DB schema/RLS 改动 | PR #12 CI/Vercel 绿；Preview Gate 3 Pass |
+| V-01 | Ready | 小范围真实用户验证：让 1-3 个非构建者用户走完 Production 主路径，记录能否独立完成首次生成、保存配方、配方重跑，并读出对应指标 | 新功能开发、视觉渲染、资产库、自动学习、价格/Stripe、runtime i18n、内容日历 | I-23 已合入 main；Preview OAuth wildcard 已配置；Production 已可登录；metrics 脚本存在 |
 
-> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-22 已把第一份结果推进到结构化、可复制、可判断是否保存；下一步不是继续美化输出，而是证明“值得保存”能进入真实复用：保存后到配方详情，再换输入重跑，仍得到 I-22 级别的内容方案。
+> **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
 ### DSN-01 执行票（Open Design POC，Claude Design 保底）
 
@@ -307,11 +309,11 @@
 - PR #10 已 squash merge 到 `main`（`a9c0f44`）；I-22 Done。
 ```
 
-### I-23 执行票（下一张唯一任务）
+### I-23 执行票（已完成）
 
 ```text
 票号：I-23
-状态：Review
+状态：Done
 类型：实现票（保存配方后的复用证据链）
 目标：把 I-22 的“这次配方值不值得留”推进到真实复用路径：
       用户保存结构化内容方案后，能立即进入配方详情，并用新输入重跑；
@@ -373,7 +375,69 @@
 - 旧配方 fields 可能只含旧版 `cardPrompts.prompt`；本票验收使用 I-22 后生成并保存的配方，旧数据兼容只做不白屏，不要求回填。
 
 下一步：
-- Gate 2 通过；Preview Gate 3 通过：保存后出现“查看配方”入口，进入详情后换输入重跑成功，新 `/forge?session=` 仍保留 I-22 结构，原配方 `usage_count` 0→1。PR #12 可转 Ready；I-23 待合并后进入 Done。
+- Gate 2 通过；Preview Gate 3 通过：保存后出现“查看配方”入口，进入详情后换输入重跑成功，新 `/forge?session=` 仍保留 I-22 结构，原配方 `usage_count` 0→1。
+- PR #12 已 squash merge 到 `main`（`c62065f`）；I-23 Done。
+```
+
+### V-01 执行票（下一张唯一任务）
+
+```text
+票号：V-01
+状态：Ready
+类型：验证票（真实用户路径，不写产品功能）
+目标：让 1-3 个非构建者用户在 Production 走完 ForgeNote M1 主路径，
+      证明当前闭环是否真的可被公平测试：首次生成、保存配方、从配方详情换输入重跑。
+
+用户是谁：
+- 非构建者真实用户，最好是有图文卡片 / carousel 发布需求的创作者或准创作者。
+
+用户任务：
+- 登录 Production → 输入一个真实模糊想法 → 看懂/必要时修改假设 → 生成内容方案
+  → 判断是否保存配方 → 进入配方详情 → 换一个新输入重跑。
+
+范围内：
+1. 准备一份极短测试脚本和观察记录模板，落 `docs/acceptance/V-01.md`。
+2. 使用 Production（优先）或明确标注的同码 Preview 执行真实路径。
+3. 记录每个用户是否独立完成：
+   - 登录
+   - 首次生成
+   - 假设条是否看懂/是否编辑
+   - 是否复制或认为内容可用
+   - 是否保存配方
+   - 是否进入详情并重跑
+4. 跑一次 `npm run metrics` 或等价只读指标读出，记录 activation / assumption_edit / recipe_save / recipe_rerun。
+5. 输出结论：继续打磨当前闭环、修具体阻塞，或再考虑下一张产品实现票。
+
+范围外：
+- 不开发新功能。
+- 不改 prompt / schema / RLS / API。
+- 不做资产库、视觉渲染、自动学习、内容日历、Stripe、runtime i18n。
+- 不把 Owner/Codex 自测冒充真实用户验证。
+
+涉及文件：
+- `docs/acceptance/V-01.md`
+- `docs/PROJECT-STATUS.md`
+- `docs/TICKETS.md`
+
+验收标准：
+- 至少 1 个非构建者用户完成或明确卡在 Production 主路径某一步。
+- 记录用户身份类型、环境、输入主题、完成/失败步骤、可观察证据、残余风险。
+- 指标读出记录到验收文档；无 DB 权限时必须记录具体阻塞，不得伪造。
+- 得出下一步唯一判断：修阻塞、继续验证，或进入下一张实现票。
+
+验证命令：
+  npm run doctor
+  npm run metrics
+
+手工验收步骤：
+  真实用户共享屏幕或现场操作；Codex 只观察和记录，不代替用户决定内容好坏。
+
+风险：
+- 样本极小，只能证明“是否能用/哪里卡”，不能证明市场需求。
+- 若 Production env / OAuth / DB 指标权限再次卡住，本票结论必须写 Blocked 原因，不得改做无关功能。
+
+下一步：
+- `docs/acceptance/V-01.md` 测试脚本和记录模板已准备；下一步安排真实用户执行并记录结果。
 ```
 
 <details><summary>I-19 执行票（已完成，存档）</summary>
@@ -441,7 +505,7 @@
 
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-22 与 DSN-01 均已 Done。下一张唯一任务是 I-23：保存配方后的复用证据链。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染，先把支柱1（假设条→账号级判断）、支柱2（可用内容方案）和支柱3（配方复用）串成一条真实路径。V-01（拉测试用户）仍挂起；观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。下一张唯一任务是 V-01：小范围真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
