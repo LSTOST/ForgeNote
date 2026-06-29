@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `363de04`（PR #18 / V-01-FIX-04 已合入并同步 V-01 Ready 状态）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `588a214`（PR #19 merge 后状态同步；V-01-FIX-05 已合入）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -68,9 +68,36 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03/04/05 均已通过；非 Google 用户测试前仍需一个已确认邮箱密码账号登录证据 |
+| V-01-FIX-06 | Review | 删除 `/login` 底部噪音文案「登录后可保存配方和偏好。」；Gate 2 pass，Preview Gate 3 pass | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、主标题/按钮/输入框/注册逻辑改动 | V-01-FIX-05 已合入；本票合入后恢复 V-01 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-06 执行票（Review）
+
+```text
+票号：V-01-FIX-06
+状态：Review（Gate 2 Pass / Preview Gate 3 Pass）
+类型：V-01 前置登录页微修（只改 /login 前端渲染）
+目标：删除 `/login` 底部文案「登录后可保存配方和偏好。」。
+
+范围内：
+1. 删除登录页可见 footer note 渲染。
+2. 保留 Google、邮箱密码、注册切换、Magic Link 行为。
+3. 优先少改文件；不删除 copy key。
+
+范围外：
+- 不改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+- 不新增/删除登录方式。
+- 不改主标题、按钮、输入框、注册逻辑。
+
+验收结果：
+- 匿名打开 `/login`，不再出现「登录后可保存配方和偏好。」。
+- 仍出现 Google 登录、邮箱、密码、主按钮、小号注册入口、小号 Magic Link 入口。
+- 自动验证：lint / typecheck / build / git diff --check 通过。
+- 本地匿名 `/login` HTML 检查通过。
+- Preview Gate 3：PR #20 Preview 匿名 `/login` 渲染已删除目标文案，保留 Google/email/password/sign-in/create-account/Magic Link 文案；GitHub CI / Vercel 绿。
+- 残余风险：未做浏览器点击交互；邮箱密码真实登录到 `/forge` 仍需一个已确认邮箱密码测试账号。
+```
 
 ### V-01-FIX-05 执行票（已完成）
 
