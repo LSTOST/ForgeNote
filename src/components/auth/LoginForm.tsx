@@ -129,7 +129,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
   return (
     <div className="w-full max-w-[min(380px,calc(100vw-40px))] space-y-7">
       <header className="space-y-2.5 text-center">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">
+        <h1 className="break-keep text-[26px] leading-tight font-semibold tracking-tight text-foreground">
           {PRODUCT_NAME}
         </h1>
         <p className="text-[14px] leading-6 text-muted-foreground">{SLOGAN}</p>
