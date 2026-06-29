@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**V-01-FIX-06 Review / Gate 2 Pass / Preview Gate 3 Pass**。Owner 指出 `/login` 底部「登录后可保存配方和偏好。」是噪音；本票只删除该 footer note 渲染，不改 Google、邮箱密码、注册切换、Magic Link、Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。V-01 真实用户验证在该登录页微修合入后恢复；非 Google 用户测试前，仍需一个已确认邮箱密码账号跑 `/login` → `/forge`。
+当前唯一票：**V-01 Ready**。V-01-FIX-06 已随 PR #20 合入主线：`/login` 底部「登录后可保存配方和偏好。」不再渲染。下一步恢复 Production 真实用户验证；非 Google 用户测试前，仍需一个已确认邮箱密码账号跑 `/login` → `/forge`。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` = `588a214`（PR #19 merge 后状态同步）。当前实现分支：`codex/v-01-fix-06-login-footer-copy`。`/login` footer note 微修不改 API / prompt / DB / RLS。
+当前代码基线：`main` / `origin/main` = `0875aaa`（PR #20 / V-01-FIX-06 已 squash merge）。`/login` footer note 微修已进入主线；不改 API / prompt / DB / RLS。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -125,8 +125,8 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 当前执行边界
-- **V-01-FIX-06（Review / Gate 2 Pass / Preview Gate 3 Pass）**：删除 `/login` 底部文案「登录后可保存配方和偏好。」。范围只限登录页前端渲染；不删除 copy key，不改 Google、邮箱密码、注册切换、Magic Link、Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。`lint` / `typecheck` / `build` / `git diff --check` / 本地匿名 `/login` HTML 检查通过；PR #20 Preview 匿名 `/login` 与 GitHub CI / Vercel 通过。
 - **V-01（Ready）**：小范围真实用户验证。让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录指标与阻塞点。不要再把 Owner dry run 当作真实用户验证。拉非 Google 用户前，先用一个已确认邮箱密码账号补跑 Production `/login` → `/forge`。
+- **V-01-FIX-06（Done）**：删除 `/login` 底部文案「登录后可保存配方和偏好。」。范围只限登录页前端渲染；不删除 copy key，不改 Google、邮箱密码、注册切换、Magic Link、Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。`lint` / `typecheck` / `build` / `git diff --check` / 本地匿名 `/login` HTML 检查通过；PR #20 Preview 匿名 `/login` 与 GitHub CI / Vercel 通过；PR #20 已合入。残余风险：未做浏览器点击交互；邮箱密码真实登录到 `/forge` 仍需一个已确认邮箱密码测试账号。
 - **V-01-FIX-05（Done）**：修复 `/login` 邮箱模块过度复杂。范围只限登录页前端与 copy：删掉大号“登录 / 注册”切换和虚线备用链接模块，保留邮箱 + 密码主路径，把注册/登录链接降为小号文字入口，把 Magic Link 降为次级文字入口；不改 Supabase 策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` / `git diff --check` 通过；PR #19 Preview 匿名 `/login` 与 Preview `smoke:api` 通过；PR #19 已合入。残余风险：未用已确认邮箱密码账号真实登录到 `/forge`，Magic Link sent-state 未用浏览器工具实点。
 - **V-01-FIX-04（Done / Conditional Pass）**：修复非 Google 用户登录摩擦。范围只限 `/login` 前端：邮箱 + 密码变成主路径，Magic Link 降级为备用；不新增 OAuth/MFA/passkey/忘记密码，不改 `/auth/callback`、业务 API、DB、RLS、prompt。`doctor` / `lint` / `typecheck` / `build` / `smoke:api` / `git diff --check` 通过；PR #18 Preview 匿名 `/login` 与 Preview `smoke:api` 通过；PR #18 已合入。残余风险：未用已确认邮箱密码账号真实登录到 `/forge`。
 - **V-01-FIX-03（Done）**：修复 `/forge` 页面形态错位。范围只限把现有功能重排成左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现连续性的最小工作台壳；不改生成链路、prompt、API、DB、RLS、资产库、视觉渲染。Gate 2 + Preview Gate 3 已通过，PR #17 已合入。
@@ -187,7 +187,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 已合并。当前唯一任务恢复 V-01 Production 真实非构建者用户主路径验证。不要把视觉渲染、资产库、自动学习塞进下一步。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 已合并。当前唯一任务恢复 V-01 Production 真实非构建者用户主路径验证。不要把视觉渲染、资产库、自动学习塞进下一步。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -198,6 +198,7 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-29 (PR #20 已 squash merge 到 `main`（`0875aaa`），V-01-FIX-06 进入主线。当前唯一任务恢复 V-01：Production 真实非构建者用户主路径验证；非 Google 用户测试前仍需一个已确认邮箱密码账号 `/login` → `/forge` 证据。)
 2026-06-29 (V-01-FIX-06 Preview Gate 3 Pass：PR #20 Preview `https://forge-note-git-codex-v-01-fix-06-login-ed66ea-lstosts-projects.vercel.app/login` 匿名渲染已删除「登录后可保存配方和偏好。」；仍显示 Google 登录、邮箱、密码、主按钮、小号创建账号入口和 Magic Link 入口。GitHub CI / Vercel 绿。残余风险：未做浏览器点击交互；邮箱密码真实登录 `/login` → `/forge` 仍需已确认邮箱密码测试账号。)
 2026-06-29 (V-01-FIX-06 进入 Review：删除 `/login` 底部文案「登录后可保存配方和偏好。」；未删除 copy key，未改 Google、邮箱密码、注册切换、Magic Link、Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。`lint` / `typecheck` / `build` / `git diff --check` 通过；本地匿名 `/login` HTML 检查确认目标文案 absent，Google/email/password/sign-in/create-account/Magic Link 文案 present。Draft PR 阶段，合入前 V-01 仍不标 Done。)
 2026-06-29 (PR #19 已 squash merge 到 `main`（`2aa2209`），V-01-FIX-05 进入主线。当前唯一任务恢复 V-01：Production 真实非构建者用户主路径验证；非 Google 用户测试前仍需一个已确认邮箱密码账号 `/login` → `/forge` 证据。)
