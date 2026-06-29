@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CircleAlert, KeyRound, LoaderCircle, UserPlus } from "lucide-react";
+import { CircleAlert, LoaderCircle, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { copy } from "@/lib/copy";
-import { PRODUCT_NAME, SLOGAN } from "@/lib/constants";
+import { SLOGAN } from "@/lib/constants";
 
 interface LoginFormProps {
   /** 回调或上一次失败带回的错误（如 Google provider 未配置）。 */
@@ -127,16 +127,22 @@ export function LoginForm({ initialError }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-[min(380px,calc(100vw-40px))] space-y-7">
-      <header className="space-y-2.5 text-center">
-        <h1 className="break-keep text-[26px] leading-tight font-semibold tracking-tight text-foreground">
-          {PRODUCT_NAME}
+    <div className="w-full max-w-[380px] space-y-9">
+      <header className="flex flex-col items-center gap-3 text-center">
+        <div className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#B5562B] text-[#FDF7EF] shadow-[0_2px_8px_rgba(150,70,30,0.25)]">
+          <Zap className="size-[19px]" aria-hidden strokeWidth={2.2} />
+        </div>
+        <h1 className="font-serif text-[33px] leading-none font-medium text-[#33291F] sm:text-[36px]">
+          ForgeNote
         </h1>
-        <p className="text-[14px] leading-6 text-muted-foreground">{SLOGAN}</p>
+        <p className="break-keep text-[13px] leading-5 font-medium tracking-[0.06em] text-[#9c7a52]">
+          图文卡片内容工作台
+        </p>
+        <p className="text-[14px] leading-[1.5] text-[#6f6253]">{SLOGAN}</p>
       </header>
 
       {!configured ? (
-        <div className="rounded-[14px] border border-[#b53c28]/30 bg-[#b53c28]/5 p-4 text-[13.5px] leading-6 text-[#9e3322]">
+        <div className="rounded-[14px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-4 text-[13.5px] leading-6 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]">
           <p className="font-medium">{copy.login.notConfiguredTitle}</p>
           <p className="mt-1 text-[#9e3322]/80">
             {copy.login.notConfiguredBody}
@@ -147,7 +153,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/5 p-3 text-[13.5px] leading-5 text-[#9e3322]"
+              className="flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-3 text-[13.5px] leading-5 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
             >
               <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               <span>{error}</span>
@@ -155,13 +161,13 @@ export function LoginForm({ initialError }: LoginFormProps) {
           )}
 
           {passwordState === "signupSent" ? (
-            <div className="rounded-[14px] border border-[#e7dac9] bg-muted/35 p-4 text-[14px] leading-6">
-              <p className="font-medium text-foreground">
+            <div className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-[14px] leading-6 shadow-[0_1px_10px_rgba(120,90,50,0.06)]">
+              <p className="font-medium text-[#33291F]">
                 {copy.login.signupSentTitle}
               </p>
-              <p className="mt-1 text-muted-foreground">
+              <p className="mt-1 text-[#6f6253]">
                 {copy.login.signupSentBodyPrefix}
-                <span className="font-medium">{email.trim()}</span>
+                <span className="font-medium text-[#33291F]">{email.trim()}</span>
                 {copy.login.signupSentBodySuffix}
               </p>
               <button
@@ -190,7 +196,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                   setPasswordState("idle");
                 }}
                 disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#e7dac9] bg-background px-[15px] text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50 dark:border-border dark:bg-input/30"
+                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
               />
               <label htmlFor="password" className="sr-only">
                 {copy.login.passwordLabel}
@@ -205,20 +211,16 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#e7dac9] bg-background px-[15px] text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50 dark:border-border dark:bg-input/30"
+                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
               />
               <Button
                 type="submit"
-                className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-orange-50 shadow-[0_2px_10px_rgba(150,70,30,0.20)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/25 disabled:shadow-none"
+                className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none"
                 disabled={!passwordFormValid || busy}
               >
                 {passwordState === "submitting" ? (
                   <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                ) : passwordMode === "signIn" ? (
-                  <KeyRound className="size-4" aria-hidden />
-                ) : (
-                  <UserPlus className="size-4" aria-hidden />
-                )}
+                ) : null}
                 {passwordState === "submitting"
                   ? copy.login.passwordSubmitting
                   : passwordMode === "signIn"
@@ -228,16 +230,16 @@ export function LoginForm({ initialError }: LoginFormProps) {
             </form>
           )}
 
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-[#e7dac9]" />
+          <div className="flex items-center gap-3 text-xs text-[#a99578]">
+            <span className="h-px flex-1 bg-[#E3D8C7]" />
             或
-            <span className="h-px flex-1 bg-[#e7dac9]" />
+            <span className="h-px flex-1 bg-[#E3D8C7]" />
           </div>
 
           <Button
             type="button"
             variant="outline"
-            className="h-11 w-full rounded-[13px] border-[#e7dac9] bg-transparent text-[14px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/25"
+            className="h-11 w-full rounded-[13px] border-[#E3D8C7] bg-transparent text-[14px] font-medium text-[#6f6253] hover:bg-[#FFFDF9]/65 hover:text-[#33291F] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28]"
             disabled={busy}
             onClick={handleGoogle}
           >
@@ -249,7 +251,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
             {copy.login.googleButton}
           </Button>
 
-          <div className="space-y-2 text-center text-[13px] leading-6 text-muted-foreground">
+          <div className="space-y-2 text-center text-[13px] leading-6 text-[#9c7a52]">
             <p>
               {passwordMode === "signIn"
                 ? copy.login.noAccountPrompt
@@ -286,16 +288,16 @@ export function LoginForm({ initialError }: LoginFormProps) {
             </p>
             {magicState === "sent" ? (
               <div
-                className="rounded-[14px] border border-[#e7dac9] bg-muted/35 p-4 text-left text-[14px] leading-6 text-muted-foreground"
+                className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-left text-[14px] leading-6 text-[#6f6253] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
                 role="status"
                 aria-live="polite"
               >
-                <p className="font-medium text-foreground">
+                <p className="font-medium text-[#33291F]">
                   {copy.login.magicSentTitle}
                 </p>
                 <p className="mt-1">
                   {copy.login.magicSentBodyPrefix}
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-[#33291F]">
                     {email.trim()}
                   </span>
                   {copy.login.magicSentBodySuffix}
@@ -305,7 +307,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
           </div>
         </div>
       )}
-
     </div>
   );
 }

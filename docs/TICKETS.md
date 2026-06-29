@@ -70,7 +70,7 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-08 | Ready | 修复 `/login` 与 Claude Design `Login B Final.dc.html` 不一致：补纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录能力变化、新字体依赖、直接复制原型 HTML/inline style、外部图片/资产管线 | Owner 2026-06-30 明确指出 V-01-FIX-07 与 Claude Design 不一致 |
+| V-01-FIX-08 | Review | 修复 `/login` 与 Claude Design `Login B Final.dc.html` 不一致：补纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统；本地 Gate 2 + browser visual pass，待 PR Preview Gate 3 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录能力变化、新字体依赖、直接复制原型 HTML/inline style、外部图片/资产管线 | Owner 2026-06-30 明确指出 V-01-FIX-07 与 Claude Design 不一致 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
@@ -78,7 +78,7 @@
 
 ```text
 票号：V-01-FIX-08
-状态：Ready
+状态：Review
 类型：V-01 前置登录页设计保真修复（只改 /login 呈现层）
 设计输入：/Users/tete/Downloads/Login B Final.dc.html（Claude Design 方案 B 定稿）
 
@@ -113,6 +113,17 @@
 - 错误态 / signup sent / magic sent / not configured 状态不回归，仍属于同一暖色系统。
 - 自动验证：`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check`。
 - Gate 3：Preview 匿名 `/login` desktop/mobile 视觉检查 + Preview `smoke:api`。
+```
+
+V-01-FIX-08 本地实现证据（2026-06-30，Claude Code）：
+
+```text
+- 改动文件：src/app/login/page.tsx、src/components/auth/LoginForm.tsx。
+- 已实现：纸感点阵背景、38px Zap 闪电标、ForgeNote 独立 serif 标题、分类线、slogan、深橙 #B5562B 主按钮、#FFFDF9 输入背景、#E3D8C7 边框。
+- 未改：Supabase、/auth/callback、业务 API、DB、RLS、prompt、Forge 工作台、登录能力。
+- PASS：npm run lint；npm run typecheck；npm run build（联网权限重跑，用于现有 next/font Google Fonts）；git diff --check；本地匿名 `/login` HTML 检查；本地 `smoke:api`；本地浏览器 desktop/mobile 视觉检查。
+- 本地视觉证据：desktop 1280x720 下纸感点阵背景、38px mark、独立 ForgeNote 标题、分类线、深橙按钮、380px root、无横向溢出；mobile 390x760 下 350px root、左右 20px、无横向溢出。
+- 下一步：Draft PR CI/Vercel 补远端 build；Codex QA 跑 Preview 匿名 `/login` desktop/mobile 视觉检查与 Preview `smoke:api`。
 ```
 
 ### V-01-FIX-07 执行票（已完成）
