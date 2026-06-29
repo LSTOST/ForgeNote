@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CircleAlert, KeyRound, LoaderCircle, Mail, UserPlus } from "lucide-react";
+import { CircleAlert, KeyRound, LoaderCircle, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [passwordMode, setPasswordMode] = useState<PasswordMode>("signIn");
   const [passwordState, setPasswordState] = useState<PasswordState>("idle");
   const [magicState, setMagicState] = useState<MagicLinkState>("idle");
@@ -41,9 +40,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
     oauthState === "redirecting";
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const passwordValid = password.length >= 8;
-  const passwordConfirmValid =
-    passwordMode === "signIn" || passwordConfirm === password;
-  const passwordFormValid = emailValid && passwordValid && passwordConfirmValid;
+  const passwordFormValid = emailValid && passwordValid;
 
   async function handleGoogle() {
     setError(null);
@@ -176,41 +173,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
             <span className="h-px flex-1 bg-border" />
           </div>
 
-          <div className="grid grid-cols-2 rounded-lg border border-border bg-muted/30 p-1 text-sm">
-            <button
-              type="button"
-              className={`rounded-md px-3 py-2 font-medium transition ${
-                passwordMode === "signIn"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              disabled={busy}
-              onClick={() => {
-                setPasswordMode("signIn");
-                setPasswordState("idle");
-                setError(null);
-              }}
-            >
-              {copy.login.passwordSignInTab}
-            </button>
-            <button
-              type="button"
-              className={`rounded-md px-3 py-2 font-medium transition ${
-                passwordMode === "signUp"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              disabled={busy}
-              onClick={() => {
-                setPasswordMode("signUp");
-                setPasswordState("idle");
-                setError(null);
-              }}
-            >
-              {copy.login.passwordSignUpTab}
-            </button>
-          </div>
-
           {passwordState === "signupSent" ? (
             <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
               <p className="font-medium text-foreground">
@@ -244,6 +206,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setMagicState("idle");
+                  setPasswordState("idle");
                 }}
                 disabled={busy}
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
@@ -263,28 +226,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 disabled={busy}
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
               />
-              {passwordMode === "signUp" ? (
-                <>
-                  <label htmlFor="password-confirm" className="sr-only">
-                    {copy.login.passwordConfirmLabel}
-                  </label>
-                  <input
-                    id="password-confirm"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder={copy.login.passwordConfirmPlaceholder}
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    disabled={busy}
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
-                  />
-                </>
-              ) : null}
-              <p className="text-xs text-muted-foreground">
-                {passwordMode === "signIn"
-                  ? copy.login.passwordSignInHint
-                  : copy.login.passwordSignUpHint}
-              </p>
               <Button
                 type="submit"
                 className="h-10 w-full"
@@ -306,48 +247,48 @@ export function LoginForm({ initialError }: LoginFormProps) {
             </form>
           )}
 
-          <div className="rounded-lg border border-dashed border-border p-3">
+          <div className="space-y-2 text-center text-xs text-muted-foreground">
+            <p>
+              {passwordMode === "signIn"
+                ? copy.login.noAccountPrompt
+                : copy.login.hasAccountPrompt}
+              <button
+                type="button"
+                className="ml-1 font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+                disabled={busy}
+                onClick={() => {
+                  setPasswordMode(
+                    passwordMode === "signIn" ? "signUp" : "signIn",
+                  );
+                  setPasswordState("idle");
+                  setError(null);
+                }}
+              >
+                {passwordMode === "signIn"
+                  ? copy.login.createAccountLink
+                  : copy.login.returnToSignInLink}
+              </button>
+            </p>
+            <p>
+              {copy.login.magicBackupHint}
+              <button
+                type="button"
+                className="ml-1 font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+                disabled={!emailValid || busy}
+                onClick={handleMagicLink}
+              >
+                {magicState === "sending"
+                  ? copy.login.sending
+                  : copy.login.sendMagicLink}
+              </button>
+            </p>
             {magicState === "sent" ? (
-              <div className="text-sm">
-                <p className="font-medium text-foreground">
-                  {copy.login.magicSentTitle}
-                </p>
-                <p className="mt-1 text-muted-foreground">
-                  {copy.login.magicSentBodyPrefix}
-                  <span className="font-medium">{email.trim()}</span>
-                  {copy.login.magicSentBodySuffix}
-                </p>
-                <button
-                  type="button"
-                  className="mt-3 text-sm text-primary underline-offset-4 hover:underline"
-                  onClick={() => setMagicState("idle")}
-                >
-                  {copy.login.changeEmail}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  {copy.login.magicBackupHint}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 w-full"
-                  disabled={!emailValid || busy}
-                  onClick={handleMagicLink}
-                >
-                  {magicState === "sending" ? (
-                    <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                  ) : (
-                    <Mail className="size-4" aria-hidden />
-                  )}
-                  {magicState === "sending"
-                    ? copy.login.sending
-                    : copy.login.sendMagicLink}
-                </Button>
-              </div>
-            )}
+              <p className="text-foreground" role="status" aria-live="polite">
+                {copy.login.magicSentBodyPrefix}
+                <span className="font-medium">{email.trim()}</span>
+                {copy.login.magicSentBodySuffix}
+              </p>
+            ) : null}
           </div>
         </div>
       )}
