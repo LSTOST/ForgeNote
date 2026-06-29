@@ -68,7 +68,7 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-06 | Review | 删除 `/login` 底部噪音文案「登录后可保存配方和偏好。」 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、主标题/按钮/输入框/注册逻辑改动 | V-01-FIX-05 已合入；本票合入后恢复 V-01 |
+| V-01-FIX-06 | Review | 删除 `/login` 底部噪音文案「登录后可保存配方和偏好。」；Gate 2 pass，Preview Gate 3 pass | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、主标题/按钮/输入框/注册逻辑改动 | V-01-FIX-05 已合入；本票合入后恢复 V-01 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
@@ -76,7 +76,7 @@
 
 ```text
 票号：V-01-FIX-06
-状态：Review
+状态：Review（Gate 2 Pass / Preview Gate 3 Pass）
 类型：V-01 前置登录页微修（只改 /login 前端渲染）
 目标：删除 `/login` 底部文案「登录后可保存配方和偏好。」。
 
@@ -95,6 +95,7 @@
 - 仍出现 Google 登录、邮箱、密码、主按钮、小号注册入口、小号 Magic Link 入口。
 - 自动验证：lint / typecheck / build / git diff --check 通过。
 - 本地匿名 `/login` HTML 检查通过。
+- Preview Gate 3：PR #20 Preview 匿名 `/login` 渲染已删除目标文案，保留 Google/email/password/sign-in/create-account/Magic Link 文案；GitHub CI / Vercel 绿。
 - 残余风险：未做浏览器点击交互；邮箱密码真实登录到 `/forge` 仍需一个已确认邮箱密码测试账号。
 ```
 
