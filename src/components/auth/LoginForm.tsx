@@ -293,9 +293,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
         </div>
       )}
 
-      <p className="text-center text-xs text-muted-foreground">
-        {copy.login.footerNote}
-      </p>
     </div>
   );
 }
