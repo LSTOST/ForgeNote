@@ -55,6 +55,7 @@
 | V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-03 | Done | 修复 V-01 页面形态阻塞：/forge 桌面端重排为左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-04 | Done | 修复 V-01 非 Google 用户登录摩擦：邮箱密码成为主路径，Magic Link 降级为备用；Preview Gate 3 Conditional Pass 后随 PR #18 合入 | `docs/acceptance/V-01.md` |
+| V-01-FIX-05 | Done | 修复 V-01 登录页复杂度：邮箱模块收成一个主动作，注册/登录链接与 Magic Link 降级为次级文字入口；Preview Gate 3 pass 后随 PR #19 合入 | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -67,15 +68,15 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-05 | Review | 修复 `/login` 邮箱模块过度复杂：删掉大号登录/注册切换和虚线备用卡片，收成一个邮箱主动作 + 次级文字入口；Gate 2 pass，Preview Gate 3 pass | 新 OAuth、忘记密码、MFA/passkey、Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台 | V-01-FIX-04 已提供邮箱密码能力；Owner dry run 指出当前 UI 形态过度复杂 |
+| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03/04/05 均已通过；非 Google 用户测试前仍需一个已确认邮箱密码账号登录证据 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
-### V-01-FIX-05 执行票（进行中）
+### V-01-FIX-05 执行票（已完成）
 
 ```text
 票号：V-01-FIX-05
-状态：Review（Gate 2 Pass / Preview Gate 3 Pass）
+状态：Done
 类型：V-01 前置登录页复杂度修复（只改 /login 前端，不改业务范围）
 目标：修复 Owner dry run 反馈：
       邮箱登录/注册模块过度复杂，用户第一眼被迫理解“登录/注册/密码/备用链接”。
@@ -94,13 +95,15 @@
 - 不做忘记密码、重置密码、MFA/passkey、账号合并。
 - 不改 Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
 
-验收标准：
+验收结果：
 - 匿名打开 `/login`，第一屏不再出现大号“登录 / 注册”切换。
 - 邮箱区域只保留邮箱、密码、一个主按钮。
 - 注册入口是小号文字链接；Magic Link 是次级文字入口。
 - 登录链接发送成功后用轻量状态提示，不出现虚线备用卡片。
 - 自动验证：doctor / lint / typecheck / build / smoke:api / diff check 通过。
-- Preview Gate 3：匿名 `/login` 渲染出简化结构；若有可用测试账号，再补邮箱密码登录到 `/forge`。
+- Preview Gate 3：PR #19 Preview 匿名 `/login` 渲染出简化结构，Preview `smoke:api` 通过，GitHub CI / Vercel 绿。
+- PR #19 已 squash merge 到 `main`（`2aa2209`）。
+- 残余风险：邮箱密码真实登录到 `/forge` 仍需一个已确认邮箱密码测试账号；Magic Link sent-state 未用浏览器工具实点。
 ```
 
 ### V-01-FIX-04 执行票（已完成）
