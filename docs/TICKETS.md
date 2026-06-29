@@ -70,9 +70,50 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录真实阻塞与指标 | 新功能、prompt/schema/API/RLS 改动、资产库、视觉渲染、自动学习、内容日历、Stripe、runtime i18n、把 Owner/Codex 自测当真实用户证据 | V-01-FIX-07 已合入并通过 Production recheck |
+| V-01-FIX-08 | Ready | 修复 `/login` 与 Claude Design `Login B Final.dc.html` 不一致：补纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录能力变化、新字体依赖、直接复制原型 HTML/inline style、外部图片/资产管线 | Owner 2026-06-30 明确指出 V-01-FIX-07 与 Claude Design 不一致 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-08 执行票（Ready）
+
+```text
+票号：V-01-FIX-08
+状态：Ready
+类型：V-01 前置登录页设计保真修复（只改 /login 呈现层）
+设计输入：/Users/tete/Downloads/Login B Final.dc.html（Claude Design 方案 B 定稿）
+
+目标：
+修复 Owner 反馈：当前 Production `/login` 与 Claude Design 不一致，仍像普通白底表单；登录页第一印象不适合继续进入 V-01 真实用户验证。
+
+范围内：
+- `src/app/login/page.tsx` 的登录页背景/容器呈现。
+- `src/components/auth/LoginForm.tsx` 的标题层级、标识、控件色彩和状态样式。
+- 只允许使用 CSS / Tailwind / lucide-react 现有能力；可用 `Zap` 图标或同等现有图标做 38px 闪电标。
+
+必须采纳：
+- `/login` 使用纸感暖底 + 细点阵纹理，不能继续是普通纯白页面。
+- 顶部显示 38px 暖色圆角方形闪电标。
+- 标题层级改为：`ForgeNote` 独立品牌标题；`图文卡片内容工作台` 为小号分类线；slogan 单独一行。
+- 品牌标题使用本地 serif fallback（如 Georgia / ui-serif），不新增远程字体依赖。
+- 主按钮必须使用 Claude Design 深橙 `#B5562B`，不能继续显得发灰/发浅。
+- 输入框使用 `#FFFDF9` 背景与 `#E3D8C7` 边框。
+- 保持桌面约 380px、移动端约 350px/20px 侧边距；不出现横向溢出。
+
+范围外：
+- Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+- 登录能力新增/删除、忘记密码、MFA/passkey、账号合并。
+- 新字体依赖、Google Fonts runtime fetch、外部图片、资产管线、landing page。
+- 直接复制 Claude Design 原型 HTML / inline style。
+
+验收标准：
+- 匿名 `/login` 第一屏可见纸感点阵背景、闪电标、ForgeNote 独立标题、分类副标题、slogan。
+- 邮箱密码主路径仍在 Google 之前；Google/email/password/主按钮/创建账号/Magic Link 均存在。
+- 不出现「登录后可保存配方和偏好。」。
+- Desktop 1280x720 与 mobile 390x700 均无横向溢出；移动端标题不孤立单个中文字符。
+- 错误态 / signup sent / magic sent / not configured 状态不回归，仍属于同一暖色系统。
+- 自动验证：`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check`。
+- Gate 3：Preview 匿名 `/login` desktop/mobile 视觉检查 + Preview `smoke:api`。
+```
 
 ### V-01-FIX-07 执行票（已完成）
 
