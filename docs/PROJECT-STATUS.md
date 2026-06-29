@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**V-01 Ready**。V-01-FIX-07 已随 PR #21 squash merge 到 `main`（`4bf491a`）并通过 Production recheck：`/login` 视觉比例修复完成，邮箱主路径置前，桌面/移动端比例更克制，旧 footer 文案未回归；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。现在恢复 V-01 真实用户验证：让 1-3 个非构建者用户在 Production 走首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑。非 Google 用户测试前仍需一个已确认邮箱密码账号跑 `/login` → `/forge`。
+当前唯一票：**V-01-FIX-08 Review / Preview Gate 3 Pass**。Owner 2026-06-30 对照 Claude Design `Login B Final.dc.html` 指出当前 Production `/login` 仍不像设计稿：缺纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题和深橙主按钮。V-01-FIX-08 已在 PR #22 完成 `/login` 呈现层实现；本地 Gate 2、GitHub CI、Vercel Preview、Preview `smoke:api`、Preview desktop/mobile visual 均通过，待合并。未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` 已包含 PR #21 merge `4bf491a` 与本次状态同步；V-01-FIX-07 已合入。当前工作分支：`main`。下一步是 V-01 Production 真实用户验证，不写产品代码。
+当前代码基线：`main` / `origin/main` = `1f80b99`（PR #21 merge 后状态同步）。当前工作分支：`codex/v-01-fix-08-login-design-fidelity`。下一步是合并 PR #22，然后做 Production `/login` recheck 并恢复 V-01 真实用户验证。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` Review / Preview Gate 3 Pass，待合并。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -125,6 +125,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - 自动验证：lint/typecheck（en/zh key parity）/build（路由表不变）/doctor（0 failed/0 warnings）/smoke:api 全通过；本地登录态 Chrome smoke：`/login`、`/forge`、`/recipes`、`/recipes/[id]`、`/profile` 无 undefined / raw key / [object Object] / 未替换占位符（见 docs/acceptance/I-18.md）
 
 ## 当前执行边界
+- **V-01-FIX-08（Review / Preview Gate 3 Pass）**：修复 `/login` 与 Claude Design 不一致。已采纳：纸感暖底 + 点阵纹理、38px 暖色 Zap 闪电标、`ForgeNote` 独立 serif 品牌标题、`图文卡片内容工作台` 小号分类线、slogan、深橙 `#B5562B` 主按钮、`#FFFDF9` 输入背景、`#E3D8C7` warm border。拒绝：新字体依赖、Google Fonts runtime fetch、直接复制原型 HTML/inline style、外部图片/资产管线、任何 auth 行为变化、Supabase/API/DB/RLS/prompt/Forge 工作台改动。本地 `lint` / `typecheck` / `build` / `git diff --check` / HTML check / `smoke:api` / desktop+mobile browser visual 均通过；PR #22 GitHub CI / Vercel / Preview `smoke:api` / Preview desktop+mobile visual 均通过。
 - **V-01（Ready）**：小范围真实用户验证。让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录指标与阻塞点。不要再把 Owner dry run 当作真实用户验证。拉非 Google 用户前，先用一个已确认邮箱密码账号补跑 Production `/login` → `/forge`。
 - **V-01-FIX-07（Done）**：PR #21 已 squash merge 到 `main`（`4bf491a`）。按 Claude Design `Login B Final.dc.html` 修正 `/login` 视觉比例；Preview 与 Production 均验证桌面 1280x720 模块 380px、移动 390x700 模块 350px 且左右 20px、无横向溢出；邮箱密码主路径前置，Google 下移，44px/13px 控件，暖色主按钮/focus；Codex QA 发现移动端标题孤立 `台` 后退回 Claude Code，最终以 `break-keep` 修正。未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。main CI / Production `smoke:api` / Production `/login` HTML 检查均通过。
 - **V-01-FIX-06（Done）**：删除 `/login` 底部文案「登录后可保存配方和偏好。」。范围只限登录页前端渲染；不删除 copy key，不改 Google、邮箱密码、注册切换、Magic Link、Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。`lint` / `typecheck` / `build` / `git diff --check` / 本地匿名 `/login` HTML 检查通过；PR #20 Preview 匿名 `/login` 与 GitHub CI / Vercel 通过；PR #20 已合入。残余风险：未做浏览器点击交互；邮箱密码真实登录到 `/forge` 仍需一个已确认邮箱密码测试账号。
@@ -188,7 +189,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 已合并。当前唯一任务恢复 V-01 Production 真实非构建者用户主路径验证。不要把视觉渲染、资产库、自动学习塞进下一步。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 已合并。当前唯一任务先合并 PR #22 / V-01-FIX-08；合入后恢复 V-01 Production 真实非构建者用户主路径验证。不要把资产库、自动学习、内容日历塞进下一步。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -199,6 +200,9 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-30 (V-01-FIX-08 Preview Gate 3 Pass：PR #22 head `9109ad4`，GitHub CI / Vercel 绿。Preview `https://forge-note-git-codex-v-01-fix-08-login-699014-lstosts-projects.vercel.app/login` 匿名 HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在。Preview `smoke:api` 通过；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。结论：可合并。)
+2026-06-30 (V-01-FIX-08 进入 Review：当前分支已实现 `/login` 纸感点阵背景、38px Zap 闪电标、ForgeNote 独立 serif 标题、分类线、slogan、#B5562B 主按钮、#FFFDF9 输入背景、#E3D8C7 warm border；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check` / 本地匿名 `/login` HTML 检查 / 本地 `smoke:api` / 本地 desktop+mobile 浏览器视觉检查均通过；下一步 Draft PR CI/Vercel Preview 补远端 build、视觉与 Preview smoke 证据。)
+2026-06-30 (Owner 对照 Claude Design `Login B Final.dc.html` 指出 Production `/login` 仍不一致：当前只是白底表单比例修复，缺纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题和深橙主按钮。Codex 判定切 V-01-FIX-08：只做 `/login` 设计保真修复，不改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。)
 2026-06-29 (V-01-FIX-07 post-merge Production recheck 通过：main CI `4bf491a` PASS；Production `FORGENOTE_BASE_URL=https://forge-note-gold.vercel.app npm run smoke:api` PASS；Production `/login` HTML 检查确认 `break-keep`、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在；浏览器视觉检查确认桌面 1280x720 模块 380px、移动 390x700 模块 350px/左右 20px、无横向溢出。)
 2026-06-29 (PR #21 已 squash merge 到 `main`（`4bf491a`），V-01-FIX-07 Done。当前唯一任务恢复 V-01：Production 真实非构建者用户主路径验证；非 Google 用户测试前仍需一个已确认邮箱密码账号 `/login` → `/forge` 证据。)
 2026-06-29 (V-01-FIX-07 Preview Gate 3 Pass：PR #21 head `53b2ed9`，GitHub CI / Vercel 绿，merge state CLEAN。Preview `https://forge-note-git-codex-v-01-fix-07-login-7f2363-lstosts-projects.vercel.app/login` 匿名 desktop/mobile 视觉检查通过：1280x720 下登录模块 380px、390x700 下 350px 且左右 20px，无横向溢出；Codex QA 曾发现移动端标题孤立 `台`，Claude Code 以 `break-keep` 修正为 `ForgeNote` / `图文卡片内容工作台`。Preview `smoke:api` 通过；旧 footer 文案未回归。结论：可合并；合入后恢复 V-01 真实用户验证。)
