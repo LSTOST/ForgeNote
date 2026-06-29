@@ -47,6 +47,10 @@ export const en: Copy = {
       "After the email is confirmed, use your password next time without opening email.",
     passwordSignUpHint:
       "New accounts may need one email confirmation; after that, sign in with your password.",
+    noAccountPrompt: "No account?",
+    createAccountLink: "Create one",
+    hasAccountPrompt: "Already have an account?",
+    returnToSignInLink: "Return to sign in",
     passwordAuthFailed: "Email/password sign-in failed. Please check and retry.",
     passwordNetworkError: "Sign-in failed. Check your network and retry.",
     invalidCredentials: "Email or password is incorrect.",
@@ -56,8 +60,8 @@ export const en: Copy = {
     signupSentBodyPrefix: "We sent a confirmation email to ",
     signupSentBodySuffix:
       " Confirm it once; after that, use email and password to sign in.",
-    magicBackupHint: "Use a login link only if you do not want a password; it still requires email.",
-    sendMagicLink: "Backup: send login link",
+    magicBackupHint: "Prefer not to use a password?",
+    sendMagicLink: "Send a login link",
     sending: "Sending…",
     footerNote: "Sign in to save recipes and preferences.",
     notConfiguredTitle: "Sign-in unavailable: Supabase not configured",

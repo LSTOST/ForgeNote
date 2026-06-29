@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` = `f5f76a0`（PR #17 / V-01-FIX-03 已合入并同步 V-01 Ready 状态）。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` = `363de04`（PR #18 / V-01-FIX-04 已合入并同步 V-01 Ready 状态）。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -67,9 +67,41 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03/04 均已通过；非 Google 用户测试前先补一个已确认邮箱密码账号登录证据 |
+| V-01-FIX-05 | Review | 修复 `/login` 邮箱模块过度复杂：删掉大号登录/注册切换和虚线备用卡片，收成一个邮箱主动作 + 次级文字入口；Gate 2 pass，Preview Gate 3 待跑 | 新 OAuth、忘记密码、MFA/passkey、Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台 | V-01-FIX-04 已提供邮箱密码能力；Owner dry run 指出当前 UI 形态过度复杂 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-05 执行票（进行中）
+
+```text
+票号：V-01-FIX-05
+状态：Review（Gate 2 Pass / Preview Gate 3 pending）
+类型：V-01 前置登录页复杂度修复（只改 /login 前端，不改业务范围）
+目标：修复 Owner dry run 反馈：
+      邮箱登录/注册模块过度复杂，用户第一眼被迫理解“登录/注册/密码/备用链接”。
+      登录页必须只呈现一个邮箱主动作，注册和登录链接降级为次级文字入口。
+
+范围内：
+1. `/login` 保留 Google 登录为第一入口。
+2. 邮箱区域默认只展示邮箱、密码、一个主按钮。
+3. “没有账号？创建账号 / 已有账号？返回登录”改为文字切换，不做大号 segmented control。
+4. Magic Link 保留，但只作为次级文字入口，不再使用虚线备用模块。
+5. 注册不再要求重复输入密码，避免把 M1 登录页做成完整账号系统。
+6. copy 资源同步 zh-Hans / en key parity。
+
+范围外：
+- 不新增 GitHub/Apple/微信等 OAuth。
+- 不做忘记密码、重置密码、MFA/passkey、账号合并。
+- 不改 Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+
+验收标准：
+- 匿名打开 `/login`，第一屏不再出现大号“登录 / 注册”切换。
+- 邮箱区域只保留邮箱、密码、一个主按钮。
+- 注册入口是小号文字链接；Magic Link 是次级文字入口。
+- 登录链接发送成功后用轻量状态提示，不出现虚线备用卡片。
+- 自动验证：doctor / lint / typecheck / build / smoke:api / diff check 通过。
+- Preview Gate 3：匿名 `/login` 渲染出简化结构；若有可用测试账号，再补邮箱密码登录到 `/forge`。
+```
 
 ### V-01-FIX-04 执行票（已完成）
 
