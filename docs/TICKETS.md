@@ -69,15 +69,15 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-07 | Ready | 按 Claude Design `Login B Final.dc.html` 修正 `/login` 视觉比例：收窄登录模块、邮箱主路径置前、暖色控件语气、桌面/移动端比例更克制 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、整站品牌重做、新字体依赖、直接照搬设计稿 HTML/CSS | V-01-FIX-06 已合入；Claude Design 交付 `Login B Final.dc.html` |
+| V-01-FIX-07 | Review / Preview Gate 3 Pass | 按 Claude Design `Login B Final.dc.html` 修正 `/login` 视觉比例：收窄登录模块、邮箱主路径置前、暖色控件语气、桌面/移动端比例更克制；PR #21 待合并 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、整站品牌重做、新字体依赖、直接照搬设计稿 HTML/CSS | V-01-FIX-06 已合入；Claude Design 交付 `Login B Final.dc.html` |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
-### V-01-FIX-07 执行票（Ready）
+### V-01-FIX-07 执行票（Review / Preview Gate 3 Pass）
 
 ```text
 票号：V-01-FIX-07
-状态：Ready
+状态：Review / Preview Gate 3 Pass
 类型：V-01 前置登录页视觉比例修复（只改 /login 前端样式）
 设计输入：/Users/tete/Downloads/Login B Final.dc.html（Claude Design 方案 B 定稿）
 
@@ -125,7 +125,8 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 - 未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。
 - 自动验证：`npm run lint` PASS；`npm run typecheck` PASS；`npm run build` PASS（首次沙箱构建仅因 `next/font` 拉 Google Fonts 失败，联网权限重跑通过）；`FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api` PASS（本地 dev server + localhost 权限）；`git diff --check` PASS。
 - 本地匿名 `/login` HTML 检查 PASS：HTTP 200；Google/email/password/主按钮/创建账号/Magic Link 均存在；邮箱输入早于 Google；旧文案「登录后可保存配方和偏好。」不存在。
-- Browser/visual：已尝试 Playwright；Node REPL Chromium 被 macOS sandbox 权限阻断，shell 环境无 `playwright` 包；不伪造截图。Preview desktop/mobile 视觉检查待 PR Preview URL 出来后补。
+- Browser/visual：已尝试 Playwright；Node REPL Chromium 被 macOS sandbox 权限阻断，shell 环境无 `playwright` 包；不伪造截图。
+- Preview Gate 3（2026-06-29，Codex QA）：PR #21 head `53b2ed9`，GitHub CI / Vercel 均 PASS，merge state CLEAN。Preview `smoke:api` PASS。匿名 `/login` HTML 检查 PASS：`break-keep` 已存在，Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧文案不存在。浏览器视觉检查 PASS：桌面 1280x720 下模块 380px、无横向溢出；移动端 390x700 下模块 350px、左右 20px、无横向溢出，标题换行为 `ForgeNote` / `图文卡片内容工作台`，不再孤立 `台`。
 
 ### V-01-FIX-06 执行票（已完成）
 
