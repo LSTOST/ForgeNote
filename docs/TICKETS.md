@@ -119,6 +119,14 @@
 - Preview Gate 3：匿名 `/login` desktop/mobile 视觉检查 + Preview `smoke:api`。
 ```
 
+V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
+- 实现文件：`src/components/auth/LoginForm.tsx`。
+- 已按设计输入收窄登录模块到 380px 上限，移动端按 `100vw - 40px` 保留侧边距；邮箱密码主路径前置，Google 下移并用 divider 分隔；输入框/主按钮为 44px 高度、13px 圆角、14-15px 字号；错误、未配置、signup sent、magic sent 状态同步新比例和暖色状态样式。
+- 未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。
+- 自动验证：`npm run lint` PASS；`npm run typecheck` PASS；`npm run build` PASS（首次沙箱构建仅因 `next/font` 拉 Google Fonts 失败，联网权限重跑通过）；`FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api` PASS（本地 dev server + localhost 权限）；`git diff --check` PASS。
+- 本地匿名 `/login` HTML 检查 PASS：HTTP 200；Google/email/password/主按钮/创建账号/Magic Link 均存在；邮箱输入早于 Google；旧文案「登录后可保存配方和偏好。」不存在。
+- Browser/visual：已尝试 Playwright；Node REPL Chromium 被 macOS sandbox 权限阻断，shell 环境无 `playwright` 包；不伪造截图。Preview desktop/mobile 视觉检查待 PR Preview URL 出来后补。
+
 ### V-01-FIX-06 执行票（已完成）
 
 ```text

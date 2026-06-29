@@ -127,54 +127,35 @@ export function LoginForm({ initialError }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-md space-y-8">
-      <header className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{PRODUCT_NAME}</h1>
-        <p className="text-muted-foreground">{SLOGAN}</p>
+    <div className="w-full max-w-[min(380px,calc(100vw-40px))] space-y-7">
+      <header className="space-y-2.5 text-center">
+        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">
+          {PRODUCT_NAME}
+        </h1>
+        <p className="text-[14px] leading-6 text-muted-foreground">{SLOGAN}</p>
       </header>
 
       {!configured ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded-[14px] border border-[#b53c28]/30 bg-[#b53c28]/5 p-4 text-[13.5px] leading-6 text-[#9e3322]">
           <p className="font-medium">{copy.login.notConfiguredTitle}</p>
-          <p className="mt-1 text-destructive/80">
+          <p className="mt-1 text-[#9e3322]/80">
             {copy.login.notConfiguredBody}
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-[18px]">
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+              className="flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/5 p-3 text-[13.5px] leading-5 text-[#9e3322]"
             >
               <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               <span>{error}</span>
             </div>
           )}
 
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 w-full"
-            disabled={busy}
-            onClick={handleGoogle}
-          >
-            {oauthState === "redirecting" ? (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <GoogleIcon />
-            )}
-            {copy.login.googleButton}
-          </Button>
-
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            {copy.login.emailDivider}
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
           {passwordState === "signupSent" ? (
-            <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
+            <div className="rounded-[14px] border border-[#e7dac9] bg-muted/35 p-4 text-[14px] leading-6">
               <p className="font-medium text-foreground">
                 {copy.login.signupSentTitle}
               </p>
@@ -185,7 +166,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
               </p>
               <button
                 type="button"
-                className="mt-3 text-sm text-primary underline-offset-4 hover:underline"
+                className="mt-3 text-[14px] font-medium text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
                 onClick={() => setPasswordState("idle")}
               >
                 {copy.login.changeEmail}
@@ -209,7 +190,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                   setPasswordState("idle");
                 }}
                 disabled={busy}
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                className="h-11 w-full rounded-[13px] border border-[#e7dac9] bg-background px-[15px] text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50 dark:border-border dark:bg-input/30"
               />
               <label htmlFor="password" className="sr-only">
                 {copy.login.passwordLabel}
@@ -224,11 +205,11 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={busy}
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                className="h-11 w-full rounded-[13px] border border-[#e7dac9] bg-background px-[15px] text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50 dark:border-border dark:bg-input/30"
               />
               <Button
                 type="submit"
-                className="h-10 w-full"
+                className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-orange-50 shadow-[0_2px_10px_rgba(150,70,30,0.20)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/25 disabled:shadow-none"
                 disabled={!passwordFormValid || busy}
               >
                 {passwordState === "submitting" ? (
@@ -247,14 +228,35 @@ export function LoginForm({ initialError }: LoginFormProps) {
             </form>
           )}
 
-          <div className="space-y-2 text-center text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-[#e7dac9]" />
+            或
+            <span className="h-px flex-1 bg-[#e7dac9]" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full rounded-[13px] border-[#e7dac9] bg-transparent text-[14px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/25"
+            disabled={busy}
+            onClick={handleGoogle}
+          >
+            {oauthState === "redirecting" ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <GoogleIcon />
+            )}
+            {copy.login.googleButton}
+          </Button>
+
+          <div className="space-y-2 text-center text-[13px] leading-6 text-muted-foreground">
             <p>
               {passwordMode === "signIn"
                 ? copy.login.noAccountPrompt
                 : copy.login.hasAccountPrompt}
               <button
                 type="button"
-                className="ml-1 font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+                className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
                 disabled={busy}
                 onClick={() => {
                   setPasswordMode(
@@ -273,7 +275,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
               {copy.login.magicBackupHint}
               <button
                 type="button"
-                className="ml-1 font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+                className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
                 disabled={!emailValid || busy}
                 onClick={handleMagicLink}
               >
@@ -283,11 +285,22 @@ export function LoginForm({ initialError }: LoginFormProps) {
               </button>
             </p>
             {magicState === "sent" ? (
-              <p className="text-foreground" role="status" aria-live="polite">
-                {copy.login.magicSentBodyPrefix}
-                <span className="font-medium">{email.trim()}</span>
-                {copy.login.magicSentBodySuffix}
-              </p>
+              <div
+                className="rounded-[14px] border border-[#e7dac9] bg-muted/35 p-4 text-left text-[14px] leading-6 text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="font-medium text-foreground">
+                  {copy.login.magicSentTitle}
+                </p>
+                <p className="mt-1">
+                  {copy.login.magicSentBodyPrefix}
+                  <span className="font-medium text-foreground">
+                    {email.trim()}
+                  </span>
+                  {copy.login.magicSentBodySuffix}
+                </p>
+              </div>
             ) : null}
           </div>
         </div>
