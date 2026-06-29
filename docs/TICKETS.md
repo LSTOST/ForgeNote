@@ -67,7 +67,7 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-05 | Review | 修复 `/login` 邮箱模块过度复杂：删掉大号登录/注册切换和虚线备用卡片，收成一个邮箱主动作 + 次级文字入口；Gate 2 pass，Preview Gate 3 待跑 | 新 OAuth、忘记密码、MFA/passkey、Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台 | V-01-FIX-04 已提供邮箱密码能力；Owner dry run 指出当前 UI 形态过度复杂 |
+| V-01-FIX-05 | Review | 修复 `/login` 邮箱模块过度复杂：删掉大号登录/注册切换和虚线备用卡片，收成一个邮箱主动作 + 次级文字入口；Gate 2 pass，Preview Gate 3 pass | 新 OAuth、忘记密码、MFA/passkey、Supabase 后台策略、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台 | V-01-FIX-04 已提供邮箱密码能力；Owner dry run 指出当前 UI 形态过度复杂 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
@@ -75,7 +75,7 @@
 
 ```text
 票号：V-01-FIX-05
-状态：Review（Gate 2 Pass / Preview Gate 3 pending）
+状态：Review（Gate 2 Pass / Preview Gate 3 Pass）
 类型：V-01 前置登录页复杂度修复（只改 /login 前端，不改业务范围）
 目标：修复 Owner dry run 反馈：
       邮箱登录/注册模块过度复杂，用户第一眼被迫理解“登录/注册/密码/备用链接”。
