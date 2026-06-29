@@ -69,9 +69,64 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个真实非构建者用户在 Production 跑首次生成 → 假设理解/编辑 → 保存配方 → 配方详情重跑，并记录卡点和指标 | 新功能开发、UI 重设计、资产库、视觉渲染、自动学习、prompt/API/DB/RLS 改动 | V-01-FIX-01/02/03/04/05/06 均已通过；非 Google 用户测试前仍需一个已确认邮箱密码账号登录证据 |
+| V-01-FIX-07 | Review / Preview Gate 3 Pass | 按 Claude Design `Login B Final.dc.html` 修正 `/login` 视觉比例：收窄登录模块、邮箱主路径置前、暖色控件语气、桌面/移动端比例更克制；PR #21 待合并 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录方式增删、整站品牌重做、新字体依赖、直接照搬设计稿 HTML/CSS | V-01-FIX-06 已合入；Claude Design 交付 `Login B Final.dc.html` |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-07 执行票（Review / Preview Gate 3 Pass）
+
+```text
+票号：V-01-FIX-07
+状态：Review / Preview Gate 3 Pass
+类型：V-01 前置登录页视觉比例修复（只改 /login 前端样式）
+设计输入：/Users/tete/Downloads/Login B Final.dc.html（Claude Design 方案 B 定稿）
+
+目标：
+修复 Owner 反馈：当前登录框左右拉得太长，像默认 SaaS 表单，缺少 ForgeNote 的温暖文字工作台美学。
+
+采纳设计稿：
+1. 登录模块桌面宽度收敛到约 380px；移动端使用 `w-full` 但保留 20-24px 页面边距。
+2. 邮箱密码成为第一表单组；Google 登录移到邮箱组之后，用 divider 分隔。
+3. 输入框 / 主按钮高度约 44px，圆角约 12-14px，文字 14-15px。
+4. 主按钮使用暖色动作语气；focus ring 使用同一暖色系。
+5. 次级入口仍为小号文字：创建账号 / 返回登录 / 发送登录链接。
+6. 错误、未配置、signup sent、magic sent 状态同步新视觉比例。
+
+不采纳设计稿：
+- 不引入 Newsreader 或任何新字体依赖。
+- 不直接照搬设计稿里的 HTML / inline style。
+- 不新增独立闪电 logo 或品牌图标。
+- 不把整页做成米色/棕色单色品牌系统；可使用少量暖色 accent，但需保留现有 app 主题兼容性。
+- 不改变登录流程顺序以外的 auth 行为。
+
+范围内：
+- `src/components/auth/LoginForm.tsx` 的布局/className/状态样式。
+- 必要时少量 copy 复用，但不新增登录方式。
+
+范围外：
+- Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+- 忘记密码、MFA/passkey、账号合并。
+- 整站视觉重设计、landing page、背景插画、资产库。
+
+验收标准：
+- Desktop `/login` 表单不再横向过宽；视觉宽度约 380px，不是默认 `max-w-md` 撑满感。
+- Mobile `/login` 控件不贴边，且不出现横向溢出。
+- 邮箱密码主路径在 Google 之前；登录能力不变。
+- 仍能看到 Google 登录、邮箱、密码、主按钮、小号注册入口、小号 Magic Link 入口。
+- 不再出现「登录后可保存配方和偏好。」。
+- 错误态 / signup sent / magic sent / not configured 状态不回归。
+- 自动验证：lint / typecheck / build / smoke:api / git diff --check 通过。
+- Preview Gate 3：匿名 `/login` desktop/mobile 视觉检查 + Preview `smoke:api`。
+```
+
+V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
+- 实现文件：`src/components/auth/LoginForm.tsx`。
+- 已按设计输入收窄登录模块到 380px 上限，移动端按 `100vw - 40px` 保留侧边距；邮箱密码主路径前置，Google 下移并用 divider 分隔；输入框/主按钮为 44px 高度、13px 圆角、14-15px 字号；错误、未配置、signup sent、magic sent 状态同步新比例和暖色状态样式。
+- 未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。
+- 自动验证：`npm run lint` PASS；`npm run typecheck` PASS；`npm run build` PASS（首次沙箱构建仅因 `next/font` 拉 Google Fonts 失败，联网权限重跑通过）；`FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api` PASS（本地 dev server + localhost 权限）；`git diff --check` PASS。
+- 本地匿名 `/login` HTML 检查 PASS：HTTP 200；Google/email/password/主按钮/创建账号/Magic Link 均存在；邮箱输入早于 Google；旧文案「登录后可保存配方和偏好。」不存在。
+- Browser/visual：已尝试 Playwright；Node REPL Chromium 被 macOS sandbox 权限阻断，shell 环境无 `playwright` 包；不伪造截图。
+- Preview Gate 3（2026-06-29，Codex QA）：PR #21 head `53b2ed9`，GitHub CI / Vercel 均 PASS，merge state CLEAN。Preview `smoke:api` PASS。匿名 `/login` HTML 检查 PASS：`break-keep` 已存在，Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧文案不存在。浏览器视觉检查 PASS：桌面 1280x720 下模块 380px、无横向溢出；移动端 390x700 下模块 350px、左右 20px、无横向溢出，标题换行为 `ForgeNote` / `图文卡片内容工作台`，不再孤立 `台`。
 
 ### V-01-FIX-06 执行票（已完成）
 
