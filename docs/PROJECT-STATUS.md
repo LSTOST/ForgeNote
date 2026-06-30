@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**V-01 Ready**。V-01-FIX-08 已随 PR #22 squash merge 到 `main`（`7b78558`）并通过 Production recheck：`/login` 已对齐 Claude Design 的纸感点阵背景、38px 闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。现在恢复 V-01 真实用户验证：让 1-3 个非构建者用户在 Production 走首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑。非 Google 用户测试前仍需一个已确认邮箱密码账号跑 `/login` → `/forge`。
+当前唯一产品验证票：**V-01 Ready**。并行设计轨道已开 **DSN-03 Ready**：项目级 Core UX Map + Design System Baseline，不写产品代码。DSN-03 解决“局部 fix 票驱动产品”的根问题；V-01 仍要拿至少 1 个真实非构建者用户 Production 路径证据。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`main`。下一步是 V-01 Production 真实用户验证，不写产品代码。
+当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`codex/dsn-03-core-ux-map`。下一步：把 DSN-03 brief 交给 Claude Design 产出 UX map / IA / state map / design-system baseline；同时不能暂停 V-01 真实用户验证。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #25：`https://github.com/LSTOST/ForgeNote/pull/25` Draft，DSN-03 文档票。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -189,7 +189,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 / PR #22 已合并。当前唯一任务恢复 V-01 Production 真实非构建者用户主路径验证。不要把资产库、自动学习、内容日历塞进下一步。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 / PR #22 已合并。当前唯一产品验证任务仍是 V-01 Production 真实非构建者用户主路径验证；DSN-03 是并行设计轨道，用来建立后续实现母版，不替代真实用户证据。不要把资产库、自动学习、内容日历塞进下一步。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -200,6 +200,7 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-30 (DSN-03 已开：项目级 Core UX Map + Design System Baseline，Draft PR #25。目标是停止用局部 fix 票驱动产品，先定义 M1 核心路径、信息架构、状态流、视觉语言、设计债务与实现切片。DSN-03 不写产品代码，不替代 V-01；后续新实现票必须引用 DSN-03 的 path/state/design baseline。当前仍需至少 1 个真实非构建者用户 Production 路径证据。)
 2026-06-30 (PR #22 已 squash merge 到 `main`（`7b78558`），V-01-FIX-08 Done。Production recheck 通过：main CI `7b78558` PASS；Production `smoke:api` PASS；Production `/login` HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。当前唯一任务恢复 V-01。)
 2026-06-30 (V-01-FIX-08 Preview Gate 3 Pass：PR #22 head `9109ad4`，GitHub CI / Vercel 绿。Preview `https://forge-note-git-codex-v-01-fix-08-login-699014-lstosts-projects.vercel.app/login` 匿名 HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在。Preview `smoke:api` 通过；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。结论：可合并。)
 2026-06-30 (V-01-FIX-08 进入 Review：当前分支已实现 `/login` 纸感点阵背景、38px Zap 闪电标、ForgeNote 独立 serif 标题、分类线、slogan、#B5562B 主按钮、#FFFDF9 输入背景、#E3D8C7 warm border；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check` / 本地匿名 `/login` HTML 检查 / 本地 `smoke:api` / 本地 desktop+mobile 浏览器视觉检查均通过；下一步 Draft PR CI/Vercel Preview 补远端 build、视觉与 Preview smoke 证据。)
