@@ -856,7 +856,7 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 
 ```text
 票号：DSN-03
-状态：Ready（设计轨道；不写产品代码）
+状态：Conditional Pass（设计轨道；不写产品代码）
 类型：项目级 UX / IA / Design System 基线票
 
 背景：
@@ -928,6 +928,12 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 - 文档检查：所有交付物存在，且能从每条实现建议追溯到 path/state/design baseline。
 - Codex review：检查是否解决“局部补丁驱动产品”的根问题。
 - 不跑 build 作为设计验收依据；build 只用于 PR 安全检查。
+
+Codex Review（2026-06-30）：
+- `docs/design/dsn-03-core-ux-map/codex-review.md` 已给 Conditional Pass。
+- DSN-03 可作为后续广义实现票的 UX / IA / Design Baseline 母版。
+- 条件：不得用 DSN-03 推迟 V-01；B1/B2 是高杠杆修复方向，不是无限等待完美产品的借口。
+- 条件：DSN-02 auth 实现仍需单独锁技术边界，DSN-03 只把认证纳入 Path 1 / Path 6 / Slice 4。
 
 排期裁决：
 - 当前仍要先修正/冻结 V-01-FIX-09 的迁移安全边界，并跑至少 1 个 V-01 真实用户证据。
