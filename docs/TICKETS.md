@@ -848,6 +848,107 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 > 注（I-14 决策）：观测为**零依赖 no-op scaffold**，未配 env 不影响 build / 运行；真实 SDK 接入留作后续票（`observability.ts` TODO）。
 > 注（I-17 决策）：i18n 仅 **scaffold**（en/zh 资源 + typed helper + 代表性接线），默认 zh-Hans 行为不变；运行时切换 / 偏好持久化 / output_locale 联动留作后续票。
 
+## 待评估设计票（Owner 已决策，待 Codex 定边界 / 排期）
+
+> Owner 直接拍板的方向，由 Claude Code 代为整理成票交给 Codex；**认证技术边界、排期、是否拆实现票由 Codex 定**。
+> ⚠️ 登录改造大半已由 **V-01-FIX-04 ~ FIX-09** 完成（邮箱+密码为主、Google 备选、注册同页切换、注册邮箱验证、暖纸感视觉改版）。本票**只覆盖真实缺口**，不重做已完成项。Codex 需先裁定本票与进行中的 **V-01-FIX-09（登录/注册模式辨识 + Magic Link 负担）** 的关系（取代 / 承接 / 合并）。
+
+### DSN-02 执行票（登录页：补齐缺口 + 视觉融合）
+
+```text
+票号：DSN-02
+状态：Backlog（Owner 已决策；待 Codex 定认证边界 + 排期）
+类型：设计 + 实现票（视觉融合稿由 Claude Design；认证缺口实现由 Codex 定边界后落地）
+
+已存在、本票不重做（main 现状）：
+- 邮箱+密码为主登录（signInWithPassword）— FIX-04。
+- Google 登录备选。
+- Sign In / Sign Up 同页切换（passwordMode）— FIX-05。
+- 注册后邮箱验证（signUp + emailRedirectTo → signupSent 待验证态）。
+- 暖纸感视觉系统（点阵纸背景、品牌标、ForgeNote 标题、深橙主按钮、暖色表单）— FIX-07/08。
+
+Owner 本轮新决策（本票要做的）：
+1. 彻底移除 Magic Link 登录（signInWithOtp / magicState / magicBackupHint / sendMagicLink 全部下线），
+   不再保留为备用入口。
+2. 新增「忘记密码 / 密码重置邮件流程」：请求重置 →「重置邮件已发送」态 → 重置密码页 → 设新密码 → 完成。
+3. 新增「记住 30 天」复选框，并落实对应会话时长策略。
+4. 视觉融合：在现有暖纸感系统基础上，融入「活泼彩色角色 + 眼睛动效」
+   （参考 https://careercompassai.vercel.app/login 的角色与眼睛动效），
+   风格克制简洁、与暖纸感协调，不是推翻 FIX-08 重做。
+5. Logo 沿用现有品牌标（FIX-08 已落地的标记，Owner 称「🔥」），不新设计 logo。
+6. 老用户迁移：Google 用户继续用 Google；仅 Magic Link 老用户通过新「忘记密码」流程设密码后改用密码登录
+   —— Magic Link 下线前，此路径必须先可用。
+
+目标：
+在不推翻已完成登录改造的前提下，补齐密码重置与「记住 30 天」、彻底去掉 Magic Link，
+并把「活泼彩色角色 + 眼睛动效」克制地融入暖纸感登录页。
+
+范围内：
+1. 视觉/动效：Claude Design 在暖纸感系统内产出「角色 + 眼睛动效」融合稿
+   （桌面 + 移动）、动效规格（触发/时长/缓动 + prefers-reduced-motion 降级）、与现状差异清单。
+2. 移除 Magic Link：下线相关 UI 与调用，清理对应 copy；保证登录页只剩 邮箱密码 + Google。
+3. 忘记密码 / 重置：新增请求重置入口、重置页与路由、Supabase 重置邮件回跳；全套状态。
+4. 记住 30 天：复选框 + 会话时长策略。
+5. 老用户迁移路径在设计与实现中明确可走通。
+6. 文案进 src/lib/copy（中英）；视觉产物落 docs/design/dsn-02-login-auth/
+   （brief / 融合稿 / 动效规格 / states / handoff.md / codex-review.md，参照 DSN-01）。
+
+范围外：
+- 不重做 FIX-04/05/07/08 已完成的邮箱密码主路径、同页注册切换、暖纸感视觉。
+- 不改 /forge 及其它功能页。
+- 不加 Google 以外第三方登录、2FA / SSO / 手机号登录。
+- 不改 DB 业务表 schema / RLS / prompt / 生成链路。
+- 不新设计 logo（沿用现有标）。
+
+涉及文件：
+- 设计产物：docs/design/dsn-02-login-auth/（brief / 融合稿 / 动效规格 / states / handoff.md / codex-review.md）
+- 实现将触及：
+  - src/components/auth/LoginForm.tsx（移除 Magic Link、加记住30天、忘记密码入口）
+  - src/app/login/page.tsx（视觉融合 + 角色/眼睛动效）
+  - 新增：忘记密码 / 重置密码 页与路由
+  - src/app/auth/callback（重置/验证回跳）、src/lib/supabase/*（auth）
+  - src/lib/copy/{zh-Hans,en}.ts
+  - Supabase 控制台（Owner 操作、Codex 指导）：密码重置邮件模板、Production + Preview redirect URLs、会话时长
+- 状态/决策同步：docs/TICKETS.md、docs/PROJECT-STATUS.md、
+  docs/DECISIONS.md（去 Magic Link + 加密码重置=决策，需 Codex 记 D-记录）
+
+验收标准：
+- 登录页只剩 邮箱密码 + Google；Magic Link 入口与调用完全消失。
+- 「记住 30 天」勾选影响会话留存时长（勾选→长会话；不勾→短会话），可验证。
+- 忘记密码全流程跑通：请求 → 邮件 → 重置页设新密码 → 用新密码登录成功。
+- 仅 Magic Link 老用户能通过忘记密码设密码并登录（迁移路径实测可走）。
+- 角色 + 眼睛动效在暖纸感系统内呈现协调；reduced-motion 下有降级。
+- 桌面/移动无横向溢出；登录失败信息不泄露账号是否存在。
+- 自动验证：doctor / lint / typecheck / build / smoke:api。
+- Preview Gate 3：真实登录态走通 密码登录 / 注册 / 忘记密码重置 / 记住30天。
+
+待 Codex 在实现前锁定的技术边界：
+- 「记住 30 天」的 session / refresh token 实现方式。
+- 密码重置 redirect URL（Production + Preview wildcard，呼应历史 OAuth redirect 经验）。
+- 密码策略（最小长度/强度）、速率限制 / 防爆破；前端绝不记录或回显密码明文。
+- Magic Link 下线与老用户迁移的先后顺序（迁移路径先于下线可用）。
+
+验证命令：
+  npm run doctor
+  npm run lint
+  npm run typecheck
+  npm run build
+  FORGENOTE_BASE_URL=<目标环境> npm run smoke:api
+
+风险：
+- 认证改动影响全部用户登录，回归面大；必须 Preview 真实登录态验收后再上 Production。
+- 先删 Magic Link 再补迁移路径会把仅 Magic Link 老用户锁外——顺序必须「迁移可用」在前。
+- 密码重置依赖邮件投递，需 Supabase email/SMTP 配置就绪。
+- 与 V-01 并行分散注意力；建议 V-01 收口后再进实现。
+- 与 V-01-FIX-09 重叠，未先裁定关系会双线冲突。
+
+下一步：
+- Codex 裁定 DSN-02 与 V-01-FIX-09 的关系（取代/承接/合并）。
+- Codex 定认证技术边界 + 记 DECISIONS（去 Magic Link + 密码重置）+ 排期（建议 V-01 收口后）。
+- Claude Design 产出「角色+眼睛动效」融合暖纸感的稿，落 docs/design/dsn-02-login-auth/。
+- Codex review 通过后拆/排实现，Claude Code 实现。
+```
+
 ## M1 剩余执行队列
 
 > M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一任务恢复 V-01 真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
