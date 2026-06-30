@@ -1,7 +1,7 @@
 # ForgeNote Tickets
 
 > 执行层唯一任务板。`PRD-M1.md` 定义产品，`PROJECT-STATUS.md` 记录当前快照，本文件负责把 M1 拆成可推进、可验收、可追踪的票。
-> 基线：`main` / `origin/main` 已包含 PR #21 merge `4bf491a` 与本次状态同步；V-01-FIX-07 已合入。**不回滚到 I-02B 旧状态。**
+> 基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。**不回滚到 I-02B 旧状态。**
 
 ## 状态定义
 
@@ -58,6 +58,7 @@
 | V-01-FIX-05 | Done | 修复 V-01 登录页复杂度：邮箱模块收成一个主动作，注册/登录链接与 Magic Link 降级为次级文字入口；Preview Gate 3 pass 后随 PR #19 合入 | `docs/acceptance/V-01.md` |
 | V-01-FIX-06 | Done | 删除 V-01 登录页底部噪音文案「登录后可保存配方和偏好。」；Preview Gate 3 pass 后随 PR #20 合入 | `docs/acceptance/V-01.md` |
 | V-01-FIX-07 | Done | 修复 V-01 登录页视觉比例：桌面 380px、移动端 20px 边距、邮箱主路径置前、暖色控件语气；Preview Gate 3 pass 后随 PR #21 合入 | `docs/acceptance/V-01.md` |
+| V-01-FIX-08 | Done | 修复 V-01 登录页设计保真：纸感点阵背景、闪电标、ForgeNote 独立标题、分类副标题、深橙主按钮和暖色表单系统；Preview Gate 3 pass 后随 PR #22 合入 | `docs/acceptance/V-01.md` |
 
 > I-18 已 squash merge 到 `main`（`b56cfa0`，PR #2），远端分支 `i-18-copy-coverage` 已删除；验收文档 `docs/acceptance/I-18.md` 已在 `main`。
 > I-19 代码/文档侧已 squash merge 到 `main`（`acd94fe`，PR #4）；Production 配置（Vercel env→Production / Deployment Protection 关 / Supabase redirect+Google）+ 生产 OAuth 登录往返 + Gate 4 生产指标读出均已实测（2026-06-23），用户内容路径以 Preview 同码已验为依据由 Owner 接受 **Conditional Pass**，**I-19 → Done**。OPS-02 状态同步 PR 另出。
@@ -70,15 +71,15 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01-FIX-08 | Review / Preview Gate 3 Pass | 修复 `/login` 与 Claude Design `Login B Final.dc.html` 不一致：补纸感点阵背景、闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统；PR #22 待合并 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、登录能力变化、新字体依赖、直接复制原型 HTML/inline style、外部图片/资产管线 | Owner 2026-06-30 明确指出 V-01-FIX-07 与 Claude Design 不一致 |
+| V-01 | Ready | 让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录真实阻塞与指标 | 新功能、prompt/schema/API/RLS 改动、资产库、内容视觉渲染、自动学习、内容日历、Stripe、runtime i18n、把 Owner/Codex 自测当真实用户证据 | V-01-FIX-08 已合入并通过 Production recheck |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 
-### V-01-FIX-08 执行票（Ready）
+### V-01-FIX-08 执行票（已完成）
 
 ```text
 票号：V-01-FIX-08
-状态：Review / Preview Gate 3 Pass
+状态：Done
 类型：V-01 前置登录页设计保真修复（只改 /login 呈现层）
 设计输入：/Users/tete/Downloads/Login B Final.dc.html（Claude Design 方案 B 定稿）
 
@@ -125,6 +126,8 @@ V-01-FIX-08 本地实现证据（2026-06-30，Claude Code）：
 - 本地视觉证据：desktop 1280x720 下纸感点阵背景、38px mark、独立 ForgeNote 标题、分类线、深橙按钮、380px root、无横向溢出；mobile 390x760 下 350px root、左右 20px、无横向溢出。
 - 下一步：Draft PR CI/Vercel 补远端 build；Codex QA 跑 Preview 匿名 `/login` desktop/mobile 视觉检查与 Preview `smoke:api`。
 - Preview Gate 3（2026-06-30，Codex QA）：PR #22 head `9109ad4`，GitHub CI / Vercel 均 PASS。Preview `smoke:api` PASS。匿名 `/login` HTML 检查 PASS：纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B 均存在；Google/email/password/主按钮/创建账号/Magic Link 均存在；邮箱输入早于 Google；旧 footer 文案不存在。浏览器视觉检查 PASS：桌面 1280x720 下 root 380px、无横向溢出；移动 390x760 下 root 350px、左右 20px、无横向溢出。
+- PR #22 已 squash merge 到 `main`（`7b78558`）；V-01-FIX-08 Done。
+- Post-merge Production recheck：main CI PASS；Production `smoke:api` PASS；Production `/login` HTML 检查 PASS；Production 浏览器视觉检查 PASS（桌面 1280x720 root 380px，移动 390x760 root 350px、左右 20px、无横向溢出）。
 ```
 
 ### V-01-FIX-07 执行票（已完成）
@@ -847,7 +850,7 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01 真实用户验证因登录页设计保真问题暂时切到 V-01-FIX-08；FIX-08 只修 `/login` 呈现层。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一任务恢复 V-01 真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
