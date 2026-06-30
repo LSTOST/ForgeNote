@@ -17,6 +17,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+import { SUPABASE_AUTH_COOKIE_OPTIONS } from "@/lib/supabase/auth-config";
+
 /** 已登录上下文：cookie 绑定的客户端 + 当前用户。 */
 export interface AuthenticatedContext {
   supabase: SupabaseClient;
@@ -47,6 +49,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient | nul
   const cookieStore = await cookies();
 
   return createServerClient(config.url, config.anonKey, {
+    cookieOptions: SUPABASE_AUTH_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return cookieStore.getAll();

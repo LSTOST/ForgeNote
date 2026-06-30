@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { CircleAlert, LoaderCircle, Zap } from "lucide-react";
+import { type FormEvent, type ReactNode, useState } from "react";
+import {
+  Check,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +22,36 @@ interface LoginFormProps {
   initialError?: string;
 }
 
-type MagicLinkState = "idle" | "sending" | "sent" | "error";
+type AuthMode = "signIn" | "signUp";
+type AuthView = "auth" | "resetRequest" | "resetSent";
 type OAuthState = "idle" | "redirecting" | "error";
-type PasswordMode = "signIn" | "signUp";
-type PasswordState = "idle" | "submitting" | "signupSent" | "error";
+type FormState = "idle" | "submitting" | "signupSent" | "error";
+type ResendState = "idle" | "submitting" | "sent" | "error";
 
-// 登录页表单（UIUX §4）：Google 登录 + 邮箱密码主路径 + Magic Link 备用路径。
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const fieldClass =
+  "h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#8b8378] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50 sm:h-[46px] sm:text-[16px]";
+
 export function LoginForm({ initialError }: LoginFormProps) {
   const configured = isSupabaseConfigured();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordMode, setPasswordMode] = useState<PasswordMode>("signIn");
-  const [passwordState, setPasswordState] = useState<PasswordState>("idle");
-  const [magicState, setMagicState] = useState<MagicLinkState>("idle");
+  const [authMode, setAuthMode] = useState<AuthMode>("signIn");
+  const [view, setView] = useState<AuthView>("auth");
+  const [formState, setFormState] = useState<FormState>("idle");
   const [oauthState, setOauthState] = useState<OAuthState>("idle");
-  // 表单级错误；初始可能来自 callback 的 ?error=。
+  const [signupResendState, setSignupResendState] =
+    useState<ResendState>("idle");
+  const [signupResendError, setSignupResendError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(initialError ?? null);
 
-  const busy =
-    passwordState === "submitting" ||
-    magicState === "sending" ||
-    oauthState === "redirecting";
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const emailValid = emailPattern.test(email.trim());
   const passwordValid = password.length >= 8;
-  const passwordFormValid = emailValid && passwordValid;
+  const busy = formState === "submitting" || oauthState === "redirecting";
+  const resetReady = emailValid && !busy;
+  const isSignIn = authMode === "signIn";
 
   async function handleGoogle() {
     setError(null);
@@ -51,7 +62,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
         provider: "google",
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
-      // 成功时浏览器会被重定向到 Google；走到这里通常意味着 provider 未配置/失败。
       if (oauthError) {
         setError(oauthError.message || copy.login.googleUnavailable);
         setOauthState("error");
@@ -62,21 +72,25 @@ export function LoginForm({ initialError }: LoginFormProps) {
     }
   }
 
-  async function handlePasswordAuth(e: React.FormEvent) {
+  async function handlePasswordAuth(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!passwordFormValid) return;
+    if (!emailValid || !passwordValid) {
+      setError(copy.login.emailPasswordRequired);
+      setFormState("error");
+      return;
+    }
     setError(null);
-    setPasswordState("submitting");
+    setFormState("submitting");
     try {
       const supabase = createSupabaseBrowserClient();
-      if (passwordMode === "signIn") {
+      if (isSignIn) {
         const { error: passwordError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
         if (passwordError) {
           setError(getPasswordAuthError(passwordError));
-          setPasswordState("error");
+          setFormState("error");
           return;
         }
         window.location.assign("/forge");
@@ -90,223 +104,650 @@ export function LoginForm({ initialError }: LoginFormProps) {
       });
       if (signupError) {
         setError(getPasswordAuthError(signupError));
-        setPasswordState("error");
+        setFormState("error");
         return;
       }
       if (data.session) {
         window.location.assign("/forge");
         return;
       }
-      setPasswordState("signupSent");
+      setSignupResendState("idle");
+      setSignupResendError(null);
+      setFormState("signupSent");
     } catch {
       setError(copy.login.passwordNetworkError);
-      setPasswordState("error");
+      setFormState("error");
     }
   }
 
-  async function handleMagicLink() {
-    if (!emailValid) return;
-    setError(null);
-    setMagicState("sending");
+  async function handleResendSignupConfirmation() {
+    if (!emailValid) {
+      setSignupResendError(copy.login.emailPasswordRequired);
+      setSignupResendState("error");
+      return;
+    }
+    setSignupResendError(null);
+    setSignupResendState("submitting");
     try {
       const supabase = createSupabaseBrowserClient();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
         email: email.trim(),
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
-      if (otpError) {
-        setError(otpError.message || copy.login.magicSendFailed);
-        setMagicState("error");
+      if (resendError) {
+        setSignupResendError(
+          resendError.message || copy.login.signupResendFailed,
+        );
+        setSignupResendState("error");
         return;
       }
-      setMagicState("sent");
+      setSignupResendState("sent");
     } catch {
-      setError(copy.login.magicSendNetworkError);
-      setMagicState("error");
+      setSignupResendError(copy.login.signupResendFailed);
+      setSignupResendState("error");
     }
   }
 
+  async function handleResetRequest(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!resetReady) return;
+    setError(null);
+    setFormState("submitting");
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/auth/callback?next=/login/reset`,
+        },
+      );
+      if (resetError) {
+        setError(resetError.message || copy.login.resetSendFailed);
+        setFormState("error");
+        return;
+      }
+      setView("resetSent");
+      setFormState("idle");
+    } catch {
+      setError(copy.login.resetSendNetworkError);
+      setFormState("error");
+    }
+  }
+
+  function switchMode(nextMode: AuthMode) {
+    setAuthMode(nextMode);
+    setView("auth");
+    setFormState("idle");
+    setSignupResendState("idle");
+    setSignupResendError(null);
+    setError(null);
+    setPassword("");
+  }
+
+  function goResetRequest() {
+    setView("resetRequest");
+    setFormState("idle");
+    setError(null);
+  }
+
+  function goAuth() {
+    setView("auth");
+    setFormState("idle");
+    setError(null);
+  }
+
   return (
-    <div className="w-full max-w-[380px] space-y-9">
-      <header className="flex flex-col items-center gap-3 text-center">
-        <div className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#B5562B] text-[#FDF7EF] shadow-[0_2px_8px_rgba(150,70,30,0.25)]">
-          <Zap className="size-[19px]" aria-hidden strokeWidth={2.2} />
-        </div>
-        <h1 className="font-serif text-[33px] leading-none font-medium text-[#33291F] sm:text-[36px]">
-          ForgeNote
-        </h1>
-        <p className="break-keep text-[13px] leading-5 font-medium tracking-[0.06em] text-[#9c7a52]">
-          图文卡片内容工作台
-        </p>
-        <p className="text-[14px] leading-[1.5] text-[#6f6253]">{SLOGAN}</p>
-      </header>
+    <section className="grid w-full overflow-hidden rounded-[3px] bg-[#FBF7F0] shadow-[0_18px_60px_rgba(74,52,31,0.13)] lg:min-h-screen lg:rounded-none lg:shadow-none lg:grid-cols-2">
+      <BrandPanel status={statusFromState(formState, oauthState)} />
 
-      {!configured ? (
-        <div className="rounded-[14px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-4 text-[13.5px] leading-6 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]">
-          <p className="font-medium">{copy.login.notConfiguredTitle}</p>
-          <p className="mt-1 text-[#9e3322]/80">
-            {copy.login.notConfiguredBody}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-[18px]">
-          {error && (
-            <div
-              role="alert"
-              className="flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-3 text-[13.5px] leading-5 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
-            >
-              <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-              <span>{error}</span>
-            </div>
-          )}
+      <div className="flex min-h-[640px] items-center justify-center px-5 py-10 sm:px-10 lg:min-h-screen">
+        <div className="w-full max-w-[344px]">
+          <MobileBrand />
 
-          {passwordState === "signupSent" ? (
-            <div className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-[14px] leading-6 shadow-[0_1px_10px_rgba(120,90,50,0.06)]">
-              <p className="font-medium text-[#33291F]">
-                {copy.login.signupSentTitle}
-              </p>
-              <p className="mt-1 text-[#6f6253]">
-                {copy.login.signupSentBodyPrefix}
-                <span className="font-medium text-[#33291F]">{email.trim()}</span>
-                {copy.login.signupSentBodySuffix}
-              </p>
-              <button
-                type="button"
-                className="mt-3 text-[14px] font-medium text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
-                onClick={() => setPasswordState("idle")}
-              >
-                {copy.login.changeEmail}
-              </button>
-            </div>
+          {!configured ? (
+            <StateNotice tone="danger" title={copy.login.notConfiguredTitle}>
+              {copy.login.notConfiguredBody}
+            </StateNotice>
+          ) : formState === "signupSent" ? (
+            <SignupSent
+              email={email}
+              resendError={signupResendError}
+              resendState={signupResendState}
+              onChangeEmail={goAuth}
+              onResend={handleResendSignupConfirmation}
+            />
+          ) : view === "resetRequest" ? (
+            <ResetRequest
+              email={email}
+              busy={busy}
+              error={error}
+              resetReady={resetReady}
+              onBack={goAuth}
+              onEmailChange={(value) => {
+                setEmail(value);
+                setFormState("idle");
+                setError(null);
+              }}
+              onSubmit={handleResetRequest}
+            />
+          ) : view === "resetSent" ? (
+            <ResetSent email={email} onBack={goAuth} onResend={goResetRequest} />
           ) : (
-            <form onSubmit={handlePasswordAuth} className="space-y-3">
-              <label htmlFor="email" className="sr-only">
-                {copy.login.emailLabel}
-              </label>
-              <input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder={copy.login.emailPlaceholder}
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setMagicState("idle");
-                  setPasswordState("idle");
-                }}
-                disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
-              />
-              <label htmlFor="password" className="sr-only">
-                {copy.login.passwordLabel}
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete={
-                  passwordMode === "signIn" ? "current-password" : "new-password"
-                }
-                placeholder={copy.login.passwordPlaceholder}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
-              />
+            <>
+              <header className="mb-7">
+                <h1 className="font-serif text-[32px] leading-tight font-medium text-[#33291F]">
+                  {isSignIn ? copy.login.signInTitle : copy.login.signUpTitle}
+                </h1>
+                <p className="mt-2 text-[14px] leading-5 text-[#8a7d6c]">
+                  {isSignIn
+                    ? copy.login.signInSubtitle
+                    : copy.login.signUpSubtitle}
+                </p>
+              </header>
+
+              <AuthError error={error} />
+
+              <form onSubmit={handlePasswordAuth} className="space-y-4">
+                <FieldLabel htmlFor="email">{copy.login.emailLabelShort}</FieldLabel>
+                <input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder={copy.login.emailPlaceholderShort}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setFormState("idle");
+                    setError(null);
+                  }}
+                  disabled={busy}
+                  className={fieldClass}
+                />
+
+                <div className="space-y-[7px]">
+                  <FieldLabel htmlFor="password">
+                    {copy.login.passwordLabel}
+                  </FieldLabel>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete={isSignIn ? "current-password" : "new-password"}
+                      placeholder={
+                        isSignIn
+                          ? copy.login.passwordPlaceholderSignIn
+                          : copy.login.passwordPlaceholderSignUp
+                      }
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setFormState("idle");
+                        setError(null);
+                      }}
+                      disabled={busy}
+                      className={`${fieldClass} pr-[46px]`}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-1.5 top-1.5 flex size-8 items-center justify-center rounded-[9px] text-[#9c7a52] transition hover:bg-[#F5EFE6] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+                      aria-label={
+                        showPassword
+                          ? copy.login.hidePassword
+                          : copy.login.showPassword
+                      }
+                      aria-pressed={showPassword}
+                      onClick={() => setShowPassword((value) => !value)}
+                      disabled={busy}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-[18px]" aria-hidden />
+                      ) : (
+                        <Eye className="size-[18px]" aria-hidden />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2 text-[13px] text-[#6f6253]">
+                    <span className="flex size-4 shrink-0 items-center justify-center rounded-[3px] bg-[#B5562B] text-[#FFFDF9]">
+                      <Check className="size-3" strokeWidth={3} aria-hidden />
+                    </span>
+                    <span>{copy.login.rememberThirtyDays}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 text-[13px] font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+                    onClick={goResetRequest}
+                    disabled={busy}
+                  >
+                    {copy.login.forgotPassword}
+                  </button>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none sm:h-[46px]"
+                  disabled={busy}
+                >
+                  {formState === "submitting" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                  ) : null}
+                  {formState === "submitting"
+                    ? copy.login.passwordSubmitting
+                    : isSignIn
+                      ? copy.login.primarySignIn
+                      : copy.login.primarySignUp}
+                </Button>
+              </form>
+
+              <Divider />
+
               <Button
-                type="submit"
-                className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none"
-                disabled={!passwordFormValid || busy}
-              >
-                {passwordState === "submitting" ? (
-                  <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                ) : null}
-                {passwordState === "submitting"
-                  ? copy.login.passwordSubmitting
-                  : passwordMode === "signIn"
-                    ? copy.login.passwordSignInButton
-                    : copy.login.passwordSignUpButton}
-              </Button>
-            </form>
-          )}
-
-          <div className="flex items-center gap-3 text-xs text-[#a99578]">
-            <span className="h-px flex-1 bg-[#E3D8C7]" />
-            或
-            <span className="h-px flex-1 bg-[#E3D8C7]" />
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 w-full rounded-[13px] border-[#E3D8C7] bg-transparent text-[14px] font-medium text-[#6f6253] hover:bg-[#FFFDF9]/65 hover:text-[#33291F] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28]"
-            disabled={busy}
-            onClick={handleGoogle}
-          >
-            {oauthState === "redirecting" ? (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <GoogleIcon />
-            )}
-            {copy.login.googleButton}
-          </Button>
-
-          <div className="space-y-2 text-center text-[13px] leading-6 text-[#9c7a52]">
-            <p>
-              {passwordMode === "signIn"
-                ? copy.login.noAccountPrompt
-                : copy.login.hasAccountPrompt}
-              <button
                 type="button"
-                className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
+                variant="outline"
+                className="h-11 w-full rounded-[13px] border-[#E3D8C7] bg-transparent text-[14px] font-medium text-[#6f6253] hover:bg-[#FFFDF9]/65 hover:text-[#33291F] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] sm:h-[46px]"
                 disabled={busy}
-                onClick={() => {
-                  setPasswordMode(
-                    passwordMode === "signIn" ? "signUp" : "signIn",
-                  );
-                  setPasswordState("idle");
-                  setError(null);
-                }}
+                onClick={handleGoogle}
               >
-                {passwordMode === "signIn"
-                  ? copy.login.createAccountLink
-                  : copy.login.returnToSignInLink}
-              </button>
-            </p>
-            <p>
-              {copy.login.magicBackupHint}
-              <button
-                type="button"
-                className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
-                disabled={!emailValid || busy}
-                onClick={handleMagicLink}
-              >
-                {magicState === "sending"
-                  ? copy.login.sending
-                  : copy.login.sendMagicLink}
-              </button>
-            </p>
-            {magicState === "sent" ? (
-              <div
-                className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-left text-[14px] leading-6 text-[#6f6253] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
-                role="status"
-                aria-live="polite"
-              >
-                <p className="font-medium text-[#33291F]">
-                  {copy.login.magicSentTitle}
-                </p>
-                <p className="mt-1">
-                  {copy.login.magicSentBodyPrefix}
-                  <span className="font-medium text-[#33291F]">
-                    {email.trim()}
-                  </span>
-                  {copy.login.magicSentBodySuffix}
-                </p>
-              </div>
-            ) : null}
-          </div>
+                {oauthState === "redirecting" ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <GoogleIcon />
+                )}
+                {oauthState === "redirecting"
+                  ? copy.login.googleRedirecting
+                  : copy.login.googleButton}
+              </Button>
+
+              <p className="mt-5 text-center text-[13px] leading-6 text-[#8a7d6c]">
+                {isSignIn
+                  ? copy.login.noAccountPrompt
+                  : copy.login.hasAccountPrompt}
+                <button
+                  type="button"
+                  className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
+                  disabled={busy}
+                  onClick={() => switchMode(isSignIn ? "signUp" : "signIn")}
+                >
+                  {isSignIn
+                    ? copy.login.createAccountLink
+                    : copy.login.returnToSignInLink}
+                </button>
+              </p>
+            </>
+          )}
         </div>
-      )}
+      </div>
+    </section>
+  );
+}
+
+function statusFromState(
+  formState: FormState,
+  oauthState: OAuthState,
+): "idle" | "loading" | "error" | "success" {
+  if (oauthState === "redirecting" || formState === "submitting") return "loading";
+  if (formState === "signupSent") return "success";
+  if (formState === "error" || oauthState === "error") return "error";
+  return "idle";
+}
+
+function BrandPanel({
+  status,
+}: {
+  status: "idle" | "loading" | "error" | "success";
+}) {
+  return (
+    <aside className="relative hidden min-h-[660px] overflow-hidden bg-[#EEE0C9] bg-[radial-gradient(rgba(120,90,50,0.06)_1px,transparent_1px)] [background-size:6px_6px] lg:block">
+      <div className="absolute left-[18px] top-[12px]">
+        <span className="font-serif text-[30px] leading-none font-semibold text-[#33291F]">
+          ForgeNote
+        </span>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-[118px] top-[118px] flex items-end justify-center">
+        <MascotGroup status={status} />
+      </div>
+    </aside>
+  );
+}
+
+function MobileBrand() {
+  return (
+    <header className="mb-7 flex flex-col items-center text-center lg:hidden">
+      <div className="relative mb-3 size-[92px]">
+        <EmberFace compact />
+      </div>
+      <h1 className="font-serif text-[31px] leading-none font-medium text-[#33291F]">
+        ForgeNote
+      </h1>
+      <p className="mt-2 break-keep text-[12px] leading-5 font-medium tracking-[0.06em] text-[#9c7a52]">
+        {copy.login.productCategory}
+      </p>
+      <p className="mt-1 text-[13.5px] leading-[1.5] text-[#6f6253]">
+        {SLOGAN}
+      </p>
+    </header>
+  );
+}
+
+function MascotGroup({
+  status,
+}: {
+  status: "idle" | "loading" | "error" | "success";
+}) {
+  return (
+    <div
+      className={[
+        "relative h-[430px] w-[500px] transition-transform duration-200 motion-reduce:transition-none",
+        status === "success" ? "motion-safe:animate-pulse" : "",
+        status === "error" ? "motion-safe:animate-pulse" : "",
+      ].join(" ")}
+      aria-hidden
+    >
+      <div className="absolute left-[42px] bottom-[18px] h-3 w-[418px] rounded-full bg-[#D8C8AF]/75 blur-[1px]" />
+      <div className="absolute left-[104px] bottom-[28px] h-[334px] w-[122px] rotate-[-6deg] rounded-[26px] bg-[#6C4CF6] shadow-[0_16px_46px_rgba(84,58,186,0.18)]" />
+      <div className="absolute left-[246px] bottom-[28px] h-[230px] w-[92px] rounded-[25px] bg-[#2E2E2E]" />
+      <div className="absolute left-[56px] bottom-[28px] h-[134px] w-[174px] rounded-t-full bg-[#F08B4F]" />
+      <div className="absolute left-[342px] bottom-[28px] h-[150px] w-[156px] rounded-t-full bg-[#E7D63A]" />
+
+      <div className="absolute left-[122px] top-[98px] flex gap-[28px]">
+        <EyeDot status={status} inverted />
+        <EyeDot status={status} inverted />
+      </div>
+      <div className="absolute left-[267px] top-[184px] flex gap-[28px]">
+        <EyeDot status={status} inverted />
+        <EyeDot status={status} inverted />
+      </div>
+      <div className="absolute left-[107px] bottom-[82px] flex gap-[48px]">
+        <EyeDot small status={status} />
+        <EyeDot small status={status} />
+      </div>
+      <div className="absolute left-[388px] bottom-[96px] flex gap-[42px]">
+        <EyeDot small status={status} />
+        <EyeDot small status={status} />
+      </div>
+      <div className="absolute left-[421px] bottom-[62px] h-[10px] w-[42px] border-b-[3px] border-[#2C2C2C] opacity-95" />
+      {status === "loading" ? (
+        <div className="absolute left-[230px] top-[30px] size-10 animate-spin rounded-full border-2 border-[#B5562B]/25 border-t-[#B5562B] motion-reduce:animate-none" />
+      ) : null}
+    </div>
+  );
+}
+
+function EmberFace({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={[
+        "absolute inset-0 rounded-[46%_54%_50%_50%] bg-[#C45A2D] shadow-[0_12px_34px_rgba(108,62,28,0.18)]",
+        compact ? "" : "rotate-[-5deg]",
+      ].join(" ")}
+      aria-hidden
+    >
+      <div className="absolute left-[27%] top-[35%] flex gap-5">
+        <span className="size-2 rounded-full bg-[#33291F]" />
+        <span className="size-2 rounded-full bg-[#33291F]" />
+      </div>
+      <div className="absolute left-[38%] top-[57%] h-2 w-6 rounded-b-full border-b-2 border-[#6F3324]" />
+    </div>
+  );
+}
+
+function EyeDot({
+  status,
+  small = false,
+  inverted = false,
+}: {
+  status: "idle" | "loading" | "error" | "success";
+  small?: boolean;
+  inverted?: boolean;
+}) {
+  const size = small ? "size-[11px]" : "size-[28px]";
+  const shape =
+    status === "loading" ? "h-1.5 w-3 rounded-full" : `${size} rounded-full`;
+  if (!inverted) {
+    return <span className={`${shape} bg-[#171717]`} />;
+  }
+  return (
+    <span
+      className={`${shape} flex items-center justify-center bg-[#FFFDF9] shadow-[0_1px_4px_rgba(0,0,0,0.08)]`}
+    >
+      <span className="size-[14px] rounded-full bg-[#171717]" />
+    </span>
+  );
+}
+
+function AuthError({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <div
+      role="alert"
+      className="mb-4 flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-3 text-[13.5px] leading-5 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
+    >
+      <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>{error}</span>
+    </div>
+  );
+}
+
+function FieldLabel({
+  htmlFor,
+  children,
+}: {
+  htmlFor: string;
+  children: ReactNode;
+}) {
+  return (
+    <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-[#5c5347]">
+      {children}
+    </label>
+  );
+}
+
+function StateNotice({
+  title,
+  children,
+  tone = "neutral",
+}: {
+  title: string;
+  children: ReactNode;
+  tone?: "neutral" | "danger";
+}) {
+  return (
+    <div
+      className={[
+        "rounded-[14px] border p-4 text-[13.5px] leading-6 shadow-[0_1px_10px_rgba(120,90,50,0.06)]",
+        tone === "danger"
+          ? "border-[#b53c28]/30 bg-[#b53c28]/[0.06] text-[#9e3322]"
+          : "border-[#E3D8C7] bg-[#FBF6EE] text-[#6f6253]",
+      ].join(" ")}
+    >
+      <p className={tone === "danger" ? "font-medium" : "font-semibold text-[#33291F]"}>
+        {title}
+      </p>
+      <p className="mt-1">{children}</p>
+    </div>
+  );
+}
+
+function SignupSent({
+  email,
+  resendError,
+  resendState,
+  onChangeEmail,
+  onResend,
+}: {
+  email: string;
+  resendError: string | null;
+  resendState: ResendState;
+  onChangeEmail: () => void;
+  onResend: () => void;
+}) {
+  const resending = resendState === "submitting";
+  return (
+    <div className="space-y-5">
+      <div className="relative mx-auto size-[96px]">
+        <EmberFace compact />
+      </div>
+      <StateNotice title={copy.login.signupSentTitle}>
+        {copy.login.signupSentBodyPrefix}
+        <span className="font-semibold text-[#33291F]">{email.trim()}</span>
+        {copy.login.signupSentBodySuffix}
+      </StateNotice>
+      {resendState === "sent" ? (
+        <p className="rounded-[13px] border border-[#2f8f5b]/25 bg-[#2f8f5b]/[0.07] p-3 text-[13px] leading-5 text-[#2f6f4a]">
+          {copy.login.signupResent}
+        </p>
+      ) : null}
+      {resendError ? (
+        <p
+          role="alert"
+          className="rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-3 text-[13px] leading-5 text-[#9e3322]"
+        >
+          {resendError}
+        </p>
+      ) : null}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button
+          type="button"
+          className="h-11 rounded-[13px] bg-[#B5562B] px-4 text-[14px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.18)] hover:bg-[#9f4924] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] sm:flex-1"
+          onClick={onResend}
+          disabled={resending}
+        >
+          {resending ? (
+            <LoaderCircle className="size-4 animate-spin" aria-hidden />
+          ) : null}
+          {resending ? copy.login.signupResending : copy.login.signupResend}
+        </Button>
+        <button
+          type="button"
+          className="text-[13.5px] font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
+          onClick={onChangeEmail}
+          disabled={resending}
+        >
+          {copy.login.changeEmail}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ResetRequest({
+  email,
+  busy,
+  error,
+  resetReady,
+  onBack,
+  onEmailChange,
+  onSubmit,
+}: {
+  email: string;
+  busy: boolean;
+  error: string | null;
+  resetReady: boolean;
+  onBack: () => void;
+  onEmailChange: (value: string) => void;
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <>
+      <header className="mb-6 text-center">
+        <div className="relative mx-auto mb-3 size-[92px]">
+          <EmberFace compact />
+        </div>
+        <h1 className="font-serif text-[28px] leading-tight font-medium text-[#33291F]">
+          {copy.login.resetTitle}
+        </h1>
+        <p className="mt-2 text-[13.5px] leading-5 text-[#6f6253]">
+          {copy.login.resetBody}
+        </p>
+      </header>
+      <AuthError error={error} />
+      <form onSubmit={onSubmit} className="space-y-4">
+        <label htmlFor="reset-email" className="sr-only">
+          {copy.login.emailLabel}
+        </label>
+        <input
+          id="reset-email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder={copy.login.emailPlaceholder}
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          disabled={busy}
+          className={fieldClass}
+        />
+        <Button
+          type="submit"
+          className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none"
+          disabled={!resetReady}
+        >
+          {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : null}
+          {busy ? copy.login.sending : copy.login.resetSendButton}
+        </Button>
+      </form>
+      <button
+        type="button"
+        className="mt-5 block w-full text-center text-[13px] font-medium text-[#9c7a52] hover:text-[#B5562B] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+        onClick={onBack}
+        disabled={busy}
+      >
+        {copy.login.backToSignIn}
+      </button>
+    </>
+  );
+}
+
+function ResetSent({
+  email,
+  onBack,
+  onResend,
+}: {
+  email: string;
+  onBack: () => void;
+  onResend: () => void;
+}) {
+  return (
+    <div className="space-y-5 text-center">
+      <div className="relative mx-auto size-[96px]">
+        <EmberFace compact />
+      </div>
+      <StateNotice title={copy.login.resetSentTitle}>
+        {copy.login.resetSentBodyPrefix}
+        <span className="font-semibold text-[#33291F]">{email.trim()}</span>
+        {copy.login.resetSentBodySuffix}
+      </StateNotice>
+      <p className="text-[12.5px] text-[#9c7a52]">
+        {copy.login.resetNotReceived}
+        <button
+          type="button"
+          className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+          onClick={onResend}
+        >
+          {copy.login.resetResend}
+        </button>
+      </p>
+      <button
+        type="button"
+        className="text-[13px] font-medium text-[#9c7a52] hover:text-[#B5562B] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+        onClick={onBack}
+      >
+        {copy.login.backToSignIn}
+      </button>
+    </div>
+  );
+}
+
+function Divider() {
+  return (
+    <div className="my-4 flex items-center gap-3 text-xs text-[#a99578]">
+      <span className="h-px flex-1 bg-[#E3D8C7]" />
+      {copy.login.orDivider}
+      <span className="h-px flex-1 bg-[#E3D8C7]" />
     </div>
   );
 }

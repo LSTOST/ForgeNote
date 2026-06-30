@@ -23,7 +23,7 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F5EFE6] bg-[radial-gradient(rgba(120,90,50,0.045)_1px,transparent_1px)] [background-size:5px_5px] px-5 py-8 text-[#33291F] sm:px-6 sm:py-12">
+    <main className="flex min-h-screen flex-1 bg-[#F5EFE6] bg-[radial-gradient(rgba(120,90,50,0.045)_1px,transparent_1px)] [background-size:5px_5px] px-5 py-8 text-[#33291F] sm:px-6 sm:py-12 lg:bg-[#FBF7F0] lg:bg-none lg:p-0">
       <LoginForm initialError={error} />
     </main>
   );

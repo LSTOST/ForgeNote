@@ -71,7 +71,48 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录真实阻塞与指标 | 新功能、prompt/schema/API/RLS 改动、资产库、内容视觉渲染、自动学习、内容日历、Stripe、runtime i18n、把 Owner/Codex 自测当真实用户证据 | V-01-FIX-08 已合入并通过 Production recheck |
+| V-01-FIX-09 | Review | 承接 DSN-02 登录页重做：邮箱密码为主路径，Google 备选，移除 Magic Link，新增忘记密码 / 设置新密码流程，并把 Auth cookie maxAge 收敛为 30 天 | MFA/passkey、新 OAuth、账号合并、业务 DB/API/RLS/prompt、Forge 工作台 | DSN-02 Login Auth 设计稿；D-09 |
+
+V-01 仍是唯一产品验证票；V-01-FIX-09 只是恢复真实用户验证前的登录入口阻塞修复。V-01-FIX-09 通过后，下一步回到 V-01 Production 真实用户证据。
+
+### V-01-FIX-09 执行票（Review）
+
+```text
+票号：V-01-FIX-09
+状态：Review
+类型：V-01 前置登录认证缺口 + 登录页重做
+设计输入：/Users/tete/Downloads/DSN-02 Login Auth.dc.html
+决策输入：docs/DECISIONS.md D-09
+
+目标：
+修复真实用户反馈：非 Google 用户不能每次登录都去邮箱点链接。登录页需要回到克制清晰的邮箱密码主路径，并提供密码恢复，而不是继续暴露 Magic Link。
+
+范围内：
+- /login 视觉重做：桌面左品牌视觉面板 + 右侧克制表单；移动端压缩为单列。
+- 邮箱 + 密码作为主路径；Google 作为备选。
+- 登录 / 注册文案和状态明显区分。
+- 显示/隐藏密码。
+- 去掉 Magic Link / 发送登录链接入口。
+- 忘记密码请求流 + /login/reset 设置新密码页。
+- /auth/callback 支持安全站内 next path。
+- Auth cookie maxAge 30 天。
+- 更新 API / deployment / decision / copy 文档。
+
+范围外：
+- MFA / passkey / 新 OAuth provider / 账号合并。
+- 业务 DB、RLS、Forge 工作台、生成 prompt、内容 API。
+- 把登录页做成营销 landing page。
+
+验收标准：
+- 匿名 /login 可见：邮箱、密码、保持 30 天登录、忘记密码、登录主按钮、Google 备选、创建账号。
+- 匿名 /login 不出现：Magic、发送登录链接、登录链接备用入口。
+- 注册态文案与登录态明显变化。
+- /login/reset 路由存在并能渲染设置新密码 UI。
+- resetPasswordForEmail 指向 /auth/callback?next=/login/reset。
+- /auth/callback 只接受安全站内 next path。
+- 自动验证：doctor / lint / typecheck / build / git diff --check。
+- Gate 3：Preview 匿名 /login 与 /login/reset HTML 检查；如有已确认邮箱账号，补真实密码登录到 /forge。
+```
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
 

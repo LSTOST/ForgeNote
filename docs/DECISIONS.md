@@ -194,6 +194,22 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 影响文件：`src/lib/supabase/client.ts`（新增）、`src/lib/supabase/server.ts`（新增 `getCurrentUser` / `isSupabaseConfigured`）、`src/app/login/page.tsx`、`src/components/auth/LoginForm.tsx`、`src/app/auth/callback/route.ts`、`src/app/auth/signout/route.ts`、`src/app/forge/page.tsx`、`src/components/layout/TopNav.tsx`、`API-CONTRACT.md`（§8）。
 
+### D-09 Auth 方式迁移：邮箱密码主路径 + 密码重置，移除 Magic Link（2026-06-30）
+
+Owner 反馈确认：没有 Google 账号的用户被 Magic Link 迫使每次打开邮箱，登录体验不成立。DSN-02 登录设计重做后，Codex 裁决如下：
+
+- `/login` 的首选认证方式改为邮箱 + 密码；Google OAuth 作为备选入口。
+- 彻底移除 `/login` 可见 Magic Link / OTP 登录入口，不再把“发送登录链接”作为备用文案暴露给用户。
+- 新增忘记密码流程：`/login` 请求重置邮件，Supabase recovery link 经 `/auth/callback?next=/login/reset` 写入 session 后跳转 `/login/reset` 设置新密码。
+- `/auth/callback` 允许安全的站内 `next` path；拒绝空值、非 `/` 开头和 `//` 开头路径，避免开放重定向。
+- Supabase Auth cookie maxAge 收敛为 30 天；真实 refresh token 生命周期仍需 Owner 在 Supabase 控制台与项目策略保持一致。
+- 登录失败文案不泄露账号是否存在，仍统一为“邮箱或密码不正确”一类。
+- 迁移顺序：密码重置流程先上线，再下线 Magic Link。PR 实现必须同时包含重置入口与设置新密码页，不能只删除 Magic Link。
+
+范围外：不做 MFA / passkey / 新 OAuth provider / 账号合并；不改业务表、RLS、生成 prompt 或内容 API。
+
+影响文件：`src/components/auth/LoginForm.tsx`、`src/components/auth/ResetPasswordForm.tsx`、`src/app/login/reset/page.tsx`、`src/app/auth/callback/route.ts`、`src/lib/supabase/client.ts`、`src/lib/supabase/server.ts`、`src/lib/supabase/auth-config.ts`、`src/lib/copy/{zh-Hans,en}.ts`、`API-CONTRACT.md`、`DEPLOYMENT.md`。
+
 ---
 
 ## v5 选择性折叠（2026-06-21）

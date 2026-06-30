@@ -52,7 +52,7 @@ DATABASE_URL='postgres://...' npm run db:test-rls
 
 1. Vercel build 通过。
 2. 打开 Preview URL。
-3. 完成登录（Google / 邮箱 Magic Link），进入 `/forge`。
+3. 完成登录（邮箱密码主路径 / Google 备选），进入 `/forge`。
 4. 输入一条真实样例：
 
 ```text
@@ -84,8 +84,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 **2. Supabase Auth（Production）**
 
 - Site URL / Redirect URLs 加入 Production 域名的 `/auth/callback`。
+- Redirect URLs 同时确认允许 `/auth/callback?next=/login/reset` 回跳，用于密码重置后设置新密码。
 - Google provider：enabled + Client ID + **Client Secret 必须填**（Preview 期 blocker 根因即 Client Secret 为空 → `400 validation_failed` / `missing OAuth secret`，见 `docs/PROJECT-STATUS.md`）。
-- 邮箱 Magic Link 如启用，确认发信配置可用。
+- Email provider：确认注册确认邮件与密码重置邮件可发送。当前产品不再暴露 Magic Link 登录入口。
+  - Production/Preview 不应长期依赖 Supabase 默认邮件发送；QQ / 企业邮箱可能拦截默认系统邮件。
+  - 上真实用户前必须配置可靠自定义 SMTP（如 Resend/Postmark/SendGrid 或 Owner 已验证的 SMTP），并至少用一个 QQ 邮箱 + 一个非 QQ 邮箱实测注册确认与密码重置送达。
+  - 代码侧只负责 `signUp` / `auth.resend(type="signup")` / `resetPasswordForEmail` 调用和恢复入口；邮件送达率属于 Supabase Auth 发信配置。
+- Auth session / refresh token 策略需与 30 天登录承诺一致；代码侧 Auth cookie maxAge 为 30 天。
 
 **3. 数据库迁移（Production DB）**
 
