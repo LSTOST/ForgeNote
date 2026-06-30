@@ -71,9 +71,63 @@
 
 | 票号 | 状态 | 目标 | 范围外 | 依赖 |
 |---|---|---|---|---|
-| V-01 | Ready | 让 1-3 个非构建者用户在 Production 走完首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑，并记录真实阻塞与指标 | 新功能、prompt/schema/API/RLS 改动、资产库、内容视觉渲染、自动学习、内容日历、Stripe、runtime i18n、把 Owner/Codex 自测当真实用户证据 | V-01-FIX-08 已合入并通过 Production recheck |
+| V-01-FIX-09 | Review | 修复登录/注册模式辨识：当前模式必须一眼可见；去掉 Magic Link；邮箱密码为首选，Google 为备选 | Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台、新登录方式、忘记密码/MFA/passkey、整站视觉重设计 | PR #23 CI/Vercel/Preview HTML/smoke 已通过；待手动 Preview 点击确认注册态 |
 
 > **方向依据**：`docs/ForgeNote_修订版方向.md` 北极星——「创作者第一次用就觉得它比空白 ChatGPT 更懂我的账号」。I-20/I-22/I-23 已把三支柱串起来：假设条、可用内容方案、配方复用。下一步不能再堆功能，必须让真实用户走完整路径，拿到是否看得懂、是否保存、是否重跑的证据。
+
+### V-01-FIX-09 执行票（Review）
+
+```text
+票号：V-01-FIX-09
+状态：Review
+类型：V-01 前置登录/注册模式辨识修复（只改 /login 前端组件与 copy）
+
+用户反馈：
+- 登录和注册的变化不明显，用户不注意会以为没变化。
+- 登录注册组件需要克制简洁。
+- 去掉「不想用密码？发送登录链接」。
+- 首选邮箱加密码登录，备选 Google 登录。
+
+设计判断：
+- 成熟登录组件的关键不是入口多，而是当前模式强可见、主路径唯一、次路径不抢注意力。
+- 登录 / 注册必须通过标题、说明、主按钮文案、切换文案同时变化，而不是只换一个小链接。
+- Magic Link 是第三路径，会削弱邮箱密码主路径；本票删除可见入口和 OTP 客户端调用。
+
+范围内：
+- `src/components/auth/LoginForm.tsx`：删除 Magic Link 状态、handler、UI；强化登录/注册模式区分。
+- `src/lib/copy/zh-Hans.ts` 与 `src/lib/copy/en.ts`：删除未使用 Magic Link copy；补清晰的 mode title / body copy。
+- `docs/acceptance/V-01.md`、`docs/TICKETS.md`、`docs/PROJECT-STATUS.md`：记录边界、证据和状态。
+
+范围外：
+- Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。
+- 新增登录方式、忘记密码、MFA/passkey、账号合并。
+- 大幅改登录页品牌视觉、背景、Logo、整站主题。
+
+验收标准：
+- `/login` 默认登录态一眼可见：标题/说明/主按钮均表达「登录」。
+- 点击「创建账号」后，一眼可见进入注册态：标题/说明/主按钮均表达「注册/创建账号」。
+- 从注册态可清楚返回登录态。
+- 页面不再出现「不想用密码？」「发送登录链接」「登录链接已发送」等 Magic Link 文案。
+- 邮箱密码表单仍在 Google 登录之前；Google 只作为 divider 之后的备选。
+- Google 登录、邮箱、密码、主按钮、创建账号/返回登录入口仍存在。
+- 错误态、signup sent、not configured 状态不回归。
+- 自动验证：`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check`。
+- Gate 3：Preview 匿名 `/login` desktop/mobile 视觉检查 + Preview `smoke:api`。
+```
+
+V-01-FIX-09 本地实现证据（2026-06-30，Codex）：
+
+```text
+- Codex worker 已派出但未交付代码；主线程接管实现并关闭 worker，避免延迟写入冲突。
+- 参考 `https://careercompassai.vercel.app/login` 的结构原则：清晰标题、短说明、一个主表单路径、Google 备选、底部模式切换；未复制视觉。
+- 改动文件：src/components/auth/LoginForm.tsx、src/lib/copy/zh-Hans.ts、src/lib/copy/en.ts。
+- 删除：Magic Link 可见入口、`magicState`、`handleMagicLink`、`supabase.auth.signInWithOtp` 调用、Magic Link sent UI 和相关 copy。
+- 新增：登录/注册 mode header。登录态显示「登录账号」和短说明；注册态显示「创建账号」和短说明；主按钮文案随模式变化。
+- 保留：邮箱密码主路径、Google 备选、创建账号/返回登录切换、错误态、signup sent、not configured。
+- PASS：npm run lint；npm run typecheck；npm run build（现有 next/font/google 需网络权限重跑）；git diff --check；本地匿名 `/login` HTML 信号检查；本地 `smoke:api`；src 无 `signInWithOtp` / Magic Link 可见文案。
+- 本地浏览器点击阻塞：repo 未安装 Playwright；注册态点击将在 Preview Gate 3 用浏览器补验。
+- PR #23 Preview Gate 3 自动部分（2026-06-30，Codex QA）：GitHub CI PASS；Vercel Preview Ready；Preview `smoke:api` PASS；Preview `/login` HTML 信号 PASS（登录标题/说明、创建账号入口、Google、邮箱、密码均存在；Magic Link 文案不存在；邮箱早于 Google）。浏览器点击阻塞：repo 未安装 Playwright，且本机 macOS GUI app launch 通过 `open` 启动 Chrome/Safari 均返回 `kLSNoExecutableErr`。PR 保持 Draft，合并前必须手动打开 Preview 点击 `创建账号`，确认注册态标题/说明/主按钮变化明显，并能 `返回登录`。
+```
 
 ### V-01-FIX-08 执行票（已完成）
 
@@ -850,7 +904,7 @@ V-01-FIX-07 本地实现证据（2026-06-29，Claude Code）：
 
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一任务恢复 V-01 真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-09 正在修复真实用户指出的登录/注册模式辨识与 Magic Link 负担；合入后恢复 V-01 真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 

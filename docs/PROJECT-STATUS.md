@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一票：**V-01 Ready**。V-01-FIX-08 已随 PR #22 squash merge 到 `main`（`7b78558`）并通过 Production recheck：`/login` 已对齐 Claude Design 的纸感点阵背景、38px 闪电标、ForgeNote 独立品牌标题、分类副标题、深橙主按钮和暖色表单系统；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。现在恢复 V-01 真实用户验证：让 1-3 个非构建者用户在 Production 走首次生成 → 假设条理解/编辑 → 保存配方 → 配方详情重跑。非 Google 用户测试前仍需一个已确认邮箱密码账号跑 `/login` → `/forge`。
+当前唯一票：**V-01-FIX-09 Review**。Owner/真实用户反馈指出 `/login` 登录与注册状态变化不明显，用户不注意会以为没变化；Magic Link 入口增加负担。PR #23 已开 Draft：只改 `/login` 前端组件与 copy，让邮箱密码成为唯一主路径、Google 成为 divider 后备选，并删除「不想用密码？发送登录链接」可见入口；不改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或新增登录方式。本地 lint/typecheck/build/diff/html/smoke 已通过；PR #23 CI/Vercel/Preview HTML/smoke 已通过；仍待手动 Preview 点击确认注册态变化明显，未完成前不转 Ready。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`main`。下一步是 V-01 Production 真实用户验证，不写产品代码。
+当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`codex/v-01-fix-09-login-mode-clarity`。当前 PR：#23 Draft。下一步是手动打开 PR #23 Preview `/login`，点击 `创建账号` / `返回登录` 做视觉确认；通过后可转 Ready，再合入并恢复 V-01 Production 真实用户验证。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #23：`https://github.com/LSTOST/ForgeNote/pull/23` Draft。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -189,7 +189,7 @@ PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11
 - Codex GitHub App 未确认
 
 ## 下一步收口
-M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 / PR #22 已合并。当前唯一任务恢复 V-01 Production 真实非构建者用户主路径验证。不要把资产库、自动学习、内容日历塞进下一步。
+M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 / PR #13 / PR #14 / PR #15 / PR #16 / PR #17 / PR #18 / PR #19 / PR #20 / PR #21 / PR #22 已合并。当前唯一任务临时切到 V-01-FIX-09，修复真实用户指出的登录/注册模式辨识与 Magic Link 负担；合入后恢复 V-01 Production 真实非构建者用户主路径验证。不要把资产库、自动学习、内容日历塞进下一步。
 
 ## 最近一次验收结果（I-19 Production 收口，2026-06-23）
 - Gate 2：`doctor`（0/0）/ `lint` / `typecheck` / `build` 全通过；`npm run metrics` 无 DB → SKIP exit 0；本地一次性 PG 库实证只读（6 指标比对手算一致、跑前后行数不变、删库收尾）。
@@ -200,6 +200,7 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-06-30 (V-01-FIX-09 进入 Review：Owner/真实用户指出 `/login` 登录与注册变化不明显，Magic Link 增加负担；Codex 判定切前置修复，只改 `/login` 组件与 copy。参考 `https://careercompassai.vercel.app/login` 的结构原则：清晰模式标题、短说明、一个邮箱密码主路径、Google 备选、底部模式切换。PR #23 Draft 已开；GitHub CI PASS；Vercel Preview Ready；Preview `smoke:api` PASS；Preview `/login` HTML 信号 PASS。当前分支已删除 Magic Link 可见入口、`magicState`、`handleMagicLink`、`signInWithOtp` 调用和相关 copy；新增登录/注册 mode header。未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台。阻塞：repo 未安装 Playwright，且本机 `open` 启动 Chrome/Safari 均返回 `kLSNoExecutableErr`，无法由 Codex 做 Preview 点击验证；PR 保持 Draft，待手动确认点击 `创建账号` 后注册态明显变化。Codex worker 已派出但未交付，主线程接管实现并关闭 worker。)
 2026-06-30 (PR #22 已 squash merge 到 `main`（`7b78558`），V-01-FIX-08 Done。Production recheck 通过：main CI `7b78558` PASS；Production `smoke:api` PASS；Production `/login` HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。当前唯一任务恢复 V-01。)
 2026-06-30 (V-01-FIX-08 Preview Gate 3 Pass：PR #22 head `9109ad4`，GitHub CI / Vercel 绿。Preview `https://forge-note-git-codex-v-01-fix-08-login-699014-lstosts-projects.vercel.app/login` 匿名 HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在。Preview `smoke:api` 通过；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。结论：可合并。)
 2026-06-30 (V-01-FIX-08 进入 Review：当前分支已实现 `/login` 纸感点阵背景、38px Zap 闪电标、ForgeNote 独立 serif 标题、分类线、slogan、#B5562B 主按钮、#FFFDF9 输入背景、#E3D8C7 warm border；未改 Supabase、`/auth/callback`、业务 API、DB、RLS、prompt、Forge 工作台或登录能力。`npm run lint` / `npm run typecheck` / `npm run build` / `git diff --check` / 本地匿名 `/login` HTML 检查 / 本地 `smoke:api` / 本地 desktop+mobile 浏览器视觉检查均通过；下一步 Draft PR CI/Vercel Preview 补远端 build、视觉与 Preview smoke 证据。)

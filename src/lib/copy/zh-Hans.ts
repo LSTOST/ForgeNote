@@ -40,6 +40,10 @@ export const zhHans = {
   login: {
     googleButton: "使用 Google 登录",
     emailDivider: "或使用邮箱",
+    signInModeTitle: "登录账号",
+    signInModeBody: "用已确认的邮箱和密码进入工作台。",
+    signUpModeTitle: "创建账号",
+    signUpModeBody: "首次可能需要确认一次邮箱，之后直接用密码登录。",
     passwordSignInTab: "登录",
     passwordSignUpTab: "注册",
     passwordSignInButton: "用邮箱和密码登录",
@@ -63,22 +67,14 @@ export const zhHans = {
     signupSentBodyPrefix: "我们已向 ",
     signupSentBodySuffix:
       " 发送确认邮件。首次点一次确认即可，之后可用邮箱和密码直接登录。",
-    magicBackupHint: "不想用密码？",
-    sendMagicLink: "发送登录链接",
-    sending: "发送中…",
     footerNote: "登录后可保存配方和偏好。",
     notConfiguredTitle: "登录暂不可用：Supabase 未配置",
     notConfiguredBody:
       "缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY，请在环境变量中配置后重试。",
     googleUnavailable: "Google 登录暂不可用，请改用邮箱和密码登录。",
     googleInitFailed: "无法发起 Google 登录，请稍后重试或改用邮箱登录。",
-    magicSendFailed: "发送失败，请稍后重试。",
-    magicSendNetworkError: "发送失败，请检查网络后重试。",
     emailLabel: "邮箱地址",
     emailPlaceholder: "you@example.com",
-    magicSentTitle: "登录链接已发送",
-    magicSentBodyPrefix: "我们已向 ",
-    magicSentBodySuffix: " 发送了一封登录邮件，点击其中的链接即可登录。",
     changeEmail: "换一个邮箱",
   },
   idea: {

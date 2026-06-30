@@ -34,6 +34,10 @@ export const en: Copy = {
   login: {
     googleButton: "Continue with Google",
     emailDivider: "or use email",
+    signInModeTitle: "Sign in",
+    signInModeBody: "Use your confirmed email and password to enter the workspace.",
+    signUpModeTitle: "Create account",
+    signUpModeBody: "You may confirm email once, then sign in with your password.",
     passwordSignInTab: "Sign in",
     passwordSignUpTab: "Create account",
     passwordSignInButton: "Sign in with email and password",
@@ -60,22 +64,14 @@ export const en: Copy = {
     signupSentBodyPrefix: "We sent a confirmation email to ",
     signupSentBodySuffix:
       " Confirm it once; after that, use email and password to sign in.",
-    magicBackupHint: "Prefer not to use a password?",
-    sendMagicLink: "Send a login link",
-    sending: "Sending…",
     footerNote: "Sign in to save recipes and preferences.",
     notConfiguredTitle: "Sign-in unavailable: Supabase not configured",
     notConfiguredBody:
       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY; please set them in the environment and retry.",
     googleUnavailable: "Google sign-in is unavailable; please use email and password instead.",
     googleInitFailed: "Could not start Google sign-in; please retry or use email.",
-    magicSendFailed: "Failed to send, please try again.",
-    magicSendNetworkError: "Failed to send; check your network and retry.",
     emailLabel: "Email address",
     emailPlaceholder: "you@example.com",
-    magicSentTitle: "Login link sent",
-    magicSentBodyPrefix: "We sent a login email to ",
-    magicSentBodySuffix: " — click the link in it to sign in.",
     changeEmail: "Use a different email",
   },
   idea: {

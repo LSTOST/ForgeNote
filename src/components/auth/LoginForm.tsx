@@ -16,12 +16,11 @@ interface LoginFormProps {
   initialError?: string;
 }
 
-type MagicLinkState = "idle" | "sending" | "sent" | "error";
 type OAuthState = "idle" | "redirecting" | "error";
 type PasswordMode = "signIn" | "signUp";
 type PasswordState = "idle" | "submitting" | "signupSent" | "error";
 
-// 登录页表单（UIUX §4）：Google 登录 + 邮箱密码主路径 + Magic Link 备用路径。
+// 登录页表单（UIUX §4）：邮箱密码主路径 + Google 备用路径。
 export function LoginForm({ initialError }: LoginFormProps) {
   const configured = isSupabaseConfigured();
 
@@ -29,18 +28,22 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [passwordMode, setPasswordMode] = useState<PasswordMode>("signIn");
   const [passwordState, setPasswordState] = useState<PasswordState>("idle");
-  const [magicState, setMagicState] = useState<MagicLinkState>("idle");
   const [oauthState, setOauthState] = useState<OAuthState>("idle");
   // 表单级错误；初始可能来自 callback 的 ?error=。
   const [error, setError] = useState<string | null>(initialError ?? null);
 
-  const busy =
-    passwordState === "submitting" ||
-    magicState === "sending" ||
-    oauthState === "redirecting";
+  const busy = passwordState === "submitting" || oauthState === "redirecting";
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const passwordValid = password.length >= 8;
   const passwordFormValid = emailValid && passwordValid;
+  const modeTitle =
+    passwordMode === "signIn"
+      ? copy.login.signInModeTitle
+      : copy.login.signUpModeTitle;
+  const modeBody =
+    passwordMode === "signIn"
+      ? copy.login.signInModeBody
+      : copy.login.signUpModeBody;
 
   async function handleGoogle() {
     setError(null);
@@ -104,28 +107,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
     }
   }
 
-  async function handleMagicLink() {
-    if (!emailValid) return;
-    setError(null);
-    setMagicState("sending");
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (otpError) {
-        setError(otpError.message || copy.login.magicSendFailed);
-        setMagicState("error");
-        return;
-      }
-      setMagicState("sent");
-    } catch {
-      setError(copy.login.magicSendNetworkError);
-      setMagicState("error");
-    }
-  }
-
   return (
     <div className="w-full max-w-[380px] space-y-9">
       <header className="flex flex-col items-center gap-3 text-center">
@@ -179,55 +160,67 @@ export function LoginForm({ initialError }: LoginFormProps) {
               </button>
             </div>
           ) : (
-            <form onSubmit={handlePasswordAuth} className="space-y-3">
-              <label htmlFor="email" className="sr-only">
-                {copy.login.emailLabel}
-              </label>
-              <input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder={copy.login.emailPlaceholder}
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setMagicState("idle");
-                  setPasswordState("idle");
-                }}
-                disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
-              />
-              <label htmlFor="password" className="sr-only">
-                {copy.login.passwordLabel}
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete={
-                  passwordMode === "signIn" ? "current-password" : "new-password"
-                }
-                placeholder={copy.login.passwordPlaceholder}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={busy}
-                className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
-              />
-              <Button
-                type="submit"
-                className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none"
-                disabled={!passwordFormValid || busy}
-              >
-                {passwordState === "submitting" ? (
-                  <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                ) : null}
-                {passwordState === "submitting"
-                  ? copy.login.passwordSubmitting
-                  : passwordMode === "signIn"
-                    ? copy.login.passwordSignInButton
-                    : copy.login.passwordSignUpButton}
-              </Button>
-            </form>
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-[18px] leading-6 font-semibold text-[#33291F]">
+                  {modeTitle}
+                </p>
+                <p className="mt-1 text-[13.5px] leading-5 text-[#7a6b5a]">
+                  {modeBody}
+                </p>
+              </div>
+
+              <form onSubmit={handlePasswordAuth} className="space-y-3">
+                <label htmlFor="email" className="sr-only">
+                  {copy.login.emailLabel}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder={copy.login.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setPasswordState("idle");
+                  }}
+                  disabled={busy}
+                  className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
+                />
+                <label htmlFor="password" className="sr-only">
+                  {copy.login.passwordLabel}
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete={
+                    passwordMode === "signIn"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                  placeholder={copy.login.passwordPlaceholder}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy}
+                  className="h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[15px] text-[#33291F] outline-none transition-colors placeholder:text-[#77716a] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50"
+                />
+                <Button
+                  type="submit"
+                  className="h-11 w-full rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:shadow-none"
+                  disabled={!passwordFormValid || busy}
+                >
+                  {passwordState === "submitting" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                  ) : null}
+                  {passwordState === "submitting"
+                    ? copy.login.passwordSubmitting
+                    : passwordMode === "signIn"
+                      ? copy.login.passwordSignInButton
+                      : copy.login.passwordSignUpButton}
+                </Button>
+              </form>
+            </div>
           )}
 
           <div className="flex items-center gap-3 text-xs text-[#a99578]">
@@ -273,37 +266,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
                   : copy.login.returnToSignInLink}
               </button>
             </p>
-            <p>
-              {copy.login.magicBackupHint}
-              <button
-                type="button"
-                className="ml-1 font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50"
-                disabled={!emailValid || busy}
-                onClick={handleMagicLink}
-              >
-                {magicState === "sending"
-                  ? copy.login.sending
-                  : copy.login.sendMagicLink}
-              </button>
-            </p>
-            {magicState === "sent" ? (
-              <div
-                className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-left text-[14px] leading-6 text-[#6f6253] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
-                role="status"
-                aria-live="polite"
-              >
-                <p className="font-medium text-[#33291F]">
-                  {copy.login.magicSentTitle}
-                </p>
-                <p className="mt-1">
-                  {copy.login.magicSentBodyPrefix}
-                  <span className="font-medium text-[#33291F]">
-                    {email.trim()}
-                  </span>
-                  {copy.login.magicSentBodySuffix}
-                </p>
-              </div>
-            ) : null}
           </div>
         </div>
       )}
