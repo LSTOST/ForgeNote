@@ -196,6 +196,64 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 ---
 
+### D-10 Auth 方法迁移：邮箱密码 + Google，Magic Link 下线需先有密码重置（2026-06-30）
+
+Owner 已拍板 DSN-02 方向：长期登录方式收敛为 **邮箱 + 密码** 与 **Google OAuth**；Magic Link 不再作为 ForgeNote 的长期登录方式。
+
+Codex 裁决：
+
+- **DSN-02 承接 FIX-09，不取代 V-01，也不允许与 FIX-09 并行打架。**
+- V-01-FIX-09 只能作为登录/注册模式辨识与登录表面冻结票；若当前 FIX-09 删除 Magic Link，则必须在合入前改回“迁移安全”状态，或保持 Draft/关闭。
+- **彻底下线 Magic Link 的所有 UI 与 `signInWithOtp` 调用，归 DSN-02 之后的认证实现票负责。**
+- DSN-02 实现必须排在 V-01 至少 1 个真实非构建者用户路径证据之后；继续打磨登录而不跑 V-01，是回避验证。
+
+硬顺序：
+
+1. 先让 V-01-FIX-09 收口为“登录/注册状态可辨识”的最小登录表面冻结；不能在没有迁移路径时删除 Magic Link。
+2. 先跑 V-01：至少 1 个真实非构建者用户在 Production 完成或明确卡住主路径，并记录证据。
+3. 再进入 DSN-02 设计/实现。
+4. DSN-02 认证实现顺序必须是：密码重置流程可用并通过 Preview + Production 验证 → 仅 Magic Link 老用户可通过忘记密码设密码并登录 → 再下线 Magic Link UI 与 `signInWithOtp`。
+
+密码重置边界：
+
+- 用 Supabase `resetPasswordForEmail(email, { redirectTo })` 发起重置邮件。
+- `redirectTo` 统一回 ForgeNote 自有 `/auth/callback`，由 callback 用 PKCE code `exchangeCodeForSession` 落会话后，只允许跳转到内部 allowlist 路径（例如 `/reset-password`）；禁止任意外部 `next`。
+- `/reset-password` 必须在已有 Auth session 下调用 `supabase.auth.updateUser({ password })` 设置新密码。
+- 发起重置时 UI 永远显示泛化成功文案，例如“如果这个邮箱存在，我们会发送重置邮件”，不得泄露账号是否存在。
+
+Supabase Redirect URLs 硬要求：
+
+```text
+Production:
+- https://forge-note-gold.vercel.app/auth/callback
+
+Preview wildcard:
+- https://forge-note-git-*-lstosts-projects.vercel.app/auth/callback
+
+Local development:
+- http://localhost:3000/auth/callback
+```
+
+如 reset 路由使用 `/auth/callback?next=/reset-password`，Supabase allowlist 仍必须覆盖 `/auth/callback`；`next` 只在 ForgeNote callback 内做内部路径校验，不信任外部传入值。
+
+密码策略 / 防爆破：
+
+- ForgeNote 前端最小密码长度不得低于 8；DSN-02 实现票可提高到 10 或 12，但必须与 Supabase Auth password policy 一致。
+- 不在前端自创与 Supabase 不一致的强度判定；如果需要强度规则，先在 Supabase Auth 配置中锁定，再同步 UI copy。
+- 登录失败、注册、重置请求均不得暴露“邮箱是否存在”。错误文案只能泛化为“邮箱或密码不正确 / 如果邮箱存在将收到邮件 / 操作失败请稍后重试”。
+- 速率限制优先使用 Supabase Auth 自带限制与项目级配置；DSN-02 实现不得引入 service role、不得在业务 API 中自建绕过 RLS 的 auth 通道。
+
+「记住 30 天」裁决：
+
+- 当前 `@supabase/ssr` 会持久化 Auth cookie；本仓库版本的 cookie 写入使用库默认 `maxAge`，不能把“记住 30 天”简单实现为每次登录前端动态改 cookie maxAge。
+- Supabase session 时长、refresh token 行为应以 Supabase Auth 项目级 session 配置为准；如果要严格 30 天，优先配置项目级 inactivity / time-box session 策略并验收。
+- **不允许在 DSN-02 里直接做一个声称“勾选即 30 天”的假复选框。**
+- 若 Owner 坚持保留复选框，必须先拆 `AUTH-SPIKE-30D`：验证 Supabase SSR cookie、refresh token、项目级 session policy 是否能支持“勾选长会话 / 不勾短会话”的可测实现；Spike 未通过前，DSN-02 实现票不得包含该复选框。
+
+影响文件：`docs/TICKETS.md`、`docs/design/dsn-02-login-auth/brief.md`、后续 DSN-02 实现票；后续实现可能触及 `src/components/auth/LoginForm.tsx`、`src/app/auth/callback/route.ts`、新增 `/forgot-password` / `/reset-password` 页面与 copy 资源。
+
+---
+
 ## v5 选择性折叠（2026-06-21）
 
 承接产品定位讨论：战略方向调整为**国际市场 + 图文卡片/carousel 格式 + 多语言**（放弃大陆，规避备案/网信办与 OpenAI/Anthropic 不可直连）。但 M1 代码已建在 v4 小红书线（login / forge / recipes 已交付并验收）。决定：**保留已建代码，选择性折叠 v5**——只折叠"便宜且重要、对现有代码增量"的部分，推迟"贵且会推翻代码"的部分。本节只定折叠边界，不改既有功能语义。
