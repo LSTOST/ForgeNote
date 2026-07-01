@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ForgeNote /login — 角色+眼睛动效 融合稿原型</title>
+<style>
+  /* =========================================================================
+     DSN-02 · Design tokens (measurable, real values)
+     沿用 FIX-07/08 暖纸感系统；新增角色/动效层。
+     ========================================================================= */
+  :root{
+    /* surface */
+    --page-bg:#F5EFE6;            /* 全页/移动纸感底 */
+    --char-bg:#EEE0C9;            /* 桌面左侧角色区（更深一档纸感） */
+    --form-bg:#FBF7F0;            /* 桌面右侧表单区 */
+    --dot:rgba(120,90,50,.05);   /* 点阵纹理 */
+    --field-bg:#FFFDF9;           /* 输入背景（沿用） */
+    --card-bg:#FBF6EE;           /* 提示卡背景 */
+    /* ink */
+    --ink:#33291F;               /* 主文字 */
+    --ink-2:#6f6253;             /* 次文字 */
+    --ink-3:#9c7a52;             /* 品牌辅助/链接次级 */
+    --ink-mute:#8a7d6c;          /* 占位/说明 */
+    /* accent */
+    --accent:#B5562B;            /* 主按钮/主操作（沿用） */
+    --accent-hover:#9F4924;      /* 主按钮 hover */
+    --on-accent:#FDF7EF;         /* 主按钮字 */
+    --border:#E3D8C7;            /* 边框/分隔（沿用） */
+    --ring:rgba(181,86,43,.28);  /* 焦点环 */
+    /* status */
+    --ok:#2F7A4F;
+    --danger:#9E3322;
+    --danger-line:rgba(181,60,40,.30);
+    --danger-bg:rgba(181,60,40,.06);
+    /* radius / size */
+    --r-field:13px; --r-card:14px; --r-brand:11px;
+    --h-field:44px; --h-field-m:46px;
+    /* type */
+    --serif:'Newsreader', ui-serif, Georgia, 'Songti SC', serif;
+    --sans:'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:var(--sans); color:var(--ink);
+    background:#ECE3D4;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    padding:0 0 64px;
+  }
+
+  /* ---------- prototype chrome (not part of product) ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    padding:12px 20px; background:rgba(251,247,240,.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+    font-size:12.5px;
+  }
+  .toolbar .tb-title{font-weight:600; color:var(--ink); margin-right:6px;}
+  .toolbar .tb-title small{font-weight:400; color:var(--ink-mute);}
+  .toolbar .tb-sep{width:1px; height:20px; background:var(--border); margin:0 4px;}
+  .tb-btn{
+    font-family:var(--sans); font-size:12px; color:var(--ink-2);
+    background:#fff; border:1px solid var(--border); border-radius:8px;
+    padding:5px 10px; cursor:pointer; transition:background .12s, color .12s, border-color .12s;
+  }
+  .tb-btn:hover{background:#FFFDF9;}
+  .tb-btn[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent);}
+  .tb-btn.lang{margin-left:auto;}
+
+  .stage{display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; justify-content:center; padding:40px 24px 0;}
+  .stage-col{display:flex; flex-direction:column; gap:12px;}
+  .stage-lbl{font-size:12.5px; font-weight:600; color:#7b7264; letter-spacing:.01em;}
+  .stage-lbl small{font-weight:400; color:#a49a8a;}
+
+  /* ---------- shared card atoms ---------- */
+  .dots{background-image:radial-gradient(var(--dot) 1px, transparent 1px);}
+  .brand-mark{
+    width:38px; height:38px; border-radius:var(--r-brand);
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:var(--on-accent);
+    box-shadow:0 2px 8px rgba(150,70,30,.25); flex:none;
+  }
+  .brand-title{margin:0; font-family:var(--serif); font-weight:500; color:var(--ink); letter-spacing:-.01em;}
+  .brand-cat{margin:0; font-weight:500; letter-spacing:.06em; color:var(--ink-3);}
+  .brand-slogan{margin:0; color:var(--ink-2);}
+
+  label.field-label{font-size:13px; font-weight:600; color:#5c5347;}
+  .field{
+    height:var(--h-field); width:100%; border:1px solid var(--border);
+    background:var(--field-bg); border-radius:var(--r-field);
+    padding:0 15px; font-size:15px; font-family:var(--sans); color:var(--ink);
+    outline:none; transition:border-color .13s ease, box-shadow .13s ease;
+  }
+  .field::placeholder{color:#8b8378;}
+  .field:focus-visible, .field:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--ring);}
+  .field.has-eye{padding-right:46px;}
+  .eye-btn{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    height:32px; width:32px; display:flex; align-items:center; justify-content:center;
+    border:none; background:transparent; color:var(--ink-3); cursor:pointer; border-radius:9px;
+  }
+  .eye-btn:focus-visible{outline:none; box-shadow:0 0 0 3px var(--ring);}
+
+  .btn-primary{
+    height:var(--h-field); width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    border:none; background:var(--accent); color:var(--on-accent); border-radius:var(--r-field);
+    font-family:var(--sans); font-size:15px; font-weight:600; cursor:pointer;
+    box-shadow:0 2px 10px rgba(150,70,30,.22); transition:background .13s ease;
+  }
+  .btn-primary:hover{background:var(--accent-hover);}
+  .btn-primary:disabled{cursor:default; opacity:.62; box-shadow:none;}
+  .btn-primary:focus-visible{outline:none; box-shadow:0 0 0 3px var(--ring), 0 2px 10px rgba(150,70,30,.22);}
+  .btn-outline{
+    height:var(--h-field); width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid var(--border); background:transparent; color:var(--ink-2); border-radius:var(--r-field);
+    font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer; transition:background .13s, color .13s;
+  }
+  .btn-outline:hover{background:rgba(255,253,249,.65); color:var(--ink);}
+  .btn-outline:disabled{cursor:default; color:var(--ink-3); opacity:.85;}
+  .btn-outline:focus-visible{outline:none; box-shadow:0 0 0 3px var(--ring);}
+
+  .link{color:var(--accent); font-weight:600; text-decoration:none; cursor:pointer; background:none; border:none; padding:0; font-family:var(--sans);}
+  .link:hover{text-decoration:underline; text-underline-offset:3px;}
+  .link:focus-visible{outline:none; box-shadow:0 0 0 3px var(--ring); border-radius:4px;}
+  .link-muted{color:var(--ink-3); font-weight:500; text-decoration:none; cursor:pointer; background:none; border:none; padding:0; font-family:var(--sans); font-size:13px;}
+  .link-muted:hover{text-decoration:underline; text-underline-offset:3px;}
+
+  .row-between{display:flex; align-items:center; justify-content:space-between;}
+  .check{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2); cursor:pointer; user-select:none;}
+  .check input{width:16px; height:16px; accent-color:var(--accent); cursor:pointer;}
+  .divider{display:flex; align-items:center; gap:12px; font-size:12px; color:#a99578;}
+  .divider span{height:1px; flex:1; background:var(--border);}
+
+  .alert{
+    display:flex; align-items:flex-start; gap:8px;
+    border:1px solid var(--danger-line); background:var(--danger-bg);
+    border-radius:var(--r-field); padding:11px 12px; font-size:13.5px; line-height:1.45; color:var(--danger);
+  }
+  .notice{
+    border:1px solid var(--border); background:var(--card-bg);
+    border-radius:var(--r-card); padding:16px; font-size:14px; line-height:1.55;
+    box-shadow:0 1px 10px rgba(120,90,50,.06);
+  }
+  .notice.err{border-color:var(--danger-line); background:var(--danger-bg); color:var(--danger);}
+  .notice h4{margin:0; font-size:14px; font-weight:600; color:var(--ink);}
+  .notice.err h4{color:var(--danger);}
+  .notice p{margin:6px 0 0; color:var(--ink-2);}
+  .notice.err p{color:rgba(158,51,34,.85);}
+  .strong{font-weight:600; color:var(--ink);}
+
+  .spinner{width:16px; height:16px; animation:spin .8s linear infinite; transform-origin:center;}
+
+  /* ---------- desktop card ---------- */
+  .card-desktop{
+    width:920px; height:600px; display:flex; overflow:hidden;
+    border-radius:16px; box-shadow:0 18px 50px -24px rgba(80,50,20,.4), 0 2px 8px rgba(80,50,20,.10);
+    background:var(--form-bg);
+  }
+  .char-panel{
+    flex:0 0 372px; position:relative; display:flex; align-items:center; justify-content:center;
+    background:var(--char-bg); background-size:6px 6px; padding:22px;
+  }
+  .char-panel .brand-lockup{position:absolute; top:28px; left:30px; display:flex; align-items:center; gap:10px;}
+  .char-panel .brand-lockup .name{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .char-stage{width:100%; height:420px; display:flex; align-items:flex-end; justify-content:center;}
+  .form-panel{flex:1; display:flex; align-items:center; justify-content:center; padding:40px;}
+  .form-inner{width:380px; display:flex; flex-direction:column;}
+
+  /* ---------- mobile frame ---------- */
+  .card-mobile{
+    width:390px; height:760px; overflow:hidden;
+    border-radius:30px; border:1px solid var(--border);
+    box-shadow:0 18px 50px -24px rgba(80,50,20,.4);
+    background:var(--page-bg); background-size:5px 5px;
+    display:flex; flex-direction:column; justify-content:center; padding:28px 20px;
+  }
+  .m-inner{display:flex; flex-direction:column; align-items:center; width:100%;}
+  .m-mascot{width:120px; height:120px;}
+
+  h1.title{font-family:var(--serif); font-size:32px; font-weight:500; letter-spacing:-.015em; color:var(--ink); margin:0; line-height:1.05;}
+  .subtitle{margin:8px 0 0; font-size:14px; color:var(--ink-mute); line-height:1.5;}
+
+  /* ---------- animations ---------- */
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes emHop{0%{transform:translateY(0)}28%{transform:translateY(-13px)}52%{transform:translateY(0)}70%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+  @keyframes emShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-7px)}38%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .anim-hop{animation:emHop .62s ease;}
+  .anim-shake{animation:emShake .42s ease;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{scroll-behavior:auto !important;}
+    .anim-hop, .anim-shake{animation:none !important;}
+    .field, .btn-primary, .btn-outline{transition:none !important;}
+    .spinner{animation-duration:1.4s;} /* keep a slow, non-flashing progress cue */
+  }
+
+  /* capture helpers (used by screenshot tooling) */
+  body.capture .toolbar{display:none;}
+  body.capture .stage-lbl{display:none;}
+  body.capture .stage{padding:0; min-height:100vh; align-items:center; justify-content:center;}
+  body.cap-desktop .col-mobile{display:none;}
+  body.cap-mobile .col-desktop{display:none;}
+  body.capture.cap-desktop .stage{transform:scale(.86); transform-origin:center center;}
+  body.capture.cap-mobile .stage{transform:scale(.68); transform-origin:center center;}
+</style>
+</head>
+<body>
+  <div class="toolbar" role="toolbar" aria-label="原型状态控制（非产品 UI）">
+    <span class="tb-title">DSN-02 · /login 融合稿 <small>角色+眼睛动效 · 暖纸感</small></span>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" data-state="signin"        aria-pressed="true">登录 默认</button>
+    <button class="tb-btn" data-state="submitting">提交中</button>
+    <button class="tb-btn" data-state="error">登录失败</button>
+    <button class="tb-btn" data-state="signup">注册</button>
+    <button class="tb-btn" data-state="signupSent">注册待验证</button>
+    <button class="tb-btn" data-state="google">Google 登录中</button>
+    <button class="tb-btn" data-state="notConfigured">env 未配置</button>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" data-state="reset">忘记密码</button>
+    <button class="tb-btn" data-state="resetSent">已发送</button>
+    <button class="tb-btn" data-state="newpw">重置页</button>
+    <button class="tb-btn" data-state="resetDone">重置完成</button>
+    <button class="tb-btn lang" id="langBtn">EN ↔ 中</button>
+  </div>
+
+  <div class="stage">
+    <div class="stage-col col-desktop">
+      <div class="stage-lbl">桌面 · 1280 视口内 920×600 卡片，表单栏 380 <small>· 左：暖纸角色一家随光标看你，聚焦密码捂眼</small></div>
+      <div id="deskCard" class="card-desktop"></div>
+    </div>
+    <div class="stage-col col-mobile">
+      <div class="stage-lbl">移动 · 390pt，左右 20 安全边距</div>
+      <div id="mobCard" class="card-mobile dots"></div>
+    </div>
+  </div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ForgeNote /login 融合稿原型 —— 自包含、离线、无构建、无远程字体/图片。
+   角色：暖色「Ember 一家」——借 careercompass「一群小家伙看着你」的感觉，
+   角色形象与配色全部原创、暖纸系，非冷白 SaaS。
+   ===================================================================== */
+const SVGNS = "http://www.w3.org/2000/svg";
+function s(tag, attrs){ const e=document.createElementNS(SVGNS, tag); if(attrs) for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+const reducedMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+/* ---------- copy (zh / en, key 对齐 handoff §5) ---------- */
+const COPY = {
+  zh:{
+    signinTitle:"欢迎回来", signinSub:"输入邮箱和密码，继续锻造你的内容",
+    signupTitle:"创建账号", signupSub:"填邮箱和密码，开始使用 ForgeNote",
+    resetTitle:"重置密码", resetSub:"输入注册邮箱，我们会发一封重置链接给你",
+    newpwTitle:"设置新密码", newpwSub:"给账号设置一个新密码（至少 8 位）",
+    emailLabel:"邮箱地址", emailPh:"you@example.com",
+    pwLabel:"密码", pwPh:"输入密码", pwPhSignup:"设置密码（至少 8 位）",
+    newPwPh:"新密码（至少 8 位）", confirmPwPh:"再输入一次新密码",
+    showPw:"显示密码", hidePw:"隐藏密码",
+    remember:"保持 30 天登录", forgot:"忘记密码？",
+    signin:"登录", signup:"创建账号", submitting:"登录中…",
+    google:"使用 Google 登录", googleRedir:"正在跳转到 Google…",
+    or:"或", noAccount:"还没有账号？", hasAccount:"已有账号？",
+    toSignup:"创建账号", toSignin:"返回登录",
+    invalid:"邮箱或密码不正确，请检查后重试。",
+    signupSentTitle:"确认邮件已发送", signupSentBody:"首次点一次确认即可，之后用邮箱密码直接登录。",
+    resetSend:"发送重置邮件", backToSignin:"← 返回登录",
+    resetSentTitle:"重置邮件已发送", resetSentBody:"打开邮件点链接，即可设置新密码。",
+    resend:"没收到？重新发送",
+    savePw:"保存新密码",
+    doneTitle:"密码已更新", doneBody:"新密码设置成功，现在可以用它登录了。", goSignin:"去登录",
+    ncTitle:"登录暂不可用：Supabase 未配置",
+    ncBody:"缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY，请在环境变量中配置后重试。",
+    prefix:"我们已向 ", suffix:" 发送邮件。",
+  },
+  en:{
+    signinTitle:"Welcome back", signinSub:"Enter your email and password to keep forging",
+    signupTitle:"Create account", signupSub:"Add an email and password to start using ForgeNote",
+    resetTitle:"Reset password", resetSub:"Enter your account email and we'll send a reset link",
+    newpwTitle:"Set a new password", newpwSub:"Choose a new password for your account (min 8 chars)",
+    emailLabel:"Email", emailPh:"you@example.com",
+    pwLabel:"Password", pwPh:"Enter password", pwPhSignup:"Set a password (min 8 chars)",
+    newPwPh:"New password (min 8 chars)", confirmPwPh:"Re-enter new password",
+    showPw:"Show password", hidePw:"Hide password",
+    remember:"Stay signed in for 30 days", forgot:"Forgot password?",
+    signin:"Sign in", signup:"Create account", submitting:"Signing in…",
+    google:"Continue with Google", googleRedir:"Redirecting to Google…",
+    or:"or", noAccount:"No account yet?", hasAccount:"Already have an account?",
+    toSignup:"Create one", toSignin:"Back to sign in",
+    invalid:"Email or password is incorrect. Please check and try again.",
+    signupSentTitle:"Confirmation email sent", signupSentBody:"Confirm once, then sign in with email and password.",
+    resetSend:"Send reset email", backToSignin:"← Back to sign in",
+    resetSentTitle:"Reset email sent", resetSentBody:"Open it and follow the link to set a new password.",
+    resend:"Didn't get it? Resend",
+    savePw:"Save new password",
+    doneTitle:"Password updated", doneBody:"Your new password is set — you can sign in with it now.", goSignin:"Go to sign in",
+    ncTitle:"Sign-in unavailable: Supabase not configured",
+    ncBody:"Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Set them in your environment and retry.",
+    prefix:"We've sent an email to ", suffix:".",
+  }
+};
+
+/* small inline icons */
+function eyeOpenSVG(){ return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z"/><circle cx="12" cy="12" r="3"/></svg>`; }
+function eyeOffSVG(){ return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 5.09A10.9 10.9 0 0 1 12 5c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M6.06 6.06A13.6 13.6 0 0 0 2 12s3 7 10 7a10 10 0 0 0 5.94-1.94"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M3 3l18 18"/></svg>`; }
+function googleSVG(){ return `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52Z"/></svg>`; }
+function alertSVG(){ return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-top:1px;flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`; }
+function brandZapSVG(sz){ return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4.5 13.2c-.4.5 0 1.3.7 1.3H11l-1 7.5 8.5-11.2c.4-.5 0-1.3-.7-1.3H12l1-7.5Z"/></svg>`; }
+
+/* =====================================================================
+   Mascot —— warm Ember family. Builds an SVG scene, returns a controller
+   with setGaze(px,py) and setPose(pose). Honors prefers-reduced-motion.
+   pose ∈ idle | glance | cover | avert | happy | worried | loading
+   ===================================================================== */
+function buildMascot(host, mode /* 'group' | 'single' */){
+  const reduced = () => reducedMQ.matches;
+  const svg = s("svg", { viewBox: mode==="group" ? "0 0 360 300" : "0 0 140 140",
+                         width:"100%", height:"100%", role:"img",
+                         "aria-label":"ForgeNote 吉祥物 Ember 一家" });
+  const defs = s("defs");
+  function grad(id, c0, c1){ const g=s("linearGradient",{id,x1:0,y1:0,x2:0,y2:1});
+    g.appendChild(s("stop",{offset:0,"stop-color":c0})); g.appendChild(s("stop",{offset:1,"stop-color":c1})); defs.appendChild(g); }
+  grad("emClay","#D18A50","#BE7038"); grad("emCocoa","#8A5A38","#6E4327");
+  grad("emAmber","#EEB466","#E0A15A"); grad("emOrange","#E39A63","#D2814E");
+  grad("emSolo","#ECA86F","#D98A5A"); grad("emFlame","#EE9B3B","#B5562B");
+  svg.appendChild(defs);
+
+  const chars = []; // {group, tilt, depth, baseCx, baseCy, eyes:[{scaleG,pupilG,cx,cy,amtX,amtY,arc}], paws:[], mouth, brows:[], hasMouth}
+
+  function makeEye(parent, cx, cy, r, kind){
+    // kind: 'sclera' | 'dot'
+    const leaves = [];
+    const scaleG = s("g");
+    if(kind==="sclera"){
+      const sc = s("ellipse",{cx,cy,rx:r,ry:r+1.6,fill:"#FFFDF9",stroke:"#B06A3C","stroke-width":1.2,style:"opacity:1; transition:opacity 100ms ease"});
+      scaleG.appendChild(sc); leaves.push(sc);
+    }
+    const pupilG = s("g");
+    const pup = s("circle",{cx,cy,r:kind==="dot"?r:r*0.52,fill:"#33291F",style:"opacity:1; transition:opacity 100ms ease"});
+    pupilG.appendChild(pup); leaves.push(pup);
+    if(kind==="sclera"){ const hl = s("circle",{cx:cx+r*0.22,cy:cy-r*0.24,r:r*0.17,fill:"#FFFDF9",style:"opacity:1; transition:opacity 100ms ease"}); pupilG.appendChild(hl); leaves.push(hl); }
+    scaleG.appendChild(pupilG);
+    parent.appendChild(scaleG);
+    // happy arc (∩, upward) — hidden by default
+    const arc = s("path",{d:`M ${cx-r} ${cy+1} Q ${cx} ${cy-r-1} ${cx+r} ${cy+1}`,fill:"none",stroke:"#33291F","stroke-width":3,"stroke-linecap":"round",style:"opacity:0; transition:opacity 120ms ease"});
+    parent.appendChild(arc);
+    // closed lid (gentle ∪) for blink / cover / loading — opacity on LEAF <path>
+    // (the DOM rasterizer honors opacity on leaf shapes but not on <g> groups).
+    const lid = s("path",{d:`M ${cx-r} ${cy-1} Q ${cx} ${cy+r*0.62} ${cx+r} ${cy-1}`,fill:"none",stroke:"#33291F","stroke-width":kind==="dot"?2.4:2.8,"stroke-linecap":"round",style:"opacity:0; transition:opacity 90ms ease"});
+    parent.appendChild(lid);
+    return { scaleG, pupilG, arc, lid, leaves, cx, cy, amtX:kind==="dot"?r*0.42:r*0.36, amtY:kind==="dot"?r*0.48:r*0.42 };
+  }
+  function makePaw(parent, cx, cy, r, fill){
+    // opacity-toggled (no transform) so the rasterizer captures the covered state
+    const p = s("ellipse",{cx,cy,rx:r+2.5,ry:r+1.5,fill,stroke:"#B06A3C","stroke-width":1.2,
+      style:"opacity:0; transition:opacity 200ms ease, transform 240ms cubic-bezier(.34,1.45,.5,1)"});
+    parent.appendChild(p); return { el:p, cx, cy };
+  }
+
+  function addChar(cfg){
+    const g = s("g");
+    if(cfg.shadow) g.appendChild(s("ellipse",cfg.shadow));
+    // flame tuft for solo / lead
+    if(cfg.flame){
+      g.appendChild(s("path",{d:cfg.flame.d,fill:"url(#emFlame)"}));
+      if(cfg.flame.d2) g.appendChild(s("path",{d:cfg.flame.d2,fill:"#FBE4C2",opacity:.85}));
+    }
+    if(cfg.body.tag==="rect") g.appendChild(s("rect",cfg.body.attrs));
+    else if(cfg.body.tag==="path") g.appendChild(s("path",cfg.body.attrs));
+    else g.appendChild(s("ellipse",cfg.body.attrs));
+    if(cfg.belly) g.appendChild(s("ellipse",cfg.belly));
+    if(cfg.cheeks){ cfg.cheeks.forEach(c=>g.appendChild(s("ellipse",c))); }
+    const eyes = cfg.eyes.map(e=>makeEye(g,e.cx,e.cy,e.r,e.kind));
+    const brows = [];
+    if(cfg.browAnchor){ // build worried brows (hidden)
+      cfg.browAnchor.forEach(b=>{ const l=s("line",{x1:b.x1,y1:b.y1,x2:b.x2,y2:b.y2,stroke:"#7a4a2c","stroke-width":2.2,"stroke-linecap":"round",style:"opacity:0"}); g.appendChild(l); brows.push(l); });
+    }
+    const paws = cfg.eyes.map(e=>makePaw(g,e.cx,e.cy-1,e.r,cfg.pawColor));
+    let mouth=null;
+    if(cfg.mouth){ mouth=s("path",{d:mouthPath(cfg.mouth,"idle"),fill:"none",stroke:"#7a4a2c","stroke-width":2.4,"stroke-linecap":"round"}); g.appendChild(mouth); }
+    svg.appendChild(g);
+    chars.push({ g, tilt:cfg.tilt||0, depth:cfg.depth||6, baseCx:cfg.cx, baseCy:cfg.cy, eyes, paws, mouth, mouthAnchor:cfg.mouth, brows });
+  }
+  function mouthPath(a,pose){
+    const mx=a.cx, my=a.cy;
+    if(pose==="happy") return `M ${mx-11} ${my} Q ${mx} ${my+11} ${mx+11} ${my}`;
+    if(pose==="worried") return `M ${mx-9} ${my+3} Q ${mx} ${my-3} ${mx+9} ${my+3}`;
+    if(pose==="loading") return `M ${mx-6} ${my+1} Q ${mx} ${my+3.5} ${mx+6} ${my+1}`;
+    return `M ${mx-9} ${my} Q ${mx} ${my+6} ${mx+9} ${my}`;
+  }
+
+  if(mode==="group"){
+    // shadow
+    svg.appendChild(s("ellipse",{cx:186,cy:290,rx:158,ry:11,fill:"rgba(90,60,30,.12)"}));
+    // A · back-left tall clay (tilted)
+    addChar({ cx:124, cy:186, tilt:-6, depth:5, pawColor:"#E0A56C",
+      body:{tag:"rect",attrs:{x:82,y:78,width:84,height:210,rx:26,fill:"url(#emClay)",stroke:"#A9622F","stroke-width":1.3}},
+      eyes:[{cx:108,cy:130,r:9,kind:"sclera"},{cx:140,cy:130,r:9,kind:"sclera"}],
+      browAnchor:[{x1:99,y1:114,x2:117,y2:118},{x1:149,y1:114,x2:131,y2:118}] });
+    // B · middle tall cocoa
+    addChar({ cx:207, cy:200, tilt:2, depth:6, pawColor:"#B07A4E",
+      body:{tag:"rect",attrs:{x:174,y:120,width:66,height:168,rx:22,fill:"url(#emCocoa)",stroke:"#5c3a24","stroke-width":1.3}},
+      eyes:[{cx:192,cy:164,r:7.4,kind:"sclera"},{cx:222,cy:164,r:7.4,kind:"sclera"}] });
+    // C · front-left dome amber (dot eyes)
+    addChar({ cx:92, cy:270, tilt:0, depth:11, pawColor:"#F0C583",
+      body:{tag:"path",attrs:{d:"M34 300 V250 a58 58 0 0 1 116 0 V300 Z",fill:"url(#emAmber)",stroke:"#C98A3E","stroke-width":1.3}},
+      cheeks:[{cx:60,cy:266,rx:5,ry:2.8,fill:"#E5907A",opacity:.4},{cx:126,cy:266,rx:5,ry:2.8,fill:"#E5907A",opacity:.4}],
+      eyes:[{cx:76,cy:250,r:6,kind:"dot"},{cx:110,cy:250,r:6,kind:"dot"}] });
+    // D · front-right dome orange (dot eyes + mouth + flame tuft = the "Ember" lead)
+    addChar({ cx:286, cy:270, tilt:0, depth:12, pawColor:"#EAAE7C",
+      flame:{d:"M286 176 C 293 184 292.5 192 286 196 C 279.5 192 279 184 286 176 Z"},
+      body:{tag:"path",attrs:{d:"M232 300 V236 a52 52 0 0 1 104 0 V300 Z",fill:"url(#emOrange)",stroke:"#B96D3E","stroke-width":1.3}},
+      cheeks:[{cx:258,cy:262,rx:5,ry:2.8,fill:"#E5907A",opacity:.45},{cx:314,cy:262,rx:5,ry:2.8,fill:"#E5907A",opacity:.45}],
+      eyes:[{cx:266,cy:242,r:5.6,kind:"dot"},{cx:310,cy:242,r:5.6,kind:"dot"}],
+      mouth:{cx:288,cy:266} });
+  } else {
+    // single Ember (mobile / states)
+    svg.appendChild(s("ellipse",{cx:70,cy:128,rx:30,ry:5,fill:"rgba(90,60,30,.14)"}));
+    addChar({ cx:70, cy:80, tilt:0, depth:0, pawColor:"#E6A270",
+      flame:{d:"M70 12 C 79 22 78 33 70 38 C 62 33 61 22 70 12 Z", d2:"M70 21 C 74.5 27 74 34 70 37 C 66 34 65.5 27 70 21 Z"},
+      body:{tag:"ellipse",attrs:{cx:70,cy:82,rx:42,ry:43,fill:"url(#emSolo)",stroke:"#B06A3C","stroke-width":1.5}},
+      belly:{cx:70,cy:90,rx:28,ry:25,fill:"#F4E3CD",opacity:.62},
+      cheeks:[{cx:45,cy:88,rx:6.4,ry:3.6,fill:"#E5907A",opacity:.5},{cx:95,cy:88,rx:6.4,ry:3.6,fill:"#E5907A",opacity:.5}],
+      eyes:[{cx:53,cy:74,r:10,kind:"sclera"},{cx:87,cy:74,r:10,kind:"sclera"}],
+      browAnchor:[{x1:42,y1:57,x2:60,y2:61},{x1:98,y1:57,x2:80,y2:61}],
+      mouth:{cx:70,cy:94} });
+  }
+  host.appendChild(svg);
+
+  /* ---- animation state ---- */
+  let gx=0, gy=0, pose="idle", blink=0;
+  function applyTransitions(){
+    const on = !reduced();
+    chars.forEach(c=>{
+      c.g.style.transition = on ? "transform 220ms ease-out" : "none";
+      c.eyes.forEach(e=>{ e.scaleG.style.transition = on ? "opacity 110ms ease" : "none";
+                          e.lid.style.transition = on ? "opacity 90ms ease" : "none";
+                          e.arc.style.transition = on ? "opacity 120ms ease" : "none";
+                          e.pupilG.style.transition = on ? "transform 140ms ease-out" : "none"; });
+      c.paws.forEach(p=>{ p.el.style.transition = on ? "opacity 200ms ease, transform 240ms cubic-bezier(.34,1.45,.5,1)" : "none"; });
+    });
+  }
+  function render(){
+    const bodyLift = pose==="avert"? 5 : 0;
+    const rotExtra = pose==="avert"? -7 : 0;
+    // gaze override for glance (look down at field) & avert (look away up)
+    let ex=gx, ey=gy;
+    if(pose==="glance"){ ex=0.35; ey=0.95; }
+    else if(pose==="avert"){ ex=-0.9; ey=-0.55; }
+    else if(pose==="cover"){ ex=0; ey=0.3; }
+    const covered = pose==="cover";
+    const happy = pose==="happy";
+    const worried = pose==="worried";
+    const sleepy = pose==="loading";
+    // NOTE: transforms are set as SVG `transform` ATTRIBUTES (not CSS style.transform)
+    // with origins baked in — so both browsers and the DOM-rasterizing screenshot
+    // pipeline render them identically. CSS transitions still animate the attribute.
+    chars.forEach(c=>{
+      const tx=(ex*c.depth).toFixed(2), ty=(ey*c.depth*0.65 + bodyLift).toFixed(2);
+      c.g.setAttribute("transform", `translate(${tx} ${ty}) rotate(${(c.tilt+rotExtra).toFixed(2)} ${c.baseCx} ${c.baseCy})`);
+      const closed = covered || sleepy || (blink && (pose==="idle"||pose==="glance"));
+      c.eyes.forEach(e=>{
+        if(happy){ e.arc.style.opacity=1; e.leaves.forEach(l=>l.style.opacity=0); e.lid.style.opacity=0; return; }
+        e.arc.style.opacity = 0;
+        if(closed){ e.leaves.forEach(l=>l.style.opacity=0); e.lid.style.opacity=1; }
+        else {
+          e.leaves.forEach(l=>l.style.opacity=1); e.lid.style.opacity=0;
+          e.pupilG.setAttribute("transform", `translate(${(ex*e.amtX).toFixed(2)} ${(ey*e.amtY).toFixed(2)})`);
+        }
+      });
+      c.paws.forEach((p,i)=>{
+        const spread = pose==="peek" ? (i===0?-4:4) : 0;
+        p.el.style.opacity = covered ? 1 : 0;
+        p.el.style.transform = covered ? `translateX(${spread}px)` : "translateY(5px)";
+      });
+      c.brows.forEach(b=> b.style.opacity = worried ? 1 : 0);
+      if(c.mouth) c.mouth.setAttribute("d", mouthPath(c.mouthAnchor, happy?"happy":worried?"worried":sleepy?"loading":"idle"));
+    });
+  }
+  // Time-driven blink via a single rAF loop — derives openness from the clock
+  // each frame, so it can never get stuck closed and self-clears on pose change.
+  let nextBlinkAt = performance.now() + 1800 + Math.random()*2600, blinkUntil = 0;
+  function loop(now){
+    const active = !reduced() && (pose==="idle"||pose==="glance");
+    let b = 0;
+    if(active){
+      if(now >= nextBlinkAt){ blinkUntil = now + 125; nextBlinkAt = now + 2600 + Math.random()*3800; }
+      b = now < blinkUntil ? 1 : 0;
+    }
+    if(b !== blink){ blink = b; render(); }
+    rafId = requestAnimationFrame(loop);
+  }
+  let rafId;
+  applyTransitions(); render(); rafId = requestAnimationFrame(loop);
+  reducedMQ.addEventListener("change", ()=>{ applyTransitions(); render(); });
+
+  return {
+    setGaze(px,py){ gx=Math.max(-1,Math.min(1,px)); gy=Math.max(-1,Math.min(1,py)); if(pose==="idle"||pose==="glance") render(); },
+    setPose(p){ if(p===pose) return; pose=p; render(); },
+    el:svg
+  };
+}
+
+/* =====================================================================
+   Card builder — one static skeleton per device; update() toggles blocks.
+   ===================================================================== */
+function buildCard(host, device /* 'desktop' | 'mobile' */){
+  const isM = device==="mobile";
+  const hField = isM ? "var(--h-field-m)" : "var(--h-field)";
+  const fieldFont = isM ? "16px" : "15px"; // 16 on mobile prevents iOS zoom
+
+  // form fields block (shared by signin/signup)
+  const authBlock = `
+    <form class="blk blk-auth" novalidate style="display:flex;flex-direction:column;gap:16px;margin-top:26px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <label class="field-label" for="email-${device}" data-k="emailLabel"></label>
+        <input class="field" id="email-${device}" type="email" inputmode="email" autocomplete="email" style="font-size:${fieldFont}">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <label class="field-label" for="pw-${device}" data-k="pwLabel"></label>
+        <div style="position:relative">
+          <input class="field has-eye" id="pw-${device}" type="password" autocomplete="current-password" style="font-size:${fieldFont}">
+          <button type="button" class="eye-btn" data-eye aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="row-between">
+        <label class="check"><input type="checkbox" data-remember checked> <span data-k="remember"></span></label>
+        <button type="button" class="link" data-go="reset" style="font-size:13px" data-k="forgot"></button>
+      </div>
+      <button type="submit" class="btn-primary" data-primary></button>
+      <div class="divider"><span></span><em style="font-style:normal" data-k="or"></em><span></span></div>
+      <button type="button" class="btn-outline" data-google></button>
+      <p style="text-align:center;font-size:13px;color:var(--ink-3);margin:6px 0 0">
+        <span data-k2="switchPrompt"></span>
+        <button type="button" class="link" data-toggle-mode style="font-size:13px;margin-left:4px" data-k2="switchLink"></button>
+      </p>
+    </form>`;
+
+  const resetBlock = `
+    <form class="blk blk-reset" novalidate style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <label class="field-label" for="remail-${device}" data-k="emailLabel"></label>
+        <input class="field" id="remail-${device}" type="email" inputmode="email" autocomplete="email" style="font-size:${fieldFont}">
+      </div>
+      <button type="submit" class="btn-primary" data-k="resetSend"></button>
+      <div style="text-align:center"><button type="button" class="link-muted" data-go="signin" data-k="backToSignin"></button></div>
+    </form>`;
+
+  const newpwBlock = `
+    <form class="blk blk-newpw" novalidate style="display:flex;flex-direction:column;gap:13px;margin-top:26px">
+      <div style="position:relative">
+        <input class="field has-eye" id="npw-${device}" type="password" autocomplete="new-password" style="font-size:${fieldFont}" data-ph="newPwPh">
+        <button type="button" class="eye-btn" data-eye aria-pressed="false"></button>
+      </div>
+      <input class="field" id="cpw-${device}" type="password" autocomplete="new-password" style="font-size:${fieldFont}" data-ph="confirmPwPh">
+      <button type="submit" class="btn-primary" data-k="savePw"></button>
+    </form>`;
+
+  const noticeSignup = `<div class="blk blk-signupSent notice" role="status" style="margin-top:26px">
+      <h4 data-k="signupSentTitle"></h4><p><span data-k="prefix"></span><span class="strong" data-email></span><span data-k="signupSentBody"></span></p>
+      <button type="button" class="link" data-go="signin" style="margin-top:11px;font-size:13.5px" data-k="backToSignin"></button></div>`;
+  const noticeResetSent = `<div class="blk blk-resetSent notice" role="status" style="margin-top:26px;text-align:center">
+      <h4 data-k="resetSentTitle"></h4><p><span data-k="prefix"></span><span class="strong" data-email></span><span data-k="resetSentBody"></span></p>
+      <p style="margin-top:10px"><button type="button" class="link" style="font-size:13px" data-k="resend"></button></p></div>`;
+  const noticeGoogle = `<div class="blk blk-google" style="margin-top:26px;display:flex;flex-direction:column;gap:16px;align-items:center">
+      <p style="font-size:14px;color:var(--ink-2);text-align:center" data-k="googleRedir"></p>
+      <button type="button" class="btn-outline" disabled><span class="spinner">${brandSpinner()}</span><span data-k="google"></span></button></div>`;
+  const noticeNC = `<div class="blk blk-nc notice err" role="alert" style="margin-top:26px">
+      <h4 data-k="ncTitle"></h4><p data-k="ncBody"></p></div>`;
+  const noticeDone = `<div class="blk blk-resetDone" style="margin-top:24px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center">
+      <h4 style="margin:0;font-size:14px;color:var(--ink)" data-k="doneBody"></h4>
+      <button type="button" class="btn-primary" data-go="signin" data-k="goSignin"></button></div>`;
+
+  const header = isM
+    ? `<header style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px">
+         <div class="m-mascot" data-mascot></div>
+         <h1 class="title" style="font-size:31px;margin-top:2px" data-title></h1>
+         <p class="brand-cat" style="font-size:12px;margin-top:7px">图文卡片内容工作台</p>
+         <p class="subtitle" data-sub style="margin-top:4px;font-size:13.5px"></p>
+       </header>`
+    : `<header>
+         <h1 class="title" data-title></h1>
+         <p class="subtitle" data-sub></p>
+       </header>`;
+
+  const alertBlock = `<div class="blk-alert" role="alert" style="display:none;margin-top:20px"><span class="alert">${alertSVG()}<span data-k="invalid"></span></span></div>`;
+
+  const inner = `${header}${alertBlock}${authBlock}${resetBlock}${newpwBlock}${noticeSignup}${noticeResetSent}${noticeGoogle}${noticeNC}${noticeDone}`;
+
+  if(isM){
+    host.innerHTML = `<div class="m-inner">${inner}</div>`;
+  } else {
+    host.innerHTML =
+      `<div class="char-panel dots">
+         <div class="brand-lockup"><span class="brand-mark">${brandZapSVG(20)}</span><span class="name">ForgeNote</span></div>
+         <div class="char-stage" data-mascot></div>
+       </div>
+       <div class="form-panel"><div class="form-inner">${inner}</div></div>`;
+  }
+
+  // refs
+  const q = sel => host.querySelector(sel);
+  const mascot = buildMascot(host.querySelector("[data-mascot]"), isM ? "single" : "group");
+  const refs = {
+    host, isM, mascot,
+    title:q("[data-title]"), sub:q("[data-sub]"),
+    alert:q(".blk-alert"),
+    blocks:{
+      auth:q(".blk-auth"), reset:q(".blk-reset"), newpw:q(".blk-newpw"),
+      signupSent:q(".blk-signupSent"), resetSent:q(".blk-resetSent"),
+      google:q(".blk-google"), nc:q(".blk-nc"), resetDone:q(".blk-resetDone"),
+    },
+    primary:q("[data-primary]"), google:q("[data-google]"),
+    emailInput:q(`#email-${device}`), pwInput:q(`#pw-${device}`),
+    eyeBtns:host.querySelectorAll("[data-eye]"),
+    remember:q("[data-remember]"),
+  };
+
+  // gaze (desktop only, character panel)
+  if(!isM){
+    let raf=null;
+    const panel = q(".char-panel");
+    panel.addEventListener("pointermove", e=>{
+      if(reducedMQ.matches) return;
+      if(raf) return;
+      raf = requestAnimationFrame(()=>{ raf=null;
+        const r = panel.getBoundingClientRect();
+        const mx=r.left+r.width/2, my=r.top+r.height*0.42;
+        mascot.setGaze((e.clientX-mx)/(r.width*0.9), (e.clientY-my)/(r.height*0.9));
+      });
+    });
+  }
+
+  // interactivity wiring
+  host.querySelectorAll("[data-go]").forEach(b=> b.addEventListener("click", ()=> App.go(b.dataset.go)));
+  const modeToggle = q("[data-toggle-mode]");
+  if(modeToggle) modeToggle.addEventListener("click", ()=> App.toggleMode());
+  refs.google.addEventListener("click", ()=> App.set({status:"google"}));
+  q(".blk-auth").addEventListener("submit", e=>{ e.preventDefault(); App.set({status:"submitting"}); setTimeout(()=>App.set({status:"error"}), 1100); });
+  q(".blk-reset").addEventListener("submit", e=>{ e.preventDefault(); App.go("resetSent"); });
+  q(".blk-newpw").addEventListener("submit", e=>{ e.preventDefault(); App.set({status:"resetDone"}); });
+  refs.eyeBtns.forEach(btn=> btn.addEventListener("click", ()=> App.toggleShowPw()));
+  refs.remember.addEventListener("change", ()=> App.state.remember=refs.remember.checked);
+  // focus → mascot pose
+  refs.emailInput.addEventListener("focus", ()=> App.focusField("email"));
+  refs.emailInput.addEventListener("blur", ()=> App.focusField(null));
+  refs.pwInput.addEventListener("focus", ()=> App.focusField("pw"));
+  refs.pwInput.addEventListener("blur", ()=> App.focusField(null));
+
+  return refs;
+}
+function brandSpinner(){ return `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#B5562B" stroke-width="2.6" stroke-dasharray="42" stroke-dashoffset="14" stroke-linecap="round"/></svg>`; }
+
+/* =====================================================================
+   App state machine
+   ===================================================================== */
+const App = {
+  state:{ view:"signin", status:"idle", showPw:false, remember:true, focus:null, lang:"zh" },
+  cards:[],
+  init(){
+    this.cards = [ buildCard(document.getElementById("deskCard"),"desktop"),
+                   buildCard(document.getElementById("mobCard"),"mobile") ];
+    document.querySelectorAll(".tb-btn[data-state]").forEach(b=>{
+      b.addEventListener("click", ()=>{ this.applyPreset(b.dataset.state); });
+    });
+    document.getElementById("langBtn").addEventListener("click", ()=>{
+      this.state.lang = this.state.lang==="zh"?"en":"zh"; this.render();
+    });
+    this.render();
+  },
+  applyPreset(name){
+    const map = {
+      signin:{view:"signin",status:"idle"}, submitting:{view:"signin",status:"submitting"},
+      error:{view:"signin",status:"error"}, signup:{view:"signup",status:"idle"},
+      signupSent:{view:"signup",status:"signupSent"}, google:{view:"signin",status:"google"},
+      notConfigured:{view:"signin",status:"notConfigured"}, reset:{view:"reset",status:"idle"},
+      resetSent:{view:"reset",status:"resetSent"}, newpw:{view:"newpw",status:"idle"},
+      resetDone:{view:"newpw",status:"resetDone"},
+      cover:{view:"signin",status:"idle"},
+    };
+    Object.assign(this.state, map[name], {focus:null});
+    if(name==="cover") this.state.focus="pw";
+    document.querySelectorAll(".tb-btn[data-state]").forEach(b=> b.setAttribute("aria-pressed", b.dataset.state===name));
+    this.render();
+  },
+  set(patch){ Object.assign(this.state, patch); this.render(); },
+  go(view){ this.state.view=view; this.state.status="idle"; this.state.focus=null; this.render(); },
+  toggleMode(){ this.state.view = this.state.view==="signin"?"signup":"signin"; this.state.status="idle"; this.render(); },
+  toggleShowPw(){ this.state.showPw=!this.state.showPw; this.render(); },
+  focusField(f){ this.state.focus=f; this.cards.forEach(c=> c.mascot.setPose(this.poseFor())); },
+  poseFor(){
+    const st=this.state;
+    if(st.status==="submitting"||st.status==="google") return "loading";
+    if(st.status==="error"||st.status==="notConfigured") return "worried";
+    if(st.status==="signupSent"||st.status==="resetSent"||st.status==="resetDone") return "happy";
+    if(st.view==="newpw") return "cover";
+    if(st.focus==="pw") return st.showPw?"avert":"cover";
+    if(st.focus==="email") return "glance";
+    return "idle";
+  },
+  render(){
+    const st=this.state, C=COPY[st.lang];
+    this.cards.forEach(refs=> this.renderCard(refs, st, C));
+  },
+  renderCard(refs, st, C){
+    // i18n text nodes
+    refs.host.querySelectorAll("[data-k]").forEach(el=>{ el.textContent = C[el.dataset.k] || ""; });
+    // titles
+    const titleMap={signin:"signinTitle",signup:"signupTitle",reset:"resetTitle",newpw:"newpwTitle"};
+    const subMap={signin:"signinSub",signup:"signupSub",reset:"resetSub",newpw:"newpwSub"};
+    refs.title.textContent = C[titleMap[st.view]];
+    refs.sub.textContent = C[subMap[st.view]];
+    // placeholders
+    if(refs.emailInput){ refs.emailInput.placeholder=C.emailPh; }
+    const remail = refs.host.querySelector('[id^="remail-"]'); if(remail) remail.placeholder=C.emailPh;
+    if(refs.pwInput){ refs.pwInput.placeholder = st.view==="signup"?C.pwPhSignup:C.pwPh; refs.pwInput.type = st.showPw?"text":"password"; }
+    refs.host.querySelectorAll("[data-ph]").forEach(el=> el.placeholder = C[el.dataset.ph]);
+    // password autocomplete hint
+    if(refs.pwInput) refs.pwInput.autocomplete = st.view==="signup"?"new-password":"current-password";
+    // eye buttons
+    refs.eyeBtns.forEach(btn=>{
+      const input = btn.previousElementSibling;
+      const shown = (input===refs.pwInput) ? st.showPw : (input.type==="text");
+      btn.innerHTML = shown?eyeOffSVG():eyeOpenSVG();
+      btn.setAttribute("aria-label", shown?C.hidePw:C.showPw);
+      btn.setAttribute("aria-pressed", String(shown));
+    });
+    // remember
+    if(refs.remember) refs.remember.checked = st.remember;
+    // switch prompt/link
+    refs.host.querySelectorAll('[data-k2="switchPrompt"]').forEach(el=> el.textContent = st.view==="signin"?C.noAccount:C.hasAccount);
+    refs.host.querySelectorAll('[data-k2="switchLink"]').forEach(el=> el.textContent = st.view==="signin"?C.toSignup:C.toSignin);
+    // primary + google labels
+    if(refs.primary) refs.primary.innerHTML = (st.status==="submitting"? `<span class="spinner">${brandSpinner()}</span>${C.submitting}` : (st.view==="signup"?C.signup:C.signin));
+    if(refs.primary) refs.primary.disabled = st.status==="submitting";
+    if(refs.google){
+      refs.google.innerHTML = (st.status==="google"? `<span class="spinner">${brandSpinner()}</span>${C.googleRedir}` : `${googleSVG()}${C.google}`);
+      refs.google.disabled = st.status==="google"||st.status==="submitting";
+    }
+    // emails in notices
+    const emailVal = (refs.emailInput && refs.emailInput.value.trim()) || "you@example.com";
+    refs.host.querySelectorAll("[data-email]").forEach(el=> el.textContent = emailVal);
+    // done body/title reuse
+    const doneBlk = refs.blocks.resetDone;
+    if(doneBlk){ doneBlk.querySelector('[data-k="doneBody"]').textContent = C.doneBody; }
+
+    // choose visible block
+    let show="auth";
+    if(st.status==="signupSent") show="signupSent";
+    else if(st.status==="resetSent") show="resetSent";
+    else if(st.status==="google") show="google";
+    else if(st.status==="notConfigured") show="nc";
+    else if(st.status==="resetDone") show="resetDone";
+    else if(st.view==="reset") show="reset";
+    else if(st.view==="newpw") show="newpw";
+    else show="auth";
+    Object.entries(refs.blocks).forEach(([k,el])=>{ if(el) el.style.display = (k===show)?"":"none"; });
+    // alert
+    refs.alert.style.display = st.status==="error" ? "" : "none";
+
+    // mascot pose + one-shot anims
+    const pose=this.poseFor();
+    refs.mascot.setPose(pose);
+    const mwrap = refs.host.querySelector("[data-mascot]");
+    if(mwrap && !reducedMQ.matches){
+      mwrap.classList.remove("anim-shake","anim-hop");
+      void mwrap.offsetWidth;
+      if(st.status==="error"||st.status==="notConfigured") mwrap.classList.add("anim-shake");
+      else if(st.status==="resetDone") mwrap.classList.add("anim-hop");
+    }
+  }
+};
+document.addEventListener("DOMContentLoaded", ()=> App.init());
+</script>
+</body>
+</html>
