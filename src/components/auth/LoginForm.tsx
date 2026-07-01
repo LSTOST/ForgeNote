@@ -2,7 +2,6 @@
 
 import { type FormEvent, type ReactNode, useState } from "react";
 import {
-  Check,
   CircleAlert,
   Eye,
   EyeOff,
@@ -45,6 +44,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
     useState<ResendState>("idle");
   const [signupResendError, setSignupResendError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberSession, setRememberSession] = useState(true);
   const [error, setError] = useState<string | null>(initialError ?? null);
 
   const emailValid = emailPattern.test(email.trim());
@@ -198,12 +198,12 @@ export function LoginForm({ initialError }: LoginFormProps) {
   }
 
   return (
-    <section className="grid w-full overflow-hidden rounded-[3px] bg-[#FBF7F0] shadow-[0_18px_60px_rgba(74,52,31,0.13)] lg:min-h-screen lg:rounded-none lg:shadow-none lg:grid-cols-2">
+    <section className="flex w-full overflow-hidden rounded-[3px] bg-[#FBF7F0] shadow-[0_18px_60px_rgba(74,52,31,0.13)] lg:min-h-screen lg:rounded-none lg:shadow-none">
       <BrandPanel status={statusFromState(formState, oauthState)} />
 
-      <div className="flex min-h-[640px] items-center justify-center px-5 py-10 sm:px-10 lg:min-h-screen">
+      <div className="flex min-h-[640px] flex-1 items-center justify-center px-5 py-10 sm:px-10 lg:min-h-screen">
         <div className="w-full max-w-[344px]">
-          <MobileBrand />
+          <MobileBrand status={statusFromState(formState, oauthState)} />
 
           {!configured ? (
             <StateNotice tone="danger" title={copy.login.notConfiguredTitle}>
@@ -311,12 +311,18 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2 text-[13px] text-[#6f6253]">
-                    <span className="flex size-4 shrink-0 items-center justify-center rounded-[3px] bg-[#B5562B] text-[#FFFDF9]">
-                      <Check className="size-3" strokeWidth={3} aria-hidden />
-                    </span>
+                  <label className="flex min-w-0 cursor-pointer items-center gap-2 text-[13px] text-[#6f6253]">
+                    <input
+                      type="checkbox"
+                      checked={rememberSession}
+                      onChange={(event) =>
+                        setRememberSession(event.currentTarget.checked)
+                      }
+                      disabled={busy}
+                      className="size-4 shrink-0 rounded-[3px] border-[#CDBEA7] text-[#B5562B] accent-[#B5562B] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
                     <span>{copy.login.rememberThirtyDays}</span>
-                  </div>
+                  </label>
                   <button
                     type="button"
                     className="shrink-0 text-[13px] font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
@@ -401,26 +407,28 @@ function BrandPanel({
   status: "idle" | "loading" | "error" | "success";
 }) {
   return (
-    <aside className="relative hidden min-h-[660px] overflow-hidden bg-[#EEE0C9] bg-[radial-gradient(rgba(120,90,50,0.06)_1px,transparent_1px)] [background-size:6px_6px] lg:block">
+    <aside className="relative hidden min-h-[660px] w-[524px] shrink-0 overflow-hidden bg-[#EEE0C9] bg-[radial-gradient(rgba(120,90,50,0.06)_1px,transparent_1px)] [background-size:6px_6px] lg:block">
       <div className="absolute left-[18px] top-[12px]">
         <span className="font-serif text-[30px] leading-none font-semibold text-[#33291F]">
           ForgeNote
         </span>
       </div>
 
-      <div className="absolute inset-x-0 bottom-[118px] top-[118px] flex items-end justify-center">
-        <MascotGroup status={status} />
+      <div className="absolute inset-x-0 bottom-[50px] top-[70px] flex items-end justify-center">
+        <MascotGroup status={status} scale="hero" />
       </div>
     </aside>
   );
 }
 
-function MobileBrand() {
+function MobileBrand({
+  status,
+}: {
+  status: "idle" | "loading" | "error" | "success";
+}) {
   return (
     <header className="mb-7 flex flex-col items-center text-center lg:hidden">
-      <div className="relative mb-3 size-[92px]">
-        <EmberFace compact />
-      </div>
+      <StateMascot status={status} className="mb-3" />
       <h1 className="font-serif text-[31px] leading-none font-medium text-[#33291F]">
         ForgeNote
       </h1>
@@ -436,62 +444,69 @@ function MobileBrand() {
 
 function MascotGroup({
   status,
+  scale = "hero",
 }: {
   status: "idle" | "loading" | "error" | "success";
+  scale?: "hero" | "state";
 }) {
   return (
     <div
       className={[
-        "relative h-[430px] w-[500px] transition-transform duration-200 motion-reduce:transition-none",
+        "relative transition-transform duration-200 motion-reduce:transition-none",
+        scale === "hero" ? "h-[520px] w-[620px]" : "h-[430px] w-[500px]",
         status === "success" ? "motion-safe:animate-pulse" : "",
         status === "error" ? "motion-safe:animate-pulse" : "",
       ].join(" ")}
       aria-hidden
     >
-      <div className="absolute left-[42px] bottom-[18px] h-3 w-[418px] rounded-full bg-[#D8C8AF]/75 blur-[1px]" />
-      <div className="absolute left-[104px] bottom-[28px] h-[334px] w-[122px] rotate-[-6deg] rounded-[26px] bg-[#6C4CF6] shadow-[0_16px_46px_rgba(84,58,186,0.18)]" />
-      <div className="absolute left-[246px] bottom-[28px] h-[230px] w-[92px] rounded-[25px] bg-[#2E2E2E]" />
-      <div className="absolute left-[56px] bottom-[28px] h-[134px] w-[174px] rounded-t-full bg-[#F08B4F]" />
-      <div className="absolute left-[342px] bottom-[28px] h-[150px] w-[156px] rounded-t-full bg-[#E7D63A]" />
+      <div className="absolute left-[42px] bottom-[18px] h-3 w-[500px] rounded-full bg-[#D8C8AF]/75 blur-[1px]" />
+      <div className="absolute left-[116px] bottom-[28px] h-[410px] w-[150px] rotate-[-6deg] rounded-[30px] bg-[#6C4CF6] shadow-[0_16px_46px_rgba(84,58,186,0.18)]" />
+      <div className="absolute left-[300px] bottom-[28px] h-[276px] w-[112px] rounded-[28px] bg-[#2E2E2E]" />
+      <div className="absolute left-[44px] bottom-[28px] h-[176px] w-[256px] rounded-t-full bg-[#F08B4F]" />
+      <div className="absolute left-[392px] bottom-[28px] h-[188px] w-[188px] rounded-t-full bg-[#E7D63A]" />
 
-      <div className="absolute left-[122px] top-[98px] flex gap-[28px]">
+      <div className="absolute left-[150px] top-[118px] flex gap-[32px]">
         <EyeDot status={status} inverted />
         <EyeDot status={status} inverted />
       </div>
-      <div className="absolute left-[267px] top-[184px] flex gap-[28px]">
+      <div className="absolute left-[326px] top-[220px] flex gap-[32px]">
         <EyeDot status={status} inverted />
         <EyeDot status={status} inverted />
       </div>
-      <div className="absolute left-[107px] bottom-[82px] flex gap-[48px]">
+      <div className="absolute left-[112px] bottom-[112px] flex gap-[58px]">
         <EyeDot small status={status} />
         <EyeDot small status={status} />
       </div>
-      <div className="absolute left-[388px] bottom-[96px] flex gap-[42px]">
+      <div className="absolute left-[440px] bottom-[126px] flex gap-[52px]">
         <EyeDot small status={status} />
         <EyeDot small status={status} />
       </div>
-      <div className="absolute left-[421px] bottom-[62px] h-[10px] w-[42px] border-b-[3px] border-[#2C2C2C] opacity-95" />
+      <div className="absolute left-[480px] bottom-[82px] h-[10px] w-[54px] border-b-[4px] border-[#2C2C2C] opacity-95" />
       {status === "loading" ? (
-        <div className="absolute left-[230px] top-[30px] size-10 animate-spin rounded-full border-2 border-[#B5562B]/25 border-t-[#B5562B] motion-reduce:animate-none" />
+        <div className="absolute left-[280px] top-[34px] size-10 animate-spin rounded-full border-2 border-[#B5562B]/25 border-t-[#B5562B] motion-reduce:animate-none" />
       ) : null}
     </div>
   );
 }
 
-function EmberFace({ compact = false }: { compact?: boolean }) {
+function StateMascot({
+  status,
+  className = "",
+}: {
+  status: "idle" | "loading" | "error" | "success";
+  className?: string;
+}) {
   return (
     <div
       className={[
-        "absolute inset-0 rounded-[46%_54%_50%_50%] bg-[#C45A2D] shadow-[0_12px_34px_rgba(108,62,28,0.18)]",
-        compact ? "" : "rotate-[-5deg]",
+        "relative mx-auto h-[104px] w-[128px] overflow-hidden",
+        className,
       ].join(" ")}
       aria-hidden
     >
-      <div className="absolute left-[27%] top-[35%] flex gap-5">
-        <span className="size-2 rounded-full bg-[#33291F]" />
-        <span className="size-2 rounded-full bg-[#33291F]" />
+      <div className="absolute left-1/2 top-[58%] origin-center -translate-x-1/2 -translate-y-1/2 scale-[0.24]">
+        <MascotGroup status={status} scale="state" />
       </div>
-      <div className="absolute left-[38%] top-[57%] h-2 w-6 rounded-b-full border-b-2 border-[#6F3324]" />
     </div>
   );
 }
@@ -589,9 +604,7 @@ function SignupSent({
   const resending = resendState === "submitting";
   return (
     <div className="space-y-5">
-      <div className="relative mx-auto size-[96px]">
-        <EmberFace compact />
-      </div>
+      <StateMascot status="success" />
       <StateNotice title={copy.login.signupSentTitle}>
         {copy.login.signupSentBodyPrefix}
         <span className="font-semibold text-[#33291F]">{email.trim()}</span>
@@ -655,9 +668,7 @@ function ResetRequest({
   return (
     <>
       <header className="mb-6 text-center">
-        <div className="relative mx-auto mb-3 size-[92px]">
-          <EmberFace compact />
-        </div>
+        <StateMascot status="idle" className="mb-3" />
         <h1 className="font-serif text-[28px] leading-tight font-medium text-[#33291F]">
           {copy.login.resetTitle}
         </h1>
@@ -713,9 +724,7 @@ function ResetSent({
 }) {
   return (
     <div className="space-y-5 text-center">
-      <div className="relative mx-auto size-[96px]">
-        <EmberFace compact />
-      </div>
+      <StateMascot status="success" />
       <StateNotice title={copy.login.resetSentTitle}>
         {copy.login.resetSentBodyPrefix}
         <span className="font-semibold text-[#33291F]">{email.trim()}</span>
