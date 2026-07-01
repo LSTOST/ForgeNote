@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一产品验证票：**V-01 Ready**。并行设计轨道 **DSN-03 Conditional Pass**：项目级 Core UX Map + Design System Baseline 已完成并通过 Codex 条件验收，不写产品代码。DSN-03 已拆出首张实现票 **I-24 / DSN-03-S1（假设条：账号级判断）Ready**；这是登录后 /forge 第一体验的最短高杠杆修正，不替代 V-01 真实用户证据。
+当前唯一产品验证票：**V-01 Ready**。并行设计轨道 **DSN-03 Conditional Pass**：项目级 Core UX Map + Design System Baseline 已完成并通过 Codex 条件验收，不写产品代码。DSN-03 首张实现票 **I-24 / DSN-03-S1（假设条：账号级判断）Conditional Pass**：PR #27 已过 CI / Vercel / Preview anonymous smoke；Preview 登录态核心路径已跑通，session `be9d3aae-47c1-4fe9-a07e-26f2bd39bd9b`。残余风险：移动 390px 视口未复查；I-24 不替代 V-01 真实用户证据。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`codex/dsn-03-core-ux-map`。下一步：PR #25 Ready 后，按 I-24 派发 Claude Code 实现；同时不能暂停 V-01 真实用户验证。
+当前代码基线：`main` / `origin/main` 已包含 PR #25 squash merge `05b5609`，DSN-03 文档母版已合入。当前工作分支：`codex/i-24-assumption-chips`，基于 `origin/main`。下一步：PR #27 跑 CI / Preview Gate 3；同时不能暂停 V-01 真实用户验证。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #25：`https://github.com/LSTOST/ForgeNote/pull/25` Ready，DSN-03 文档票；已补 I-24 执行票。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #25：`https://github.com/LSTOST/ForgeNote/pull/25` 已 squash merge。PR #27：`https://github.com/LSTOST/ForgeNote/pull/27` Draft，I-24 PR，CI/Vercel/Preview anonymous smoke 已通过，Preview 登录态核心路径 Conditional Pass。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
@@ -200,6 +200,8 @@ M1 计划票 I-08~I-23 全部 Done；DSN-01 已 Done；PR #10 / PR #11 / PR #12 
 - 结论：**I-19 Done。** 残余风险：Production 上尚无外部真实用户内容路径证据。
 
 ## 最后更新时间
+2026-07-01 (I-24 / DSN-03-S1 Gate 3 Conditional Pass：Preview 登录态 `nb19870729@gmail.com` 跑通输入 → 方向确认 → 展开依据 → 编辑受众为 `新手父母` → `已确认 1/3` → 否决/恢复 → 生成成功 → URL 写入 `/forge?session=be9d3aae-47c1-4fe9-a07e-26f2bd39bd9b` → 刷新恢复结果和保存配方入口。残余风险：移动 390px 视口未复查。)
+2026-07-01 (I-24 / DSN-03-S1 本地实现进入 Review：`/forge` 方向确认区已改为账号级判断 chip，包含维度+值摘要、`确定/推断/拿不准` 置信度、依据展开、编辑后 `已确认 1/3`、否决/恢复默认。未改 `/api/forge`、prompt、AI contract、DB、RLS、profile_preferences、认证或整页工作台。`lint` / `typecheck` / `build` / `doctor` / 本地 `smoke:api` / Preview `smoke:api` / `git diff --check` 通过；PR #27 CI/Vercel 通过；Playwright UI 自动化被 macOS sandbox Mach port 权限拦截，Preview Gate 3 登录态路径仍待补证据。)
 2026-07-01 (DSN-03 收口推进：已从设计母版拆出首张实现票 I-24 / DSN-03-S1「假设条：账号级判断」，写入 `docs/TICKETS.md`。边界：只改 /forge 方向确认区的假设摘要、置信度、依据、编辑/恢复和移动摘要；不改 API / prompt / DB / RLS / profile_preferences，不做整页重设计，不触碰未跟踪 `原型图/`。PR #25 已转 Ready；I-24 通过后仍不等于 V-01 通过，V-01 仍需真实非构建者用户证据。)
 2026-06-30 (DSN-03 Conditional Pass：Claude Design 7 个交付文件已落 `docs/design/dsn-03-core-ux-map/`，Codex 已补 `codex-review.md`。DSN-03 可作为后续广义实现票母版；条件是不得用 DSN-03 推迟 V-01，且 DSN-02 auth 实现仍需单独锁技术边界。PR #25 待更新。)
 2026-06-30 (PR #22 已 squash merge 到 `main`（`7b78558`），V-01-FIX-08 Done。Production recheck 通过：main CI `7b78558` PASS；Production `smoke:api` PASS；Production `/login` HTML 检查确认纸感点阵、Zap mark、ForgeNote 独立标题、分类线、slogan、#FFFDF9、#E3D8C7、#B5562B、Google/email/password/主按钮/创建账号/Magic Link 均存在，邮箱输入早于 Google，旧 footer 文案不存在；浏览器视觉检查确认 desktop 1280x720 root 380px、mobile 390x760 root 350px/左右 20px、均无横向溢出。当前唯一任务恢复 V-01。)
