@@ -387,6 +387,28 @@ export function ForgeWorkbench({
     );
   }
 
+  function dismissAssumption(key: string) {
+    setAssumptions((prev) =>
+      prev.map((a) =>
+        a.key === key ? { ...a, state: "dismissed", highlight: false } : a,
+      ),
+    );
+  }
+
+  function restoreAssumption(key: string) {
+    const defaults = buildDirectionAssumptions(
+      idea,
+      accountPost,
+      initialProfileAssumptions,
+      [],
+    );
+    const fallback = defaults.find((a) => a.key === key);
+
+    setAssumptions((prev) =>
+      prev.map((a) => (a.key === key && fallback ? fallback : a)),
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#f2f0e8]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-3 py-4 sm:px-5">
@@ -581,9 +603,11 @@ export function ForgeWorkbench({
                   assumptions={assumptions}
                   focusedIdea={idea}
                   hasAccountPost={accountPost.trim().length > 0}
+                  onDismiss={dismissAssumption}
                   onEdit={editAssumption}
                   onGenerate={runForge}
                   onRemember={rememberAssumption}
+                  onRestore={restoreAssumption}
                   rememberedKeys={rememberedKeys}
                   pending={status === "loading"}
                 />

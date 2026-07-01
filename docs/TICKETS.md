@@ -945,7 +945,7 @@ Codex Review（2026-06-30）：
 
 ```text
 票号：I-24
-状态：Ready（等待 Claude Code 实现；Codex Gate 2/3 验收）
+状态：Review（本地实现完成；等待 PR / Preview Gate 3 验收）
 类型：DSN-03 首张产品实现切片 / Forge 工作台体验修正
 
 设计来源：

@@ -8,7 +8,9 @@ import {
   Info,
   LoaderCircle,
   Pencil,
+  RotateCcw,
   Save,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,11 +34,11 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   ],
 };
 
-const CONFIDENCE_LABEL: Record<AssumptionConfidence, string> = {
-  high: "确定",
-  inferred: "推断",
-  unsure: "待确认",
-};
+function getConfidenceLabel(confidence: AssumptionConfidence) {
+  if (confidence === "high") return copy.direction.confidenceHigh;
+  if (confidence === "unsure") return copy.direction.confidenceUnsure;
+  return copy.direction.confidenceInferred;
+}
 
 interface DirectionPanelProps {
   assumptions: Assumption[];
@@ -47,7 +49,9 @@ interface DirectionPanelProps {
   compact?: boolean;
   onEdit: (key: string, value: string) => void;
   onGenerate: () => void;
+  onDismiss?: (key: string) => void;
   onRemember?: (assumption: Assumption) => void;
+  onRestore?: (key: string) => void;
 }
 
 export function DirectionPanel({
@@ -59,11 +63,18 @@ export function DirectionPanel({
   compact = false,
   onEdit,
   onGenerate,
+  onDismiss,
   onRemember,
+  onRestore,
 }: DirectionPanelProps) {
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [openRationaleKey, setOpenRationaleKey] = useState<string | null>(null);
+  const [rationaleOverrides, setRationaleOverrides] = useState<
+    Record<string, boolean>
+  >({});
   const visibleAssumptions = assumptions.filter((a) => a.state !== "dismissed");
+  const dismissedAssumptions = assumptions.filter(
+    (a) => a.state === "dismissed",
+  );
   const confirmedCount = visibleAssumptions.filter(
     (a) => a.state === "edited" || a.source === "profile",
   ).length;
@@ -108,40 +119,56 @@ export function DirectionPanel({
         {visibleAssumptions.map((assumption) => {
           const options = VALUE_OPTIONS[assumption.key] ?? [];
           const isEditing = editingKey === assumption.key;
-          const isRationaleOpen = openRationaleKey === assumption.key;
           const confidence = assumption.confidence ?? "inferred";
+          const defaultRationaleOpen =
+            confidence === "unsure" || !assumption.rationale;
+          const isRationaleOpen =
+            rationaleOverrides[assumption.key] ?? defaultRationaleOpen;
           const remembered = rememberedKeys.includes(assumption.key);
+          const confirmed =
+            assumption.state === "edited" || assumption.source === "profile";
 
           return (
             <div
               key={assumption.key}
               className={cn(
-                "rounded-lg border border-stone-300 bg-stone-50/80 p-4",
-                assumption.state === "edited" && "border-stone-500 bg-white",
+                "min-w-0 rounded-lg border border-stone-300 bg-stone-50/80 p-4",
+                confirmed && "border-stone-500 bg-white",
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-stone-500">
-                    {assumption.label}
-                  </p>
-                  <p className="mt-1 text-base font-semibold leading-6 text-stone-950">
+                <div className="min-w-0 flex-1">
+                  <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-300 bg-white px-2.5 py-1 text-xs text-stone-600">
+                    <span className="shrink-0 font-medium">{assumption.label}</span>
+                    <span className="truncate font-semibold text-stone-950">
+                      {assumption.value}
+                    </span>
+                  </div>
+                  <p className="mt-3 break-words text-base font-semibold leading-6 text-stone-950">
                     {assumption.value}
                   </p>
                 </div>
                 <span
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-medium",
+                    "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
                     confidence === "high" &&
-                      "bg-emerald-100 text-emerald-800",
+                      "border border-stone-950 bg-stone-950 text-white",
                     confidence === "inferred" &&
-                      "bg-amber-100 text-amber-800",
-                    confidence === "unsure" && "bg-stone-200 text-stone-700",
+                      "border border-stone-400 bg-white text-stone-700",
+                    confidence === "unsure" &&
+                      "border border-dashed border-stone-400 bg-stone-100 text-stone-700",
                   )}
                 >
-                  {CONFIDENCE_LABEL[confidence]}
+                  {getConfidenceLabel(confidence)}
                 </span>
               </div>
+              {confirmed && (
+                <p className="mt-2 text-xs font-medium text-stone-500">
+                  {assumption.state === "edited"
+                    ? copy.direction.editedBadge
+                    : copy.direction.profileBadge}
+                </p>
+              )}
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button
@@ -159,11 +186,17 @@ export function DirectionPanel({
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    setOpenRationaleKey(isRationaleOpen ? null : assumption.key)
+                    setRationaleOverrides((prev) => ({
+                      ...prev,
+                      [assumption.key]: !isRationaleOpen,
+                    }))
                   }
+                  aria-expanded={isRationaleOpen}
                 >
                   <Info className="size-3.5" aria-hidden />
-                  {copy.direction.rationale}
+                  {isRationaleOpen
+                    ? copy.direction.collapseRationale
+                    : copy.direction.expandRationale}
                   <ChevronDown
                     className={cn(
                       "size-3.5 transition-transform",
@@ -192,10 +225,44 @@ export function DirectionPanel({
                       : copy.direction.remember}
                   </Button>
                 )}
+                {onRestore && assumption.state === "edited" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onRestore(assumption.key);
+                      setEditingKey(null);
+                    }}
+                    disabled={pending}
+                  >
+                    <RotateCcw className="size-3.5" aria-hidden />
+                    {copy.direction.restoreDefault}
+                  </Button>
+                )}
+                {onDismiss && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onDismiss(assumption.key);
+                      setEditingKey(null);
+                    }}
+                    disabled={pending}
+                    className="text-stone-500 hover:bg-stone-100 hover:text-stone-950"
+                  >
+                    <X className="size-3.5" aria-hidden />
+                    {copy.direction.dismiss}
+                  </Button>
+                )}
               </div>
 
               {isRationaleOpen && (
                 <p className="mt-3 rounded-md bg-white px-3 py-2 text-sm leading-6 text-stone-600">
+                  <span className="font-medium text-stone-900">
+                    {copy.direction.rationalePrefix}
+                  </span>
                   {assumption.rationale ?? copy.direction.noRationale}
                 </p>
               )}
@@ -210,8 +277,10 @@ export function DirectionPanel({
                         onEdit(assumption.key, option);
                         setEditingKey(null);
                       }}
+                      disabled={pending}
+                      aria-pressed={option === assumption.value}
                       className={cn(
-                        "rounded-md border border-stone-300 bg-white px-3 py-2 text-left text-sm font-medium text-stone-800 transition hover:border-stone-500 hover:bg-stone-100",
+                        "rounded-md border border-stone-300 bg-white px-3 py-2 text-left text-sm font-medium text-stone-800 transition hover:border-stone-500 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-stone-300/60 disabled:opacity-60",
                         option === assumption.value &&
                           "border-stone-900 bg-stone-900 text-white hover:bg-stone-900",
                       )}
@@ -226,7 +295,43 @@ export function DirectionPanel({
         })}
       </div>
 
-      <div className={cn("mt-5 flex", compact ? "justify-stretch" : "justify-end")}>
+      {dismissedAssumptions.length > 0 && (
+        <div className="mt-4 rounded-lg border border-dashed border-stone-300 bg-white/70 p-3">
+          <p className="text-xs font-medium text-stone-500">
+            {copy.direction.dismissedTitle}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {dismissedAssumptions.map((assumption) => (
+              <Button
+                key={assumption.key}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onRestore?.(assumption.key)}
+                disabled={pending || !onRestore}
+                className="max-w-full border-stone-300 bg-white"
+              >
+                <RotateCcw className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">
+                  {copy.direction.restore} {assumption.label}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "mt-5 flex gap-3",
+          compact ? "flex-col" : "items-center justify-end",
+        )}
+      >
+        {visibleAssumptions.length === 0 && (
+          <p className="text-sm text-stone-600">
+            {copy.direction.allDismissed}
+          </p>
+        )}
         <Button
           type="button"
           onClick={onGenerate}
