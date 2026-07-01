@@ -1024,9 +1024,107 @@ Codex Review（2026-06-30）：
 - Codex 不把 I-24 合格等同于 V-01 通过；I-24 通过后仍要继续真实用户 V-01 证据。
 ```
 
+### I-25 / DSN-03-S2 执行票（Forge 工作区整体 UI：左 / 中 / 右 / 底）
+
+```text
+票号：I-25
+状态：Ready（交给 Claude Code 实现；Codex Gate 2/3 验收）
+类型：DSN-03 工作台 IA 落地 / Forge Workspace shell
+
+设计来源：
+- docs/design/dsn-03-core-ux-map/ia.md：§2 `/forge` 北极星，左＝账号上下文，中＝当前任务 + 内容方案，右＝假设/控制/配方，底＝session/复用/表现。
+- docs/design/dsn-03-core-ux-map/state-map.md：S-08 空工作区、S-09 输入中、S-10 方向待确认、S-13 已生成、S-16 保存配方待定、S-21/22 表现回填。
+- docs/design/dsn-03-core-ux-map/design-system-baseline.md：§0 决策层级、§1 颜色角色、§3 间距、§4 按钮层级、§6 工作台分区、§9 移动布局、§10 反 patch 守则。
+- I-24 / DSN-03-S1：假设条 chip 已定义；I-25 必须复用，不得重写回大卡片/长文档。
+
+背景：
+- Owner 明确指出：当前 `/forge` 仍像从上到下的页面流，不是之前讨论的左 / 中 / 右 / 下工作区。
+- I-24 只解决了右侧方向判断的一块；它不是完整工作区 UI。
+- V-01 真实用户验证需要一个能被第一眼理解的工作台壳：用户知道“我现在在做当前任务、系统在右侧帮我判断、底部记录这次 session 连续性”。
+
+目标：
+把 `/forge` 从纵向表单页推进为 DSN-03 北极星工作区 shell：桌面保留清晰的左 / 中 / 右 / 底区域；移动按任务优先级单列降级。只重排和收敛工作区 UI，不扩产品能力。
+
+范围内：
+- 重排 `ForgeWorkbench` 的页面骨架：
+  - 左栏：账号上下文 / 导航 / 已存偏好与内容资产的轻量入口。只能展示已有真实状态或中性说明，不能伪造资产库数据。
+  - 中区：当前任务输入、生成中/成功/失败结果、当前 session 主要内容；中区是用户工作主线。
+  - 右栏：输出语言/表达偏好、I-24 假设条、生成控制、保存配方区；右栏是“控制与判断”，不是内容主舞台。
+  - 底栏：当前 session、复用来源、保存/表现回填连续性提示；必须使用现有 session/status/data，不新增历史系统。
+- 引导态和工作台态分清：
+  - 无输入/无 session 时，不渲染一堆空面板；优先显示大输入、示例、可补判断说明。
+  - 进入 direction review 后，右栏假设条出现，中区保留当前任务。
+  - 生成成功后，中区结果为主，右栏保存配方/控制可见，底栏显示 session 连续性。
+- 桌面目标：
+  - ≥1280px 使用稳定四区布局：左窄栏 / 中主栏 / 右控制栏 / 底连续性条。
+  - 不把所有内容拍平成单列长文档。
+  - 每屏主操作唯一；不要让“新建/清空/保存/生成”抢同一个视觉权重。
+- 移动目标：
+  - 单列优先级：任务输入 → 假设摘要/确认 → 生成 → 内容方案 → 保存配方 → session/表现。
+  - 不横向滚动；触控目标 ≥44；输入字号 ≥16；标题不孤立单字。
+- 同步必要 copy 到 `src/lib/copy/{zh-Hans,en}.ts`；默认 zh-Hans 行为不变。
+- 可做轻量 component extraction，但只能为降低 `ForgeWorkbench` 复杂度服务，不做抽象秀。
+
+范围外：
+- 不改 `/api/forge`、prompt、AI 生成契约、DB、RLS、profile_preferences、auth、Supabase、OpenRouter。
+- 不做资产库、历史页、图像渲染、内容日历、自动学习、Stripe、runtime i18n。
+- 不改 I-24 假设条的数据结构和行为；只把它放到正确的工作区区域。
+- 不重做登录页，不引入角色动效进工作台。
+- 不做 DSN-03-S2 原文“结果区可发级层级 + 保存价值时刻”的深层结果重构；若结果内容层级仍不足，另开 I-26。
+- 不触碰未跟踪 `原型图/`。
+
+涉及文件（预计）：
+- src/components/forge/ForgeWorkbench.tsx
+- src/components/forge/IdeaInput.tsx（仅必要的布局/空态适配）
+- src/components/forge/DirectionPanel.tsx（仅容器适配；不得回滚 I-24）
+- src/components/forge/OutcomePanel.tsx（仅工作区容器适配）
+- src/components/forge/RecipePanel.tsx（仅右栏/保存区容器适配）
+- src/components/forge/PerformancePanel.tsx（如需放入底部连续性入口，仅 UI 容器适配）
+- src/lib/copy/zh-Hans.ts
+- src/lib/copy/en.ts
+- docs/acceptance/I-25.md
+- docs/PROJECT-STATUS.md
+
+验收标准（Gate 2 实现正确性）：
+- `/forge` 桌面 ≥1280px 明确呈现左 / 中 / 右 / 底四区；中区是当前任务与结果主线，右区是控制与判断。
+- 空工作区不展示无意义空面板；输入前主路径清楚，主操作仍是「先确认方向」。
+- 输入想法 → 方向确认 → 编辑一条假设 → 生成 → 保存配方入口的状态流不回归。
+- `/forge?session=<id>` 恢复结果不回归；刷新后仍能看到结果、session 标识、保存配方入口。
+- 右栏复用 I-24 假设条：chip、依据、编辑、否决/恢复、`已确认 1/3` 不丢。
+- 移动 390px 无横向溢出；视觉顺序符合任务优先级，不复制桌面四栏。
+- 不出现 raw key / undefined / [object Object] / 未替换占位符。
+
+验证命令：
+  npm run doctor
+  npm run lint
+  npm run typecheck
+  npm run build
+  FORGENOTE_BASE_URL=<preview-url> npm run smoke:api
+
+手工验收步骤（Gate 3 Preview 登录态）：
+  1. 使用真实登录态进入 Preview `/forge`，桌面宽度 ≥1280px。
+  2. 确认首屏不是纵向长文档：左栏账号上下文、中区当前任务、右栏控制/假设、底部连续性条的结构清楚。
+  3. 空输入态只强调当前任务输入和「先确认方向」，没有无意义空面板压迫。
+  4. 输入模糊想法，点击「先确认方向」。
+  5. 右栏出现 I-24 三条假设 chip；展开依据，编辑一条，确认 `已确认 1/3`。
+  6. 点击生成，成功后中区展示内容方案，URL 写入 `/forge?session=`。
+  7. 右栏保存配方入口可见；保存配方后「查看配方」不回归。
+  8. 刷新当前 session URL，结果和工作区结构恢复。
+  9. 移动宽度 390px 复查：无横向滚动，顺序为任务 → 假设 → 结果 → 保存/连续性。
+
+风险：
+- 如果 Claude Code 为了做左栏而伪造“资产库/历史列表”，直接退回；本票只允许已有数据或中性说明。
+- 如果布局改动顺手重写 Outcome/Recipe 内容层级，容易扩大范围；结果层级另开 I-26。
+- I-25 仍不等于 V-01 通过；它只是让真实用户验证不再被工作台形态污染。
+
+下一步：
+- Claude Code 按本票实现产品代码。
+- Codex 收到实现后按 Gate 2 review diff，并在 Preview 上跑 Gate 3 登录态路径。
+```
+
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一验证任务仍是 V-01 真实用户路径。并行实现队列的下一张票为 **I-24 / DSN-03-S1**，只修正假设条账号级判断，不扩产品范围。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一验证任务仍是 V-01 真实用户路径。并行实现队列：**I-24 / DSN-03-S1** 先让假设条成为账号级判断；**I-25 / DSN-03-S2** 再把 `/forge` 工作区壳落成左 / 中 / 右 / 底。I-25 必须基于 I-24，不允许把假设条重写回旧形态。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
