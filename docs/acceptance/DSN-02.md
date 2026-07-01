@@ -91,6 +91,29 @@ In-app browser mobile 390x760:
 
 说明：本轮浏览器控制环境未执行客户端 bundle，点击态不作为交互结论；交互状态仍待 Preview Gate 3 在真实浏览器/Owner 操作下复核。
 
+### Preview 匿名核查（PR #28，2026-07-01）
+
+环境：
+
+- Preview: `https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app`
+- Head: `3aa4239`
+- 用户身份：匿名
+
+实测：
+
+```text
+FORGENOTE_BASE_URL=https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app npm run smoke:api
+  PASS：非法 JSON 400 / 缺 rawInput 400 / 未登录生成 401 / 空白输入先鉴权 401
+
+GET /login
+  HTTP 200
+  present：欢迎回来、邮箱、密码、保持 30 天登录、忘记密码、Google、创建账号、single/group mascot SVG fallback
+  absent：Magic Link / 登录链接 / 发送登录链接 / 不想用密码
+
+HEAD /reset-password
+  HTTP 200
+```
+
 ## 残余风险 / 待跑
 
 - **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在 Preview + Owner 操作下验。
