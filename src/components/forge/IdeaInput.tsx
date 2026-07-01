@@ -71,7 +71,7 @@ export function IdeaInput({
         aria-invalid={isTooLong}
         disabled={pending}
         onKeyDown={handleKeyDown}
-        className="min-h-48 resize-y border-stone-300 bg-white/85 px-4 py-4 text-[1.05rem] leading-7 shadow-sm placeholder:text-stone-400 focus-visible:border-stone-500 focus-visible:ring-stone-300/60"
+        className="min-h-48 resize-y border-[#E3D8C7] bg-[#FFFDF9] px-4 py-4 text-[1.05rem] leading-7 shadow-sm placeholder:text-[#9a8e7c] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28]"
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -90,7 +90,7 @@ export function IdeaInput({
           type="button"
           disabled={!canForge}
           onClick={onForge}
-          className="bg-[#9b4a24] text-white shadow-sm hover:bg-[#823d1d] focus-visible:ring-[#d8a06f]/45"
+          className="bg-[#B5562B] text-[#FDF7EF] shadow-sm hover:bg-[#9F4924] focus-visible:ring-[#B5562B]/40"
         >
           {pending ? (
             <LoaderCircle className="size-4 animate-spin" aria-hidden />
@@ -123,7 +123,7 @@ export function IdeaInput({
               aria-label={copy.idea.accountPostAria}
               aria-invalid={accountPostTooLong}
               disabled={pending}
-              className="min-h-32 resize-y border-stone-300 bg-white/75 text-sm leading-6 shadow-sm placeholder:text-stone-400 focus-visible:border-stone-500 focus-visible:ring-stone-300/60"
+              className="min-h-32 resize-y border-[#E3D8C7] bg-[#FFFDF9] text-sm leading-6 shadow-sm placeholder:text-[#9a8e7c] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28]"
             />
             {accountPostTooLong && (
               <p className="text-sm text-destructive">
