@@ -941,9 +941,92 @@ Codex Review（2026-06-30）：
 - DSN-03 通过后，冻结“新实现必须先引用设计母版”的规则。
 ```
 
+### I-24 / DSN-03-S1 执行票（假设条：账号级判断）
+
+```text
+票号：I-24
+状态：Ready（等待 Claude Code 实现；Codex Gate 2/3 验收）
+类型：DSN-03 首张产品实现切片 / Forge 工作台体验修正
+
+设计来源：
+- docs/design/dsn-03-core-ux-map/ux-map.md：Path 2（第一次生成）
+- docs/design/dsn-03-core-ux-map/state-map.md：S-10 方向待确认、S-11 假设已编辑
+- docs/design/dsn-03-core-ux-map/design-system-baseline.md：§1 工作台清晰优先、§6 减字 chip、§8 动效不进密集工作区
+- docs/design/dsn-03-core-ux-map/implementation-slices.md：Slice 1 — Assumption chips as account-level judgements
+
+背景：
+- Owner 已反馈：登录后页面没有体现 DSN-03 方向，因为 DSN-03 是设计母版，不是产品代码。
+- 当前 /forge 的假设条仍更像普通表单说明，不能让用户第一眼理解“系统替我做了哪些账号级判断、哪些需要我纠正”。
+- V-01 的核心前提是用户能看懂并愿意改一条假设；如果这一步不成立，继续验证保存/重跑会得到污染证据。
+
+目标：
+把 /forge 的方向确认区改成“账号级判断”体验：三条假设以低字数 chip 呈现，带置信度、依据、可编辑/否决/恢复，用户能在生成前快速判断哪里需要改。
+
+范围内：
+- 重排 `DirectionPanel` / `AssumptionPanel` 的呈现层，让每条假设显示：
+  - 摘要 chip：维度 + 当前判断值。
+  - 置信度：`确定` / `推断` / `拿不准`，用形态区分，不靠堆颜色。
+  - 依据入口：点开后显示“我这样判断是因为……”的短解释。
+- 只对 `拿不准` 或缺依据的假设默认展开依据/纠偏入口；其余默认折叠。
+- 用户编辑一条假设后：
+  - 该条视觉状态转为已确认 / 确定。
+  - 计数更新为 `1/3`。
+  - 仍可恢复默认。
+- 移动端保留折叠摘要，不出现横向溢出或大段说明压住主操作。
+- 同步 `src/lib/copy/{zh-Hans,en}.ts` 中相关文案；默认 zh-Hans 行为不变。
+
+范围外：
+- 不改 `/api/forge`、prompt、AI 生成契约、DB、RLS、profile_preferences。
+- 不新增学习闭环、不自动写偏好、不新增分析 SDK。
+- 不做整页 /forge 重设计，不做资产库、图像渲染、内容日历、Stripe、runtime i18n。
+- 不改变假设数据结构；沿用现有 `confidence` / `rationale` / `state` / `source` 字段。若现有数据不足，先做明确 fallback，不在本票扩 prompt。
+- 不触碰未跟踪 `原型图/`。
+
+涉及文件（预计）：
+- src/components/forge/DirectionPanel.tsx
+- src/components/forge/AssumptionPanel.tsx
+- src/components/forge/ForgeWorkbench.tsx（仅在必要时传递状态/计数，不重构工作台）
+- src/lib/copy/zh-Hans.ts
+- src/lib/copy/en.ts
+- docs/acceptance/I-24.md（实现后由 Claude Code/Codex 记录）
+- docs/PROJECT-STATUS.md
+
+验收标准（Gate 2 实现正确性）：
+- 假设条三项都能渲染摘要、置信度、依据入口；缺失 `rationale` 时有克制 fallback，不显示 undefined/raw key。
+- 编辑、否决/恢复、确认计数与生成前提交的 assumptions 状态保持一致。
+- 生成路径不回归：编辑一条假设后点击生成，提交的 assumption value 使用编辑后的值。
+- `/forge?session=` 恢复结果不被本票破坏；已生成结果仍可查看、保存配方。
+- 桌面和移动无横向溢出，主操作仍唯一且清晰。
+
+验证命令：
+  npm run doctor
+  npm run lint
+  npm run typecheck
+  npm run build
+  FORGENOTE_BASE_URL=<preview-url> npm run smoke:api
+
+手工验收步骤（Gate 3 Preview 登录态）：
+  1. 使用真实登录态进入 Preview `/forge`。
+  2. 输入一个模糊想法，点击「先确认方向」。
+  3. 确认方向区出现 3 条账号级假设 chip，每条有置信度和依据入口。
+  4. 展开一条依据，能看懂系统为什么这样判断。
+  5. 编辑一条假设，确认计数变为 `1/3`，该条状态变为已确认。
+  6. 点击生成，生成成功，结果仍写入 `/forge?session=`。
+  7. 刷新当前 session URL，结果恢复；保存配方入口不回归。
+  8. 移动视口复查方向区摘要可用、无横向溢出。
+
+风险：
+- 现有生成前的默认假设可能没有足够丰富的 rationale/confidence；本票只能做呈现 fallback。若要让 AI 解释更准，另开 prompt/contract 票。
+- 这不是 DSN-03 全量落地；它只处理 V-01 最前面的“看懂并改一条假设”。
+
+下一步：
+- PR #25（DSN-03 文档母版）Ready 后，Claude Code 可按 I-24 实现。
+- Codex 不把 I-24 合格等同于 V-01 通过；I-24 通过后仍要继续真实用户 V-01 证据。
+```
+
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一任务恢复 V-01 真实用户验证。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一验证任务仍是 V-01 真实用户路径。并行实现队列的下一张票为 **I-24 / DSN-03-S1**，只修正假设条账号级判断，不扩产品范围。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 
