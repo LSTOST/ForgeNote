@@ -113,6 +113,38 @@ export const en: Copy = {
     generated: "Content plan generated",
     error: "Generation needs attention",
   },
+  workspace: {
+    leftBrand: "Content workspace",
+    navCurrent: "Current task",
+    navRecipes: "Recipes",
+    navProfile: "Account preferences",
+    accountContext: "Account context",
+    accountMemoryLabel: "Account memory",
+    accountMemoryBody:
+      "Saved preferences flow into the direction judgments on the right.",
+    contentAssetLabel: "Content assets",
+    contentAssetBody:
+      "After you save a recipe, return to the recipe library from here to reuse it.",
+    guidedFillHint: "I'll fill in these for you:",
+    guidedDims: "audience · platform · format · goal · style",
+    controlTitle: "Direction & controls",
+    outcomePlaceholderTitle: "Your content plan will appear here",
+    outcomePlaceholderBody:
+      "The center holds the current task and result; direction, output preference, and saving are on the right.",
+    directionPlaceholderTitle: "Direction is drafted on the right first",
+    directionPlaceholderBody:
+      "After you enter an idea, audience, format, and angle show here; edit, then generate.",
+    continuityTitle: "This run's continuity",
+    versionLabel: "Version",
+    versionActive: "Current session {id}",
+    versionIdle: "Records this session after you generate",
+    reuseLabel: "Reuse",
+    reuseActive: "Save as a recipe on the right",
+    reuseIdle: "Decide whether it's worth saving after generating",
+    performanceLabel: "Performance",
+    performanceActive: "Record performance in the result area",
+    performanceIdle: "Fill in performance after publishing",
+  },
   direction: {
     ready: "Direction pending",
     title: "I drafted the direction first. Fix what feels off.",
