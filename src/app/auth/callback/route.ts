@@ -15,9 +15,7 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   // Supabase 在用户拒绝授权或 provider 未配置时会带 error 回跳。
-  const providerError =
-    url.searchParams.get("error_description") ??
-    url.searchParams.get("error");
+  const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
 
   // 成功后的落点：默认 /forge；密码重置链接会带 ?next=/reset-password。
   // 只接受同源相对路径，防开放重定向。
@@ -30,7 +28,7 @@ export async function GET(request: Request): Promise<Response> {
   const loginUrl = new URL("/login", url.origin);
 
   if (providerError) {
-    loginUrl.searchParams.set("error", providerError);
+    loginUrl.searchParams.set("error", "Google 登录失败，请重试或改用邮箱和密码登录。");
     return NextResponse.redirect(loginUrl);
   }
 

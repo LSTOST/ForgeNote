@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: Review（Gate 2 通过；Preview Gate 3 登录态 + 移动端待跑）
+- Status: Review（Codex Gate 2 通过；Preview Gate 3 登录态 + 移动端待跑）
 - Date: 2026-07-01
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
-- 实现分支：`claude/dsn-02-login-auth-ticket`（基于 `origin/main` = DSN-03 baseline + FIX-08）
+- 实现分支：`claude/dsn-02-login-impl`（PR #28，base `main`）
 
-> ⚠️ 与进行中的 **V-01-FIX-09（登录/注册模式 + Magic Link 负担）** 重叠。本 PR 基于 FIX-08 的 `main`，未纳入 FIX-09；合并前需 Codex 裁定二者关系（取代/承接/合并），避免双线冲突。
+> Codex 裁决：DSN-02 **承接并取代** V-01-FIX-09。旧登录线 #23/#24/#26 已关闭，#28 是唯一继续推进的登录/auth PR；不得再双线修 Magic Link 或登录页局部补丁。
 
 ## 实现内容（按 handoff 逐节）
 
@@ -19,13 +19,15 @@
 - **§5 文案**：`src/lib/copy/{zh-Hans,en}.ts` 重构 `login.*`（删 Magic Link 相关 key）、新增 `reset.*`；en/zh key 对齐（typecheck 保证）。
 - **§6 删/增/改/留**：删 Magic Link（`signInWithOtp` 及全部相关 UI/文案/状态）；增 记住30天 + 忘记密码 + 重置流程 + 显示密码眼睛（`aria-pressed`）+ 角色动效；Google 保持次按钮；留暖纸系统 + 邮箱密码主路径 + 同页注册 + 失败不泄露账号是否存在 + 未配置提示 + 已登录跳 `/forge`。
 - **§7 可访问性**：链接加下划线/加粗不只靠色；`focus-visible` 3px 暖色 ring；显示密码 `aria-label` + `aria-pressed`；表单错误 `role="alert"`、异步提示 `role="status" aria-live="polite"`；移动 16px 输入；`prefers-reduced-motion` 降级。
+- **Codex QA 修正**：`EmberMascot` 原实现只在 `useEffect` 中命令式绘制，SSR/首屏截图左侧角色区为空；已补静态 SVG fallback，hydration 后再替换为动态角色，避免首屏视觉保真失败。
 
 ## §8 开放项——最小实现（待 Owner/Codex 复核）
 
 - **角色命名**：沿用「Ember 一家」；SVG 纯装饰，容器 `aria-hidden`，SVG 自带 `aria-label`。未进品牌资产。
 - **重置页路由形态**：`/auth/callback` 增 `next` 参数（仅同源相对路径，防开放重定向）；`resetPasswordForEmail` 的 redirectTo 指向 `/auth/callback?next=/reset-password`，交换出恢复会话后落新页 `/reset-password`（`updateUser({password})`）。签名/确认邮件仍回 `/forge`。
 - **记住 30 天**：`createSupabaseBrowserClient({ remember })` → `@supabase/ssr` cookieOptions.maxAge：勾选=30 天持久 cookie（默认），不勾=会话级 cookie。**注意**：refresh token 服务端最长寿命仍由 Supabase 项目设置决定，属 Codex 边界，本票只控本次登录写入的 auth cookie 过期。
-- **失败文案**：统一「邮箱或密码不正确」，不区分账号是否存在（防枚举）。
+- **失败文案**：登录失败不暴露账号是否存在；UI 使用泛化文案，不直接展示 Supabase 原始错误消息。
+- **决策记录**：`docs/DECISIONS.md` 已新增 D-10，记录彻底去掉 Magic Link、补邮箱密码重置、记住 30 天、Redirect URL 与迁移顺序硬约束。
 
 ## 验证
 
@@ -35,10 +37,30 @@
 npm run doctor      : PASS（0 failed / 0 warnings）
 npm run lint        : PASS
 npm run typecheck   : PASS（en/zh key parity）
-npm run build       : PASS（新增静态路由 /reset-password；路由表其余不变）
+npm run build       : PASS（新增静态路由 /reset-password；路由表其余不变；沙箱首次因 Google Fonts 网络失败，提权重跑通过）
 FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api : PASS（未改 /api/forge；匿名边界不变）
 /reset-password（本地）: HTTP 200
 ```
+
+### Codex Gate 2 补充复核（2026-07-01，PR #28）
+
+```text
+npm run doctor      : PASS（0 failed / 0 warnings）
+npm run lint        : PASS
+npm run typecheck   : PASS
+npm run build       : PASS（提权访问 Google Fonts 后通过）
+FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api : PASS
+git diff --check    : PASS
+本地 /login HTML    : PASS（邮箱密码主路径、保持 30 天、忘记密码、Google 次按钮；Magic Link absent）
+本地 /reset-password: HTTP 200
+```
+
+Codex 代码复核补充：
+
+- `signInWithOtp`、Magic Link 相关运行时代码不存在。
+- 登录 / Google / reset / update password 不直接展示 Supabase 原始错误消息。
+- `/auth/callback?next=` 只接受同源相对路径，避免开放重定向。
+- `docs/DECISIONS.md` 已补 D-10，认证方式变更有权威记录。
 
 ### 本地浏览器视觉/交互核对（匿名，Chrome MCP，localhost:3000）
 
@@ -53,9 +75,25 @@ FORGENOTE_BASE_URL=http://127.0.0.1:3000 npm run smoke:api : PASS（未改 /api/
 - /reset-password（匿名直访）：单个 Ember + 设置新密码标题 + 「重置链接无效或已过期」回退态（无恢复会话），不白屏 ✓
 ```
 
+### Codex 浏览器视觉核查（本地，匿名）
+
+```text
+Chrome desktop 1470x730:
+- 左右分屏、左侧 Ember 一家可见、右侧邮箱密码表单可见。
+- 保持 30 天、忘记密码、Google 次按钮、创建账号入口可见。
+- Magic Link / 发送登录链接 / 不想用密码 absent。
+- 无横向溢出。
+
+In-app browser mobile 390x760:
+- 单列布局、单个 Ember、ForgeNote、分类线、slogan、邮箱、密码、保持 30 天、忘记密码、登录、Google、创建账号均可见。
+- 桌面角色区隐藏；无横向溢出（scrollWidth=390）。
+```
+
+说明：本轮浏览器控制环境未执行客户端 bundle，点击态不作为交互结论；交互状态仍待 Preview Gate 3 在真实浏览器/Owner 操作下复核。
+
 ## 残余风险 / 待跑
 
 - **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在 Preview + Owner 操作下验。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
 - **Supabase 侧配置（Owner/Codex）**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs、会话/refresh 时长策略。
-- **与 V-01-FIX-09 关系**：Codex 裁定。
+- **V-01-FIX-09**：已由 DSN-02 承接/取代，不再单独推进。

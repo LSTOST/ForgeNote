@@ -196,6 +196,22 @@ I-02A 确立 M1 模型接入路线，作为后续 I-02B 真实调用的权威依
 
 ---
 
+## D-10 DSN-02 认证方式更新（2026-07-01）
+
+DSN-02 改变登录方式，作为 Batch B Auth 决策的增量更新；旧的邮箱 Magic Link 不再作为登录入口。
+
+- 登录方式：邮箱 + 密码为主路径，Google OAuth 为备选路径；彻底下线登录页 Magic Link UI、文案和 `signInWithOtp` 调用。
+- 迁移顺序硬约束：必须先上线“忘记密码 / 重置密码”路径，再下线 Magic Link，避免只依赖 Magic Link 的旧用户被锁在门外。
+- 密码重置：`resetPasswordForEmail` 的 `redirectTo` 指向 `${origin}/auth/callback?next=/reset-password`；`/auth/callback` 只接受同源相对 `next`，交换恢复会话后进入 `/reset-password`，由客户端 `updateUser({ password })` 保存新密码。
+- 记住 30 天：登录页默认勾选；浏览器 Supabase 客户端用 `@supabase/ssr` `cookieOptions.maxAge = 30 天` 控制本次写入 auth cookie 的持久化。Supabase refresh token 服务端最长寿命仍由 Supabase 项目设置控制，不由前端票据假装决定。
+- 密码策略：前端最小 8 位；更强复杂度、泄露密码拦截、速率限制和防爆破以 Supabase Auth 项目配置为准，未在应用层新增自建鉴权逻辑。
+- 错误信息：登录失败不暴露账号是否存在；UI 使用泛化文案，不把 Supabase 原始错误消息直接展示给用户。
+- Redirect URLs：Production 与 Preview wildcard 必须在 Supabase Auth URL Configuration 中放行 `/auth/callback`，沿用历史 OAuth redirect 经验；代码不硬编码 Production 域名。
+
+影响文件：`src/components/auth/LoginForm.tsx`、`src/app/reset-password/page.tsx`、`src/app/auth/callback/route.ts`、`src/lib/supabase/client.ts`、`src/lib/copy/{zh-Hans,en}.ts`。
+
+---
+
 ## v5 选择性折叠（2026-06-21）
 
 承接产品定位讨论：战略方向调整为**国际市场 + 图文卡片/carousel 格式 + 多语言**（放弃大陆，规避备案/网信办与 OpenAI/Anthropic 不可直连）。但 M1 代码已建在 v4 小红书线（login / forge / recipes 已交付并验收）。决定：**保留已建代码，选择性折叠 v5**——只折叠"便宜且重要、对现有代码增量"的部分，推迟"贵且会推翻代码"的部分。本节只定折叠边界，不改既有功能语义。

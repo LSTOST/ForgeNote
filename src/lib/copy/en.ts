@@ -60,6 +60,8 @@ export const en: Copy = {
       "Email or password is incorrect. Please check and try again.",
     emailNotConfirmed:
       "This email is not confirmed yet. Confirm it once, then sign in with your password.",
+    authNeedsCheck:
+      "Sign-in did not complete. Check your email, password, or confirmation email.",
     authFailed: "Sign-in failed. Please try again.",
     networkError: "Sign-in failed. Check your network and retry.",
     googleUnavailable:

@@ -64,6 +64,7 @@ export const zhHans = {
     toSignInLink: "返回登录",
     invalidCredentials: "邮箱或密码不正确，请检查后重试。",
     emailNotConfirmed: "这个邮箱还没确认。请先点一次确认邮件，之后可用密码直接登录。",
+    authNeedsCheck: "登录未完成。请检查邮箱、密码，或先打开确认邮件。",
     authFailed: "登录失败，请稍后重试。",
     networkError: "登录失败，请检查网络后重试。",
     googleUnavailable: "Google 登录暂不可用，请改用邮箱和密码登录。",

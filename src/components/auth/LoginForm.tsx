@@ -139,7 +139,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
       if (oauthError) {
-        setError(oauthError.message || copy.login.googleUnavailable);
+        setError(copy.login.googleUnavailable);
         setOauthState("error");
       }
     } catch {
@@ -204,7 +204,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
         },
       );
       if (resetError) {
-        setError(resetError.message || copy.reset.sendFailed);
+        setError(copy.reset.sendFailed);
         setResetState("error");
         return;
       }
@@ -581,9 +581,9 @@ function NoticeCard({
 }
 
 function getAuthError(error: { message?: string; code?: string }): string {
-  if (error.code === "email_not_confirmed") return copy.login.emailNotConfirmed;
+  if (error.code === "email_not_confirmed") return copy.login.authNeedsCheck;
   if (error.code === "invalid_credentials") return copy.login.invalidCredentials;
-  return error.message || copy.login.authFailed;
+  return copy.login.authFailed;
 }
 
 function GoogleIcon() {

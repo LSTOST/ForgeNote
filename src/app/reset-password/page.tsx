@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
       const supabase = createSupabaseBrowserClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) {
-        setError(updateError.message || copy.reset.updateFailed);
+        setError(copy.reset.updateFailed);
         setSubmitting(false);
         return;
       }

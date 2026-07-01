@@ -376,6 +376,7 @@ export function EmberMascot({ mode, className, ref }: EmberMascotProps) {
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    host.replaceChildren();
     const controller = buildMascot(host, mode);
     controllerRef.current = controller;
     return () => {
@@ -393,5 +394,62 @@ export function EmberMascot({ mode, className, ref }: EmberMascotProps) {
     [],
   );
 
-  return <div ref={hostRef} className={className} aria-hidden />;
+  return (
+    <div ref={hostRef} className={className} aria-hidden>
+      <StaticMascot mode={mode} />
+    </div>
+  );
+}
+
+function StaticMascot({ mode }: { mode: "group" | "single" }) {
+  if (mode === "single") {
+    return (
+      <svg viewBox="0 0 140 140" className="size-full" focusable="false">
+        <ellipse cx="70" cy="128" rx="30" ry="5" fill="rgba(90,60,30,.14)" />
+        <path
+          d="M70 12 C79 22 78 33 70 38 C62 33 61 22 70 12 Z"
+          fill="#B5562B"
+        />
+        <path
+          d="M70 21 C74.5 27 74 34 70 37 C66 34 65.5 27 70 21 Z"
+          fill="#FBE4C2"
+          opacity=".85"
+        />
+        <ellipse cx="70" cy="82" rx="42" ry="43" fill="#D98A5A" stroke="#B06A3C" strokeWidth="1.5" />
+        <ellipse cx="70" cy="90" rx="28" ry="25" fill="#F4E3CD" opacity=".62" />
+        <ellipse cx="45" cy="88" rx="6.4" ry="3.6" fill="#E5907A" opacity=".5" />
+        <ellipse cx="95" cy="88" rx="6.4" ry="3.6" fill="#E5907A" opacity=".5" />
+        <ellipse cx="53" cy="74" rx="10" ry="11.6" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+        <ellipse cx="87" cy="74" rx="10" ry="11.6" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+        <circle cx="53" cy="74" r="5.2" fill="#33291F" />
+        <circle cx="87" cy="74" r="5.2" fill="#33291F" />
+        <path d="M61 94 Q70 100 79 94" fill="none" stroke="#7A4A2C" strokeLinecap="round" strokeWidth="2.4" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 360 300" className="h-full w-full" focusable="false">
+      <ellipse cx="186" cy="290" rx="158" ry="11" fill="rgba(90,60,30,.12)" />
+      <rect x="82" y="78" width="84" height="210" rx="26" fill="#C2743F" stroke="#A9622F" strokeWidth="1.3" transform="rotate(-6 124 186)" />
+      <rect x="174" y="120" width="66" height="168" rx="22" fill="#2D2B2A" stroke="#5C3A24" strokeWidth="1.3" transform="rotate(2 207 200)" />
+      <path d="M34 300 V250 a58 58 0 0 1 116 0 V300 Z" fill="#E4A95C" stroke="#C98A3E" strokeWidth="1.3" />
+      <path d="M286 176 C293 184 292.5 192 286 196 C279.5 192 279 184 286 176 Z" fill="#B5562B" />
+      <path d="M232 300 V236 a52 52 0 0 1 104 0 V300 Z" fill="#D98A5A" stroke="#B96D3E" strokeWidth="1.3" />
+
+      <ellipse cx="108" cy="130" rx="9" ry="10.6" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+      <ellipse cx="140" cy="130" rx="9" ry="10.6" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+      <ellipse cx="192" cy="164" rx="7.4" ry="9" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+      <ellipse cx="222" cy="164" rx="7.4" ry="9" fill="#FFFDF9" stroke="#B06A3C" strokeWidth="1.2" />
+      <circle cx="108" cy="130" r="4.7" fill="#33291F" />
+      <circle cx="140" cy="130" r="4.7" fill="#33291F" />
+      <circle cx="192" cy="164" r="3.8" fill="#33291F" />
+      <circle cx="222" cy="164" r="3.8" fill="#33291F" />
+      <circle cx="76" cy="250" r="6" fill="#33291F" />
+      <circle cx="110" cy="250" r="6" fill="#33291F" />
+      <circle cx="266" cy="242" r="5.6" fill="#33291F" />
+      <circle cx="310" cy="242" r="5.6" fill="#33291F" />
+      <path d="M279 266 Q288 272 297 266" fill="none" stroke="#7A4A2C" strokeLinecap="round" strokeWidth="2.4" />
+    </svg>
+  );
 }

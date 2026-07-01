@@ -1,5 +1,5 @@
 // ForgeNote M1 — Supabase 浏览器端客户端（Batch B）。
-// 仅用于客户端组件（登录页）：用 anon key 发起 Magic Link / OAuth 登录。
+// 仅用于客户端组件（登录页）：用 anon key 发起邮箱密码 / OAuth / 密码重置。
 // 绝不引入 service role；URL + anon key 均为公开配置（受 RLS 保护）。
 // 依据：docs/API-CONTRACT.md（§1 不暴露模型 Key / §3 数据按 RLS 隔离）、
 //       docs/DECISIONS.md（Supabase Auth cookie 识别用户，不绕过 RLS）。
