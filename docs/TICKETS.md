@@ -945,7 +945,7 @@ Codex Review（2026-06-30）：
 
 ```text
 票号：I-24
-状态：Review（本地实现完成；等待 PR / Preview Gate 3 验收）
+状态：Conditional Pass（Preview 登录态核心路径已通过；移动 390px 视口待后续响应式验收复查）
 类型：DSN-03 首张产品实现切片 / Forge 工作台体验修正
 
 设计来源：
