@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: Review（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复；密码重置真实路径修复后待复验）
+- Status: Conditional Pass（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径与密码重置真实路径已通过；移动设备细节仍需后续核对）
 - Date: 2026-07-02
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
@@ -410,14 +410,21 @@ Owner 反馈：
 4. 页面应自动进入 /forge，不继续停在等待邮件状态。
 ```
 
+复验结果（Owner，最新 PR #28 Preview）：
+
+```text
+从最新 PR #28 Preview 发一次重置邮件，
+完成重置/登录后，
+回到原来的 reset-sent 标签页，
+按预期自动进入 /forge。
+```
+
 QA 结论：
 
-- 这次“收不到邮件”不能直接判定为前端 bug。
-- 当时更准确的阻塞原因是：测试邮箱不是新邮箱密码账号 + 项目仍用 Supabase 默认邮件通道 + 邮件发送限制只有 2/hour。
-- 下一次 Gate 3 必须使用全新可收信地址（或 Gmail plus alias），并在 1 小时窗口内只跑一次注册确认；否则测试噪声太大。
-- 自定义 SMTP/Resend 已在 2026-07-02 配置完成；需要重跑注册确认与密码重置闭环。
+- Password reset 真实路径已跑通：发送邮件 → 邮件链接 → `/reset-password` → 设置新密码/登录 → 原 reset-sent 标签页自动进 `/forge`。
+- Resend custom SMTP、Supabase Redirect URLs、reset recovery race、发送冷却、跨标签状态连续性均已补齐并通过实际反馈复验。
+- DSN-02 可作为登录/auth 线的 Conditional Pass：不再阻塞旧 Magic Link 下线和邮箱密码主路径收口。
 
-- **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在邮件投递问题解除后重跑。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
-- **Supabase 侧配置（Owner/Codex）**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs（必须同时放行 `/auth/callback` 与 `/reset-password`）、会话/refresh 时长策略。
+- **Supabase 侧配置**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs（`/auth/callback` 与 `/reset-password`）、Resend custom SMTP 已完成；会话/refresh 服务端时长仍按 Supabase 项目策略。
 - **V-01-FIX-09**：已由 DSN-02 承接/取代，不再单独推进。
