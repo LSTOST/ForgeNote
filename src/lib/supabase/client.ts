@@ -35,6 +35,16 @@ interface BrowserClientOptions {
    * 过期时间；refresh token 的服务端最长寿命仍由 Supabase 项目设置决定，属 Codex 边界。
    */
   remember?: boolean;
+  /**
+   * 是否让 Supabase 客户端初始化时自动从当前 URL 检测登录/恢复会话。
+   * 普通登录页保留默认；密码重置落点需要关闭，避免库先消费 recovery code/hash，
+   * 再与页面手动处理逻辑发生竞态。
+   */
+  detectSessionInUrl?: boolean;
+  /**
+   * @supabase/ssr 默认在浏览器复用 singleton。需要按调用点隔离 auth options 时关闭。
+   */
+  isSingleton?: boolean;
 }
 
 /**
@@ -55,5 +65,12 @@ export function createSupabaseBrowserClient(
     options.remember === false
       ? undefined
       : { maxAge: REMEMBER_MAX_AGE_SECONDS };
-  return createBrowserClient(config.url, config.anonKey, { cookieOptions });
+  return createBrowserClient(config.url, config.anonKey, {
+    cookieOptions,
+    isSingleton: options.isSingleton,
+    auth:
+      options.detectSessionInUrl === undefined
+        ? undefined
+        : { detectSessionInUrl: options.detectSessionInUrl },
+  });
 }

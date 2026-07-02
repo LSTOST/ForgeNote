@@ -332,6 +332,30 @@ curl -sSI "https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.verc
 - Codex 不能操作 QQ 邮箱标签页：浏览器安全策略阻止访问 `https://wx.mail.qq.com`。
 - 需要 Owner 点击最新一封 ForgeNote 重置邮件链接，确认是否进入 `/reset-password` 新密码表单。
 
+### Reset recovery second failure（2026-07-02）
+
+Owner 反馈：
+
+```text
+1. 第一次重置邮件长时间未使用，可能过期。
+2. 再次发送后点击链接，仍跳转到登录页面。
+3. 第三次发送显示发送失败，请稍后重试。
+```
+
+补充检查：
+
+- Supabase Reset password 邮件模板使用 `{{ .ConfirmationURL }}`，没有硬编码登录页。
+- 第三次发送失败应按邮件/认证限流处理，不能继续重复点击发送。
+
+新增修复：
+
+```text
+- /reset-password 使用 detectSessionInUrl=false 的隔离 Supabase browser client。
+- 原因：@supabase/ssr 默认会在初始化时自动检测并消费 URL 中的 recovery code/hash；
+  页面随后再手动 exchange/setSession 会发生竞态，导致恢复会话失败。
+- reset 页面关闭 singleton，避免复用登录页已创建的默认 auth client。
+```
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。

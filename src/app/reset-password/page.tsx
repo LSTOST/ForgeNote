@@ -42,7 +42,10 @@ export default function ResetPasswordPage() {
     let active = true;
     (async () => {
       try {
-        const supabase = createSupabaseBrowserClient();
+        const supabase = createSupabaseBrowserClient({
+          detectSessionInUrl: false,
+          isSingleton: false,
+        });
         const url = new URL(window.location.href);
         const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
         const callbackError =
