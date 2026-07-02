@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: Blocked（Codex Gate 2 通过；Preview Gate 3 被确认邮件未投递阻塞）
+- Status: Blocked（Codex Gate 2 通过；Preview Gate 3 被 Supabase 邮件/测试账号配置阻塞）
 - Date: 2026-07-01
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
@@ -137,10 +137,56 @@ HEAD /reset-password
 
 结论：
 
-- Gate 3 **Blocked**。页面请求路径可用，但 Supabase 确认邮件未被用户收到，无法完成“注册确认 → 密码登录 → 忘记密码 → 重置密码 → 新密码登录”认证闭环。
+- Gate 3 **Blocked**。页面请求路径可用，但这次测试不能证明“注册确认 → 密码登录 → 忘记密码 → 重置密码 → 新密码登录”认证闭环成立。
 - #28 不能作为完整产品验收合并；最多只能证明 Gate 2 和匿名 Preview 可用。
-- 下一步必须先查 Supabase Auth 邮件投递：Email provider/SMTP、Auth logs、rate limit、邮件模板、Redirect URL，以及该邮箱是否已有 OAuth/旧账号导致 signUp 被静默处理。
-- 可选复测路径：Owner 授权使用一个全新可收信测试邮箱，或同一 Gmail 的 plus alias；但如果 Supabase 邮件服务本身未投递，换邮箱不会解决根因。
+- 下一步必须先查 Supabase Auth 邮件投递与测试账号状态：Email provider/SMTP、Auth logs、rate limit、邮件模板、Redirect URL，以及该邮箱是否已有 OAuth/旧账号导致 signUp 被静默处理。
+
+### Supabase Dashboard 复核（2026-07-02）
+
+只读检查，不改 Supabase 配置：
+
+```text
+Auth Users:
+  Owner-provided Gmail test address 已存在。
+  email_confirmed = true。
+  has_password_hash = false。
+  identities = google。
+  结论：该地址是已确认的 Google-only 老账号，不是干净的邮箱密码新注册样本。
+
+Auth > Sign In / Providers:
+  Allow new users to sign up = enabled。
+  Email provider = enabled。
+  Confirm email = enabled。
+  Google provider = enabled。
+
+Auth > URL Configuration:
+  Site URL = https://forge-note-gold.vercel.app。
+  Redirect URLs 已包含 Production / localhost / Preview wildcard：
+    https://forge-note-git-*-lstosts-projects.vercel.app/auth/callback
+
+Auth > Emails:
+  Templates 可见。
+  页面提示当前使用默认 email templates；要编辑主题/正文需先设置 custom SMTP。
+
+Auth > Emails > SMTP Settings:
+  Enable custom SMTP = off。
+  结论：认证邮件当前走 Supabase 默认邮件通道，不走自有 SMTP。
+
+Auth > Rate Limits:
+  Rate limit for sending emails = 2 emails/hour。
+  结论：反复注册/重置测试极易撞到认证邮件限流。
+
+Supabase Status:
+  当前有 Supabase 技术事故横幅；状态页事故重点是 project operations / compute capacity，
+  未看到明确 Auth email / SMTP 投递事故。
+```
+
+QA 结论：
+
+- 这次“收不到邮件”不能直接判定为前端 bug。
+- 更准确的阻塞原因是：测试邮箱不是新邮箱密码账号 + 项目仍用 Supabase 默认邮件通道 + 邮件发送限制只有 2/hour。
+- 下一次 Gate 3 必须使用全新可收信地址（或 Gmail plus alias），并在 1 小时窗口内只跑一次注册确认；否则测试噪声太大。
+- 如果要稳定做真实用户验证，必须配置自定义 SMTP/Resend，再重跑注册确认与密码重置闭环。
 
 - **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在邮件投递问题解除后重跑。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
