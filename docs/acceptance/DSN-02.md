@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: Conditional Pass（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复，回调错误归因已用 Preview 合成回调复验）
+- Status: Review（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复；密码重置真实路径修复后待复验）
 - Date: 2026-07-02
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
@@ -24,7 +24,7 @@
 ## §8 开放项——最小实现（待 Owner/Codex 复核）
 
 - **角色命名**：沿用「Ember 一家」；SVG 纯装饰，容器 `aria-hidden`，SVG 自带 `aria-label`。未进品牌资产。
-- **重置页路由形态**：`/auth/callback` 增 `next` 参数（仅同源相对路径，防开放重定向）；`resetPasswordForEmail` 的 redirectTo 指向 `/auth/callback?next=/reset-password`，交换出恢复会话后落新页 `/reset-password`（`updateUser({password})`）。签名/确认邮件仍回 `/forge`。
+- **重置页路由形态**：`resetPasswordForEmail` 的 redirectTo 指向 `/reset-password`；`/reset-password` 自己处理 Supabase PKCE `?code=` 与邮件 hash token，建立恢复会话后调用 `updateUser({password})`。签名/确认邮件仍回 `/forge`。
 - **记住 30 天**：`createSupabaseBrowserClient({ remember })` → `@supabase/ssr` cookieOptions.maxAge：勾选=30 天持久 cookie（默认），不勾=会话级 cookie。**注意**：refresh token 服务端最长寿命仍由 Supabase 项目设置决定，属 Codex 边界，本票只控本次登录写入的 auth cookie 过期。
 - **失败文案**：登录失败不暴露账号是否存在；UI 使用泛化文案，不直接展示 Supabase 原始错误消息。
 - **决策记录**：`docs/DECISIONS.md` 已新增 D-10，记录彻底去掉 Magic Link、补邮箱密码重置、记住 30 天、Redirect URL 与迁移顺序硬约束。
@@ -59,7 +59,7 @@ Codex 代码复核补充：
 
 - `signInWithOtp`、Magic Link 相关运行时代码不存在。
 - 登录 / Google / reset / update password 不直接展示 Supabase 原始错误消息。
-- `/auth/callback?next=` 只接受同源相对路径，避免开放重定向。
+- `/reset-password` 兼容 `?code=` 与 `#access_token=...&refresh_token=...` 两种邮件回调形态，并清理地址栏 token。
 - `docs/DECISIONS.md` 已补 D-10，认证方式变更有权威记录。
 
 ### 本地浏览器视觉/交互核对（匿名，Chrome MCP，localhost:3000）
@@ -265,6 +265,31 @@ QA 裁决：
 - 不重复触发真实确认邮件，以免再制造邮件限流/重复链接噪声。
 - DSN-02 仍未完成完整忘记密码→重置→新密码登录真实路径；该项保留为合并前残余风险或下一轮 Gate 3 补测。
 
+### Preview Gate 3 失败：重置密码邮件落点（2026-07-02）
+
+Owner 真实点击密码重置邮件后，页面落到登录页，而不是 `/reset-password` 设置新密码页。截图中仍出现旧登录页文案「发送登录链接」，说明重置邮件没有稳定落到 DSN-02 的恢复页面：可能是 Supabase redirectTo 未被放行后回退 Site URL，也可能是邮件回调使用 URL hash token，而服务端 `/auth/callback` 无法读取 hash。
+
+修复裁决：
+
+```text
+- resetPasswordForEmail redirectTo 改为 `${origin}/reset-password`。
+- /reset-password 作为真实邮件回调落点，兼容：
+  1. PKCE query：?code=...
+  2. hash token：#access_token=...&refresh_token=...
+- 成功建立恢复会话后清理地址栏 token，再展示新密码表单。
+- Supabase Redirect URLs 必须补放行 Production + Preview wildcard 的 /reset-password。
+```
+
+待复验：
+
+```text
+1. 在最新 Preview 点击「忘记密码？」。
+2. 输入已确认邮箱，发送重置邮件。
+3. 点击邮件链接。
+4. 必须进入 /reset-password，并显示新密码/确认密码表单。
+5. 设置新密码成功后，用新密码登录进入 /forge。
+```
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。
@@ -274,5 +299,5 @@ QA 结论：
 
 - **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在邮件投递问题解除后重跑。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
-- **Supabase 侧配置（Owner/Codex）**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs、会话/refresh 时长策略。
+- **Supabase 侧配置（Owner/Codex）**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs（必须同时放行 `/auth/callback` 与 `/reset-password`）、会话/refresh 时长策略。
 - **V-01-FIX-09**：已由 DSN-02 承接/取代，不再单独推进。

@@ -1,7 +1,7 @@
 "use client";
 
 // ForgeNote /reset-password（DSN-02）——密码重置邮件链接的落点。
-// 流程：邮件链接 → /auth/callback?next=/reset-password 交换出恢复会话 → 本页设新密码。
+// 流程：邮件链接 → /reset-password 建立恢复会话 → 本页设新密码。
 // 仅前端行为，沿用 Supabase updateUser；不改 RLS / 业务 API。
 
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +20,10 @@ type Phase = "checking" | "form" | "done" | "invalid";
 const FIELD_CLASS =
   "h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[16px] text-[#33291F] outline-none transition-colors placeholder:text-[#8b8378] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50 sm:text-[15px]";
 
+function cleanRecoveryUrl() {
+  window.history.replaceState(window.history.state, "", window.location.pathname);
+}
+
 export default function ResetPasswordPage() {
   const configured = isSupabaseConfigured();
   const [phase, setPhase] = useState<Phase>(configured ? "checking" : "invalid");
@@ -32,13 +36,57 @@ export default function ResetPasswordPage() {
 
   const mascot = useRef<MascotHandle>(null);
 
-  // 落点须已有恢复会话（由 /auth/callback 交换得到）；否则视为链接失效。
+  // 本页是密码重置邮件的真实落点：兼容 Supabase PKCE ?code= 与邮件 hash token。
   useEffect(() => {
     if (!configured) return;
     let active = true;
     (async () => {
       try {
         const supabase = createSupabaseBrowserClient();
+        const url = new URL(window.location.href);
+        const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+        const callbackError =
+          url.searchParams.get("error") ??
+          url.searchParams.get("error_description") ??
+          hashParams.get("error") ??
+          hashParams.get("error_description");
+
+        if (callbackError) {
+          if (active) setPhase("invalid");
+          return;
+        }
+
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { data, error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
+          if (!active) return;
+          if (exchangeError || !data.session) {
+            setPhase("invalid");
+            return;
+          }
+          cleanRecoveryUrl();
+          setPhase("form");
+          return;
+        }
+
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        if (accessToken && refreshToken) {
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (!active) return;
+          if (sessionError || !data.session) {
+            setPhase("invalid");
+            return;
+          }
+          cleanRecoveryUrl();
+          setPhase("form");
+          return;
+        }
+
         const { data } = await supabase.auth.getSession();
         if (!active) return;
         setPhase(data.session ? "form" : "invalid");
