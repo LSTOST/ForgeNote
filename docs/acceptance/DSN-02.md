@@ -384,6 +384,32 @@ Owner 反馈：
 4. Gate 3 不再用连续狂点发送按钮作为测试方式。
 ```
 
+### Reset sent tab continuity bug（2026-07-02）
+
+Owner 反馈：
+
+```text
+从邮件中的重置密码链接完成密码重置并登录后，
+原来停在「重置邮件已发送」的标签页仍然不动。
+```
+
+修复：
+
+```text
+- resetSent 等待页监听 focus / pageshow / visibilitychange。
+- resetSent 等待页订阅 Supabase auth state。
+- 一旦检测到当前浏览器已有 session，自动跳转 /forge。
+```
+
+验收标准：
+
+```text
+1. 在 /login 发出重置邮件，停留在「重置邮件已发送」页面。
+2. 从邮件链接进入 /reset-password，完成新密码设置并登录。
+3. 回到原来的「重置邮件已发送」标签页。
+4. 页面应自动进入 /forge，不继续停在等待邮件状态。
+```
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。

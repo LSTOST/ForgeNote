@@ -133,6 +133,55 @@ export function LoginForm({ initialError }: LoginFormProps) {
     return () => window.clearInterval(timer);
   }, [resetCooldown]);
 
+  useEffect(() => {
+    if (!configured || view !== "resetSent") return;
+    let active = true;
+    const supabase = createSupabaseBrowserClient();
+
+    async function redirectIfSignedIn() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (active && data.session) {
+          window.location.assign("/forge");
+        }
+      } catch {
+        // 留在当前等待态；用户仍可返回登录或稍后重发。
+      }
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        void redirectIfSignedIn();
+      }
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        active &&
+        session &&
+        (event === "SIGNED_IN" ||
+          event === "TOKEN_REFRESHED" ||
+          event === "USER_UPDATED")
+      ) {
+        window.location.assign("/forge");
+      }
+    });
+
+    void redirectIfSignedIn();
+    window.addEventListener("focus", redirectIfSignedIn);
+    window.addEventListener("pageshow", redirectIfSignedIn);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+      window.removeEventListener("focus", redirectIfSignedIn);
+      window.removeEventListener("pageshow", redirectIfSignedIn);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [configured, view]);
+
   function resetTransient() {
     setPasswordState("idle");
     setResetState("idle");
