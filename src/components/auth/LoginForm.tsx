@@ -29,6 +29,7 @@ const PRIMARY_BTN =
   "h-11 w-full gap-2 rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:opacity-60 disabled:shadow-none";
 const LINK_CLASS =
   "font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50";
+const RESET_EMAIL_COOLDOWN_SECONDS = 60;
 
 // 登录页表单（DSN-02）：邮箱密码为主 + Google 备选 + 忘记密码/重置；已移除 Magic Link。
 export function LoginForm({ initialError }: LoginFormProps) {
@@ -45,6 +46,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const [oauthState, setOauthState] = useState<OAuthState>("idle");
   const [sentTo, setSentTo] = useState("");
   const [error, setError] = useState<string | null>(initialError ?? null);
+  const [resetCooldown, setResetCooldown] = useState(0);
 
   const deskMascot = useRef<MascotHandle>(null);
   const mobMascot = useRef<MascotHandle>(null);
@@ -59,6 +61,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const passwordValid = password.length >= 8;
   const isSignUp = view === "signUp";
+  const resetCoolingDown = resetCooldown > 0;
 
   // 姿态：由当前状态推导，仅在交互/状态变化时发生（无首屏自动播放）。
   const pose: MascotPose = (() => {
@@ -121,6 +124,14 @@ export function LoginForm({ initialError }: LoginFormProps) {
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
+
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setResetCooldown((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resetCooldown]);
 
   function resetTransient() {
     setPasswordState("idle");
@@ -192,7 +203,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
 
   async function handleResetRequest(e: React.FormEvent) {
     e.preventDefault();
-    if (!emailValid) return;
+    if (!emailValid || resetCoolingDown) return;
     setError(null);
     setResetState("submitting");
     try {
@@ -205,14 +216,17 @@ export function LoginForm({ initialError }: LoginFormProps) {
       );
       if (resetError) {
         setError(copy.reset.sendFailed);
+        setResetCooldown(RESET_EMAIL_COOLDOWN_SECONDS);
         setResetState("error");
         return;
       }
       setSentTo(email.trim());
+      setResetCooldown(RESET_EMAIL_COOLDOWN_SECONDS);
       setResetState("idle");
       setView("resetSent");
     } catch {
       setError(copy.reset.networkError);
+      setResetCooldown(RESET_EMAIL_COOLDOWN_SECONDS);
       setResetState("error");
     }
   }
@@ -297,15 +311,29 @@ export function LoginForm({ initialError }: LoginFormProps) {
                     email={sentTo}
                     suffix={copy.reset.sentBodySuffix}
                   >
+                    <p className="mt-3 text-[13px] leading-5 text-[#8a7d6c]">
+                      {resetCoolingDown
+                        ? copy.reset.cooldownHint.replace(
+                            "{seconds}",
+                            String(resetCooldown),
+                          )
+                        : copy.reset.canResendHint}
+                    </p>
                     <button
                       type="button"
                       className={`mt-3 mr-4 text-[14px] ${LINK_CLASS}`}
+                      disabled={resetCoolingDown}
                       onClick={() => {
                         resetTransient();
                         setView("resetRequest");
                       }}
                     >
-                      {copy.reset.resend}
+                      {resetCoolingDown
+                        ? copy.reset.resendIn.replace(
+                            "{seconds}",
+                            String(resetCooldown),
+                          )
+                        : copy.reset.resend}
                     </button>
                     <button
                       type="button"
@@ -342,14 +370,31 @@ export function LoginForm({ initialError }: LoginFormProps) {
                       onBlur={() => setFocusField(null)}
                       disabled={busy}
                     />
-                    <Button type="submit" className={PRIMARY_BTN} disabled={!emailValid || busy}>
+                    <Button
+                      type="submit"
+                      className={PRIMARY_BTN}
+                      disabled={!emailValid || busy || resetCoolingDown}
+                    >
                       {resetState === "submitting" ? (
                         <LoaderCircle className="size-4 animate-spin" aria-hidden />
                       ) : null}
                       {resetState === "submitting"
                         ? copy.reset.submitting
-                        : copy.reset.submit}
+                        : resetCoolingDown
+                          ? copy.reset.resendIn.replace(
+                              "{seconds}",
+                              String(resetCooldown),
+                            )
+                          : copy.reset.submit}
                     </Button>
+                    {resetCoolingDown ? (
+                      <p className="text-center text-[13px] leading-5 text-[#8a7d6c]">
+                        {copy.reset.cooldownHint.replace(
+                          "{seconds}",
+                          String(resetCooldown),
+                        )}
+                      </p>
+                    ) : null}
                     <div className="text-center">
                       <button
                         type="button"
