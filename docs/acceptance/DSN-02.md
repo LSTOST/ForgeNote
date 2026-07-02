@@ -310,6 +310,28 @@ curl -sSI "https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.verc
   x-matched-path: /reset-password
 ```
 
+### Latest Preview reset request（2026-07-02）
+
+环境：
+
+- Preview: `https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app`
+- 测试邮箱：Owner-provided QQ test address（redacted）
+
+实测：
+
+```text
+1. 打开最新 Preview /login。
+2. 点击「忘记密码？」。
+3. 输入测试 QQ 邮箱。
+4. 点击「发送重置邮件」。
+5. 页面显示「重置邮件已发送」。
+```
+
+未完成项：
+
+- Codex 不能操作 QQ 邮箱标签页：浏览器安全策略阻止访问 `https://wx.mail.qq.com`。
+- 需要 Owner 点击最新一封 ForgeNote 重置邮件链接，确认是否进入 `/reset-password` 新密码表单。
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。
