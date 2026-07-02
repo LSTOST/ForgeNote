@@ -290,6 +290,26 @@ Owner 真实点击密码重置邮件后，页面落到登录页，而不是 `/re
 5. 设置新密码成功后，用新密码登录进入 /forge。
 ```
 
+### Supabase Redirect URL 补齐（2026-07-02）
+
+Supabase Auth URL Configuration 已从 6 条增至 9 条。新增：
+
+```text
+http://localhost:3000/reset-password
+https://forge-note-gold.vercel.app/reset-password
+https://forge-note-git-*-lstosts-projects.vercel.app/reset-password
+```
+
+页面保存反馈：`Successfully added 3 URLs`。
+
+Preview route check:
+
+```text
+curl -sSI "https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app/reset-password"
+  HTTP 200
+  x-matched-path: /reset-password
+```
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。
