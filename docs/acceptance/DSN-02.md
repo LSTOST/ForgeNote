@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: Review（Codex Gate 2 通过；Preview Gate 3 登录态 + 移动端待跑）
+- Status: Blocked（Codex Gate 2 通过；Preview Gate 3 被确认邮件未投递阻塞）
 - Date: 2026-07-01
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
@@ -116,7 +116,33 @@ HEAD /reset-password
 
 ## 残余风险 / 待跑
 
-- **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在 Preview + Owner 操作下验。
+### Preview Gate 3 阻塞（2026-07-02）
+
+环境：
+
+- Preview: `https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app`
+- 用户身份：匿名新用户路径
+- 测试邮箱：Owner-provided Gmail test address（redacted）
+
+实测步骤：
+
+```text
+1. 打开 /login。
+2. 切到「创建账号」。
+3. 输入测试邮箱 + 临时测试密码，提交创建账号。
+4. 页面显示「确认邮件已发送」，无错误 alert。
+5. Owner 检查测试邮箱：未收到确认邮件。
+6. Codex 用同一邮箱 + 临时测试密码尝试登录：未进入 /forge，页面显示「邮箱或密码不正确，请检查后重试。」
+```
+
+结论：
+
+- Gate 3 **Blocked**。页面请求路径可用，但 Supabase 确认邮件未被用户收到，无法完成“注册确认 → 密码登录 → 忘记密码 → 重置密码 → 新密码登录”认证闭环。
+- #28 不能作为完整产品验收合并；最多只能证明 Gate 2 和匿名 Preview 可用。
+- 下一步必须先查 Supabase Auth 邮件投递：Email provider/SMTP、Auth logs、rate limit、邮件模板、Redirect URL，以及该邮箱是否已有 OAuth/旧账号导致 signUp 被静默处理。
+- 可选复测路径：Owner 授权使用一个全新可收信测试邮箱，或同一 Gmail 的 plus alias；但如果 Supabase 邮件服务本身未投递，换邮箱不会解决根因。
+
+- **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在邮件投递问题解除后重跑。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
 - **Supabase 侧配置（Owner/Codex）**：email/password provider、密码重置邮件模板、Production+Preview redirect URLs、会话/refresh 时长策略。
 - **V-01-FIX-09**：已由 DSN-02 承接/取代，不再单独推进。
