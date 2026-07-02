@@ -181,12 +181,54 @@ Supabase Status:
   未看到明确 Auth email / SMTP 投递事故。
 ```
 
+### Resend SMTP 配置复核（2026-07-02）
+
+变更范围：只配置认证邮件投递，不改登录代码、不改 Redirect URLs、不启用 Resend receiving。
+
+```text
+Resend:
+  Team created。
+  Sending domain = auth.listefan.com。
+  Region = Tokyo (ap-northeast-1)。
+  API key = Supabase Auth SMTP（Sending access；secret 未写入仓库/文档）。
+  Domain status = Verified。
+
+Cloudflare DNS for listefan.com:
+  TXT  resend._domainkey.auth  = Resend DKIM key。
+  MX   send.auth               = feedback-smtp.ap-northeast-1.amazonses.com, priority 10。
+  TXT  send.auth               = v=spf1 include:amazonses.com ~all。
+  TXT  _dmarc                  = v=DMARC1; p=none;。
+  Not added: inbound receiving MX（Resend receiving 未启用）。
+
+DNS public verification:
+  DKIM TXT resolved via 1.1.1.1。
+  SPF TXT resolved via 1.1.1.1 and 8.8.8.8。
+  MX resolved to feedback-smtp.ap-northeast-1.amazonses.com。
+  DMARC TXT resolved via 1.1.1.1。
+
+Supabase Auth > Emails > SMTP Settings:
+  Enable custom SMTP = on。
+  Admin email = no-reply@auth.listefan.com。
+  Sender name = ForgeNote。
+  Host = smtp.resend.com。
+  Port = 587。
+  User = resend。
+  Password = Resend API key（saved; not readable after save）。
+  Save result = Successfully updated settings。
+```
+
+QA 结论：
+
+- 认证邮件已从 Supabase 默认邮件通道切到 Resend custom SMTP。
+- 旧的 2 emails/hour Supabase 默认邮件通道不再是 DSN-02 Gate 3 的主要阻塞。
+- 下一次 Gate 3 仍必须使用全新可收信地址（或 Gmail plus alias），不能复用已有 Google-only 测试账号。
+
 QA 结论：
 
 - 这次“收不到邮件”不能直接判定为前端 bug。
-- 更准确的阻塞原因是：测试邮箱不是新邮箱密码账号 + 项目仍用 Supabase 默认邮件通道 + 邮件发送限制只有 2/hour。
+- 当时更准确的阻塞原因是：测试邮箱不是新邮箱密码账号 + 项目仍用 Supabase 默认邮件通道 + 邮件发送限制只有 2/hour。
 - 下一次 Gate 3 必须使用全新可收信地址（或 Gmail plus alias），并在 1 小时窗口内只跑一次注册确认；否则测试噪声太大。
-- 如果要稳定做真实用户验证，必须配置自定义 SMTP/Resend，再重跑注册确认与密码重置闭环。
+- 自定义 SMTP/Resend 已在 2026-07-02 配置完成；需要重跑注册确认与密码重置闭环。
 
 - **Preview Gate 3（登录态）待跑**：真实密码注册→邮箱验证→登录、忘记密码→重置邮件→设新密码→登录、记住30天会话时长，均需 Supabase 邮件与真实会话，须在邮件投递问题解除后重跑。
 - **移动端设备核对待跑**：本地截图工具固定分辨率，未能反映 390px 窗口；结构为 mobile-first Tailwind（默认单列 `max-w-[380]`，`lg:` 分屏），建议 Preview 设备模拟确认无横向溢出。
