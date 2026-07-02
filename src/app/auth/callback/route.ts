@@ -11,18 +11,38 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function getCallbackErrorMessage(providerError: string): string {
+  const normalized = providerError.toLowerCase();
+
+  if (
+    normalized.includes("expired") ||
+    normalized.includes("invalid") ||
+    normalized.includes("otp_expired")
+  ) {
+    return "登录链接已失效或已使用。请直接用邮箱和密码登录；如果还不能登录，请重新发送确认或重置邮件。";
+  }
+
+  return "登录未完成。请重试，或改用邮箱和密码登录。";
+}
+
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   // Supabase 在用户拒绝授权或 provider 未配置时会带 error 回跳。
-  const providerError =
-    url.searchParams.get("error_description") ??
-    url.searchParams.get("error");
+  const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
+
+  // 成功后的落点：默认 /forge；next 只保留给明确的同源回跳。
+  // 只接受同源相对路径，防开放重定向。
+  const nextParam = url.searchParams.get("next");
+  const nextPath =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : "/forge";
 
   const loginUrl = new URL("/login", url.origin);
 
   if (providerError) {
-    loginUrl.searchParams.set("error", providerError);
+    loginUrl.searchParams.set("error", getCallbackErrorMessage(providerError));
     return NextResponse.redirect(loginUrl);
   }
 
@@ -43,5 +63,5 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.redirect(new URL("/forge", url.origin));
+  return NextResponse.redirect(new URL(nextPath, url.origin));
 }

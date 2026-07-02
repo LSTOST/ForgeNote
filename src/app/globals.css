@@ -128,3 +128,24 @@
     @apply font-sans;
   }
 }
+/* DSN-02 — Ember 吉祥物一次性体态（成功轻跳 / 失败轻晃）。
+   仅 transform；reduced-motion 下不播放（由 LoginForm 依 matchMedia 跳过挂载 class）。 */
+@keyframes fnHop {
+  0% { transform: translateY(0); }
+  28% { transform: translateY(-13px); }
+  52% { transform: translateY(0); }
+  70% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+@keyframes fnShake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-7px); }
+  38% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+.fn-hop { animation: fnHop 0.62s ease; }
+.fn-shake { animation: fnShake 0.42s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .fn-hop, .fn-shake { animation: none !important; }
+}
