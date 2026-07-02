@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: Review（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复，回调错误归因待复验）
+- Status: Conditional Pass（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复，回调错误归因已用 Preview 合成回调复验）
 - Date: 2026-07-02
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
@@ -250,6 +250,20 @@ QA 结论：
 - 发现真实 UX bug：`/auth/callback` 把所有 provider/callback error 都写死成「Google 登录失败」，邮件确认链接被重复点击、过期或异常回跳时会误导用户。
 - 本轮修复只改错误归因：通用回调错误显示「登录未完成」；失效/已使用链接显示「登录链接已失效或已使用」。不扩认证能力，不改 Supabase 配置。
 - Gate 3 需要在新部署上复验一次：点击确认邮件后不再出现 Google 误导文案；已确认账号可用邮箱密码进入 `/forge`。
+
+复验：
+
+```text
+curl -sSI "https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app/auth/callback?error=otp_expired"
+  HTTP 307
+  location: /login?error=登录链接已失效或已使用。请直接用邮箱和密码登录；如果还不能登录，请重新发送确认或重置邮件。
+```
+
+QA 裁决：
+
+- Callback copy bug 已在 Preview 上复验修复。
+- 不重复触发真实确认邮件，以免再制造邮件限流/重复链接噪声。
+- DSN-02 仍未完成完整忘记密码→重置→新密码登录真实路径；该项保留为合并前残余风险或下一轮 Gate 3 补测。
 
 QA 结论：
 
