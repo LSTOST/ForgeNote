@@ -11,6 +11,20 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function getCallbackErrorMessage(providerError: string): string {
+  const normalized = providerError.toLowerCase();
+
+  if (
+    normalized.includes("expired") ||
+    normalized.includes("invalid") ||
+    normalized.includes("otp_expired")
+  ) {
+    return "登录链接已失效或已使用。请直接用邮箱和密码登录；如果还不能登录，请重新发送确认或重置邮件。";
+  }
+
+  return "登录未完成。请重试，或改用邮箱和密码登录。";
+}
+
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -28,7 +42,7 @@ export async function GET(request: Request): Promise<Response> {
   const loginUrl = new URL("/login", url.origin);
 
   if (providerError) {
-    loginUrl.searchParams.set("error", "Google 登录失败，请重试或改用邮箱和密码登录。");
+    loginUrl.searchParams.set("error", getCallbackErrorMessage(providerError));
     return NextResponse.redirect(loginUrl);
   }
 

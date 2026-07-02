@@ -2,8 +2,8 @@
 
 ## 结论
 
-- Status: Blocked（Codex Gate 2 通过；Preview Gate 3 被 Supabase 邮件/测试账号配置阻塞）
-- Date: 2026-07-01
+- Status: Review（Codex Gate 2 通过；Preview Gate 3 邮箱注册主路径已恢复，回调错误归因待复验）
+- Date: 2026-07-02
 - Ticket: DSN-02（`docs/TICKETS.md`「待评估设计票」）
 - 唯一规格来源：`docs/design/dsn-02-login-auth/handoff.md`（+ `prototype.html` 量真值 / `screenshots/` 对照）
 - 实现分支：`claude/dsn-02-login-impl`（PR #28，base `main`）
@@ -222,6 +222,34 @@ QA 结论：
 - 认证邮件已从 Supabase 默认邮件通道切到 Resend custom SMTP。
 - 旧的 2 emails/hour Supabase 默认邮件通道不再是 DSN-02 Gate 3 的主要阻塞。
 - 下一次 Gate 3 仍必须使用全新可收信地址（或 Gmail plus alias），不能复用已有 Google-only 测试账号。
+
+### Preview Gate 3 重跑（Resend SMTP 后，2026-07-02）
+
+环境：
+
+- Preview: `https://forge-note-git-claude-dsn-02-login-impl-lstosts-projects.vercel.app`
+- 用户身份：匿名新用户路径
+- 测试邮箱：Owner-provided QQ test address（redacted）
+
+实测步骤：
+
+```text
+1. 打开 /login。
+2. 切到「创建账号」。
+3. 输入测试邮箱 + 临时测试密码，提交创建账号。
+4. 页面显示「确认邮件已发送」，无错误 alert。
+5. Owner 点击确认邮件。
+6. 确认回跳后页面显示「Google 登录失败，请重试或改用邮箱和密码登录。」
+7. Codex 随后用同一邮箱 + 同一临时密码登录。
+8. 成功进入 /forge，页面显示该测试账号邮箱；console 无错误。
+```
+
+结论：
+
+- Resend SMTP 与 Supabase 邮件确认链路已可用：账号已被确认，邮箱密码登录能进入 `/forge`。
+- 发现真实 UX bug：`/auth/callback` 把所有 provider/callback error 都写死成「Google 登录失败」，邮件确认链接被重复点击、过期或异常回跳时会误导用户。
+- 本轮修复只改错误归因：通用回调错误显示「登录未完成」；失效/已使用链接显示「登录链接已失效或已使用」。不扩认证能力，不改 Supabase 配置。
+- Gate 3 需要在新部署上复验一次：点击确认邮件后不再出现 Google 误导文案；已确认账号可用邮箱密码进入 `/forge`。
 
 QA 结论：
 
