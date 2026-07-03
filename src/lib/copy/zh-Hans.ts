@@ -48,6 +48,8 @@ export const zhHans = {
     passwordLabel: "密码",
     passwordPlaceholder: "输入密码",
     passwordPlaceholderSignup: "设置密码（至少 8 位）",
+    confirmPasswordLabel: "确认密码",
+    confirmPasswordPlaceholder: "确认密码",
     showPassword: "显示密码",
     hidePassword: "隐藏密码",
     rememberFor30Days: "保持 30 天登录",
