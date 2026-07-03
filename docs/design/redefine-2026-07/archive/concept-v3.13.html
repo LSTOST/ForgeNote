@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — 工作台概念稿 v3.13 (2026-07)</title>
+<style>
+  .frame{
+    --paper-0:#F6F1E8; --paper-1:#F3EBDD; --paper-2:#EFE3D3; --paper-inset:#E9DDC9;
+    --ink-1:#2B2B2B; --ink-2:#6B6B6B; --ink-3:#9A9A9A; --ink-4:#C2C2C2;
+    --accent:#E86A2F; --accent-hover:#D85F24; --accent-ghost:#FBE7DE; --accent-border:#E07A3A;
+    --bd:#D8C9B6; --bd-soft:#E7D9C6; --bd-subtle:rgba(0,0,0,0.06);
+    --done:#3C3C3C; --idle:#B8B0A2;
+    --sh-1:0 1px 0 rgba(0,0,0,0.03); --sh-2:0 2px 6px rgba(0,0,0,0.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#EDE5D5;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
+  .frame{max-width:1220px;margin:24px auto;border:1px solid var(--bd);border-radius:20px;background:var(--paper-0);overflow:hidden;color:var(--ink-1);line-height:1.7;box-shadow:var(--sh-1);position:relative}
+  h1,h2,h3,h4{letter-spacing:-0.02em}
+  button{font-family:inherit;cursor:pointer}
+
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--bd-soft)}
+  .ghostbtn{border:none;background:transparent;border-radius:8px;color:var(--ink-2);padding:4px 10px;font-size:13px}
+  .ghostbtn:hover{background:var(--paper-2)}
+  .brand{font-weight:700;font-size:14px}
+  .top-r{display:flex;gap:4px;align-items:center;margin-left:auto}
+  .kbd{color:var(--ink-3);font-size:12px;padding:3px 9px}
+
+  .cols{display:flex;min-height:600px}
+
+  /* 左 · 内容流 */
+  .left{width:224px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column}
+  .left-scroll{flex:1;overflow:auto;padding:14px 10px}
+  .newbtn{width:100%;background:var(--paper-1);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--ink-1);font-size:13.5px;font-weight:600;text-align:left}
+  .newbtn:hover{background:var(--paper-2)}
+  .sec{font-size:11px;letter-spacing:.08em;color:var(--ink-3);padding:16px 10px 6px;font-weight:600;display:flex;align-items:center}
+  .sec .act{margin-left:auto;font-weight:400;cursor:pointer;color:var(--ink-3)}
+  .item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;color:var(--ink-2);cursor:pointer;font-size:13px}
+  .item:hover{background:var(--paper-2)}
+  .item.on{background:var(--accent-ghost);color:var(--ink-1)}
+  .item .n{margin-left:auto;color:var(--ink-3);font-size:12px}
+  .radar-pick{border:1px solid var(--bd-soft);border-radius:10px;padding:9px 12px;margin:0 2px 8px;background:var(--paper-1);cursor:pointer;font-size:12.5px;line-height:1.5}
+  .radar-pick:hover{background:var(--paper-2)}
+  .radar-pick .t{color:var(--ink-1);font-weight:600;display:block}
+  .radar-pick .w{color:var(--ink-3);font-size:11.5px}
+  .left-foot{border-top:1px solid var(--bd-soft);padding:10px;display:flex;align-items:center;gap:9px;color:var(--ink-2);font-size:13px;line-height:1.3}
+  .avatar{width:22px;height:22px;border-radius:50%;background:var(--ink-1);color:var(--paper-0);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px}
+
+  /* 中 · 当前内容对象 */
+  .center{flex:1;display:flex;flex-direction:column;min-width:0}
+  .stage{display:flex;align-items:baseline;gap:14px;padding:18px 48px 0;max-width:780px;margin:0 auto;width:100%}
+  .stage h2{font-size:17px;font-weight:600}
+  .stage .st{margin-left:auto;font-size:11.5px;color:var(--ink-3)}
+  .flow{flex:1;overflow:auto;padding:18px 48px 26px}
+  .flow-in{max-width:660px;margin:0 auto}
+  .idea{color:var(--ink-3);font-size:12.5px;margin-bottom:18px}
+  .draft-lab{font-size:11px;color:var(--ink-3);letter-spacing:.08em;font-weight:600;margin-bottom:10px}
+  .draft{font-size:15px;line-height:1.9;white-space:pre-line}
+  .seg{border-radius:6px;transition:background .12s;padding:1px 4px;margin:0 -4px}
+  .seg.hl{background:var(--accent-ghost)}
+  .selline{background:var(--paper-2);border-bottom:1px dashed var(--bd);cursor:text}
+  .edit-tip{display:inline-flex;gap:10px;margin-top:6px;background:var(--paper-2);border:1px solid var(--bd-soft);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--ink-2)}
+  .edit-tip span{cursor:pointer}
+  .edit-tip span:hover{color:var(--ink-1)}
+  .composer{padding:14px 48px 16px}
+  .comp-wrap{max-width:660px;margin:0 auto}
+  .comp-in{display:flex;align-items:center;border:1px solid var(--bd-soft);border-radius:12px;padding:11px 18px;color:var(--ink-3);font-size:14px;background:var(--paper-0)}
+  .comp-in:hover{border-color:var(--bd)}
+  .comp-in .send{margin-left:auto;font-size:12px}
+
+  /* 右 · 结构控制 */
+  .right{width:246px;flex-shrink:0;border-left:1px solid var(--bd-soft);display:flex;flex-direction:column}
+  .r-body{flex:1;overflow:auto;padding:20px 16px}
+  .r-sec{font-size:11px;letter-spacing:.08em;color:var(--ink-3);font-weight:600;margin:22px 0 8px}
+  .r-sec:first-child{margin-top:0}
+  .slot{padding:7px 0;border-bottom:1px solid var(--bd-subtle);font-size:13px;cursor:text;display:flex;align-items:baseline;gap:8px}
+  .slot:last-of-type{border-bottom:none}
+  .slot .lab{font-size:11px;color:var(--ink-3);letter-spacing:.06em;width:34px;flex-shrink:0}
+  .slot .val{color:var(--ink-1)}
+  .slot .tok{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;display:none;flex-shrink:0}
+  .slot:hover .tok{display:inline}
+  .slot:hover .val::after{content:" ✎";color:var(--ink-3);font-size:12px}
+  .conf-lab{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2)}
+  .conf-bar{height:4px;border-radius:2px;background:var(--paper-inset);margin-top:6px}
+  .conf-fill{height:100%;width:82%;background:var(--done);border-radius:2px}
+  .conf-cap{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+  .rule-row{font-size:12.5px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--bd-subtle)}
+  .rule-row:last-of-type{border-bottom:none}
+  .rule-row .ok{color:var(--done);font-weight:600}
+  .dep-toggle{font-size:12.5px;color:var(--ink-3);cursor:pointer;padding:5px 0}
+  .dep-toggle:hover{color:var(--ink-2)}
+  .deps{display:none}
+  .deps.open{display:block}
+  .ev{padding:6px 0;border-bottom:1px solid var(--bd-subtle);font-size:12px;color:var(--ink-2)}
+  .ev:last-child{border-bottom:none}
+
+  /* 底 · 输出动作（渲染层） */
+  .outbar{display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd-soft);padding:12px 48px;position:relative}
+  .out-menu{position:absolute;bottom:52px;right:48px;width:250px;background:var(--paper-2);border:1px solid var(--bd);border-radius:12px;padding:6px;box-shadow:var(--sh-2);display:none;z-index:8}
+  .out-menu.show{display:block}
+  .out-row{padding:7px 10px;border-radius:8px;font-size:12.5px;color:var(--ink-1);cursor:pointer;display:flex;justify-content:space-between}
+  .out-row:hover{background:var(--paper-1)}
+  .out-row .dim{color:var(--ink-3);font-size:11.5px}
+  .btn-pri{background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600}
+  .btn-pri:hover{background:var(--accent-hover)}
+  .btn-sec{background:var(--paper-1);border:1px solid var(--bd);color:var(--ink-1);border-radius:8px;padding:5px 14px;font-size:12.5px}
+  .btn-sec:hover{background:var(--paper-2)}
+  .out-note{font-size:11.5px;color:var(--ink-3)}
+  .out-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .ver{font-size:12px;color:var(--ink-3);cursor:pointer;border:1px solid var(--bd-soft);border-radius:8px;padding:3px 10px}
+  .ver:hover{background:var(--paper-2)}
+  .ver-pop{position:absolute;bottom:52px;left:150px;background:var(--paper-2);border:1px solid var(--bd);border-radius:10px;padding:8px;box-shadow:var(--sh-2);display:none;font-size:12px;color:var(--ink-2);z-index:8}
+  .ver-pop.show{display:block}
+  .ver-pop .vr{padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+  .ver-pop .vr:hover{background:var(--paper-1)}
+
+  .note{max-width:1220px;margin:12px auto 44px;color:#9A9A9A;font-size:12.5px;padding:0 10px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <div class="topbar">
+    <button class="ghostbtn">◧</button>
+    <div class="brand">ForgeNote</div>
+    <div class="top-r"><span class="kbd">⌘K</span><button class="ghostbtn">☾</button><button class="ghostbtn">◨</button></div>
+  </div>
+
+  <div class="cols">
+
+    <!-- 左 · 内容流 -->
+    <nav class="left">
+      <div class="left-scroll">
+        <button class="newbtn">＋ 新内容</button>
+        <div class="sec">选题雷达<span class="act">换一批 ↻</span></div>
+        <div class="radar-pick"><span class="t">一个人住三年，扔掉的 5 个「必买好物」</span><span class="w">清单体 · 你最稳的结构</span></div>
+        <div class="radar-pick"><span class="t">日活 200 就该停掉 A/B 测试</span><span class="w">反共识 · 回复量高</span></div>
+        <div class="sec">进行中</div>
+        <div class="item on">砍掉的功能</div>
+        <div class="item">厨房好物清单</div>
+        <div class="sec">历史</div>
+        <div class="item">已发布<span class="n">12</span></div>
+      </div>
+      <div class="left-foot"><span class="avatar">D</span><span>Dennis<br><span style="font-size:11px;color:var(--ink-3)">Plus</span></span></div>
+    </nav>
+
+    <!-- 中 · 当前内容对象（始终可读的主稿） -->
+    <main class="center">
+      <div class="stage">
+        <h2>砍掉的功能</h2>
+        <span class="st">结构稳定 · 主稿随结构更新</span>
+      </div>
+      <div class="flow"><div class="flow-in">
+        <p class="idea">想法：上线前一晚，我把做了三周的功能砍掉了。</p>
+        <div class="draft-lab">主稿 · 平台无关（导出时由渲染层转换格式，不改结构）· hover 右侧槽位可见对应段落</div>
+        <div class="draft"><span class="seg" data-seg="hook">上线前一晚，我删掉了做了三周的功能。</span>
+
+<span class="seg" data-seg="context">那个功能叫「表格导入」。14 个用户要过它，我认认真真做了三周。
+后来我去看了用户录屏——每一个说「很需要」的人，都只用了一次。</span>
+
+<span class="seg" data-seg="insight"><span class="selline">他们要的从来不是导入功能，是旧数据别再烦他们。</span></span>
+<span class="edit-tip"><span>改写这句</span><span>更克制</span><span>删去</span></span>
+
+<span class="seg" data-seg="resolution">现在我的范围守则只有一条：
+别做用户「想要」的，做他们「会想念」的。
+
+判断方法（10 分钟版）：
+一、问「没有它你上周损失了什么」；
+二、看行为，不听嘴；
+三、能用运营顶住的，先不写代码。</span></div>
+      </div></div>
+
+      <div class="composer">
+        <div class="comp-wrap">
+          <div class="comp-in">直接说改法：「开头别太丧」「情境模糊化」，或点选想改的句子<span class="send">⏎</span></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 右 · 结构控制 -->
+    <aside class="right">
+      <div class="r-body">
+        <div class="r-sec">结构 · 改任意槽位，主稿重新生成</div>
+        <div class="slot" data-seg="hook"><span class="lab">钩子</span><span class="val" contenteditable="true">损失开场</span><span class="tok">loss_open</span></div>
+        <div class="slot" data-seg="context"><span class="lab">情境</span><span class="val" contenteditable="true">实例证据</span><span class="tok">case_evidence</span></div>
+        <div class="slot" data-seg="insight"><span class="lab">洞察</span><span class="val" contenteditable="true">预期反转</span><span class="tok">expectation_reversal</span></div>
+        <div class="slot" data-seg="resolution"><span class="lab">收束</span><span class="val" contenteditable="true">可复用守则</span><span class="tok">reusable_rule</span></div>
+
+        <div class="r-sec">置信度</div>
+        <div class="conf-lab"><span>该结构 × 你的账号</span><span>82%</span></div>
+        <div class="conf-bar"><div class="conf-fill"></div></div>
+        <div class="conf-cap">基于 6 条历史帖的同结构表现</div>
+
+        <div class="r-sec">应用中的规则</div>
+        <div class="rule-row"><span class="ok">✓</span> 钩子不用 emoji</div>
+        <div class="rule-row"><span class="ok">✓</span> 数字优先于形容词</div>
+
+        <div class="r-sec">解释</div>
+        <div class="dep-toggle" id="dep-toggle">为什么是这个结构 ▸</div>
+        <div class="deps" id="deps">
+          <div class="ev">踩坑复盘拿到你中位互动的 4.2 倍</div>
+          <div class="ev">损失开场对你的账号有效（书号验证）</div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- 底 · 输出动作（渲染层） -->
+  <div class="outbar">
+    <button class="btn-sec">存为配方</button>
+    <span class="ver" id="ver">版本 v2 ▾</span>
+    <div class="ver-pop" id="ver-pop"><div class="vr">回滚到 v1</div><div class="vr">从 v1 派生</div></div>
+    <span class="out-note">渲染层只转换格式，不改结构</span>
+    <div class="out-right">
+      <button class="btn-sec">复制</button>
+      <button class="btn-pri" id="out-sel">导出</button>
+      <div class="out-menu" id="out-menu">
+        <div class="out-row">小红书 图文 <span class="dim">Narrative + Visual</span></div>
+        <div class="out-row">X thread <span class="dim">Narrative · English</span></div>
+        <div class="out-row">Instagram carousel <span class="dim">Narrative + Visual</span></div>
+        <div class="out-row">图片 Prompt <span class="dim">配图方向</span></div>
+        <div class="out-row" style="color:var(--ink-4);cursor:default">YouTube 脚本 <span class="dim">Temporal · 未启用</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="note">
+  【存档】概念稿 v3.13 · 三层系统（意图 → 结构 → 渲染）：<b>左=内容流</b>（新建/雷达/进行中/历史），
+  <b>中=当前内容对象</b>（始终可读的平台无关主稿，段落与右栏槽位<b>双向联动高亮</b>），
+  <b>右=结构控制</b>（槽位 human label（hover 见 token）/ 置信度 / 规则 / 解释折叠），
+  <b>底=输出动作</b>（左：存为配方/版本；右：复制/<b>导出</b>——点击才弹平台列表）。被 v3.14 高保真定版取代。
+</p>
+
+<script>
+  document.querySelectorAll('.slot[data-seg]').forEach(s=>{
+    const seg=()=>document.querySelector('.seg[data-seg="'+s.dataset.seg+'"]');
+    s.addEventListener('mouseenter',()=>seg()&&seg().classList.add('hl'));
+    s.addEventListener('mouseleave',()=>seg()&&seg().classList.remove('hl'));
+  });
+  document.querySelectorAll('.seg[data-seg]').forEach(g=>{
+    const slot=()=>document.querySelector('.slot[data-seg="'+g.dataset.seg+'"]');
+    g.addEventListener('mouseenter',()=>{g.classList.add('hl');slot()&&slot().style.setProperty('background','var(--paper-2)')});
+    g.addEventListener('mouseleave',()=>{g.classList.remove('hl');slot()&&slot().style.removeProperty('background')});
+  });
+  const os=document.getElementById('out-sel'),om=document.getElementById('out-menu');
+  os.addEventListener('click',()=>om.classList.toggle('show'));
+  om.querySelectorAll('.out-row').forEach(r=>r.addEventListener('click',()=>om.classList.remove('show')));
+  const vp=document.getElementById('ver-pop');
+  document.getElementById('ver').addEventListener('click',()=>vp.classList.toggle('show'));
+  const dt=document.getElementById('dep-toggle'),dp=document.getElementById('deps');
+  dt.addEventListener('click',()=>{dp.classList.toggle('open');dt.textContent=dp.classList.contains('open')?'为什么是这个结构 ▾':'为什么是这个结构 ▸'});
+</script>
+</body>
+</html>
