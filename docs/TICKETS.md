@@ -51,6 +51,8 @@
 | I-21 | Done | 生成成功/草稿失败后把 session 写入 `/forge?session=`，刷新仍能回看结果或恢复错误态；新建/重新定方向清理旧 session URL | `docs/acceptance/I-21.md` |
 | I-22 | Done | 第一份内容方案可用性升级：生成契约/prompt、结果区、复制动作、保存配方前价值判断；Preview Gate 3 pass 后随 PR #10 合入 | `docs/acceptance/I-22.md` |
 | I-23 | Done | 保存配方后的复用证据链：保存成功进入配方详情、换输入重跑后保持 I-22 结构；Preview Gate 3 pass 后随 PR #12 合入 | `docs/acceptance/I-23.md` |
+| I-24 | Done | DSN-03-S1 假设条：账号级判断 chips；PR #27 已 merge，作为后续 I-25 工作区 UI 的基线，不替代 V-01 真实用户证据 | `docs/acceptance/I-24.md` |
+| DSN-02 | Review | 登录/auth 融合：邮箱密码主路径、移除 Magic Link、新增密码重置、Resend SMTP、reset-sent 连续性；PR #28 Conditional Pass，待转 Ready/合并裁决 | `docs/acceptance/DSN-02.md` |
 | V-01-FIX-01 | Done | 修复 V-01 前置入口阻塞：/forge 首屏状态文案、第一步按钮语义、方向确认滚动露出、输出语言/表达偏好可见性与快捷选项；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-02 | Done | 修复 V-01 二次入口理解阻塞：空态“新建”、主文案压迫感、方向确认输入反馈、按钮/图标一致性；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
 | V-01-FIX-03 | Done | 修复 V-01 页面形态阻塞：/forge 桌面端重排为左=账号/内容资产，中=当前任务与内容方案，右=方向假设/生成控制/配方，底=当前 session/复用/表现；Preview Gate 3 pass | `docs/acceptance/V-01.md` |
@@ -945,7 +947,7 @@ Codex Review（2026-06-30）：
 
 ```text
 票号：I-24
-状态：Conditional Pass（Preview 登录态核心路径已通过；移动 390px 视口待后续响应式验收复查）
+状态：Conditional Pass（PR #27 已 merge；Preview 登录态核心路径已通过；移动 390px 视口待后续响应式验收复查；I-25 / PR #30 可基于该基线继续，但暂不进入）
 类型：DSN-03 首张产品实现切片 / Forge 工作台体验修正
 
 设计来源：
@@ -1019,14 +1021,15 @@ Codex Review（2026-06-30）：
 - 现有生成前的默认假设可能没有足够丰富的 rationale/confidence；本票只能做呈现 fallback。若要让 AI 解释更准，另开 prompt/contract 票。
 - 这不是 DSN-03 全量落地；它只处理 V-01 最前面的“看懂并改一条假设”。
 
-下一步：
-- PR #25（DSN-03 文档母版）Ready 后，Claude Code 可按 I-24 实现。
-- Codex 不把 I-24 合格等同于 V-01 通过；I-24 通过后仍要继续真实用户 V-01 证据。
+收口记录：
+- PR #27（`codex/i-24-assumption-chips`）已 merge，GitHub CI 与 Vercel 均通过。
+- I-24 只确认“看懂并改一条假设”的基线，不等于 V-01 通过；V-01 仍需要真实非构建者用户证据。
+- I-25 / PR #30 必须基于 I-24，不得回退到旧 /forge 表单，不得扩 API / prompt / DB / RLS / auth。
 ```
 
 ## M1 剩余执行队列
 
-> M1 计划票 I-08~I-23 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一验证任务仍是 V-01 真实用户路径。并行实现队列的下一张票为 **I-24 / DSN-03-S1**，只修正假设条账号级判断，不扩产品范围。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
+> M1 计划票 I-08~I-24 与 DSN-01 均已 Done。V-01-FIX-08 已合入并通过 Production recheck；当前唯一验证任务仍是 V-01 真实用户路径。登录/auth 线先收口 **DSN-02 / PR #28**；I-25 / PR #30 暂不进入。**产品方向已修订**（`docs/ForgeNote_修订版方向.md`）：不堆功能、不做内容资产/图文视觉渲染；现在三支柱已串成路径，必须用真实用户证据判断下一步。观测 SDK / runtime i18n / 学习闭环按修订版方向延后。
 
 ## 每票模板
 

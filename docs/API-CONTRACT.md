@@ -545,7 +545,8 @@ M1 要求模型返回 JSON。生成失败时，API 返回 GENERATION_FAILED。
 |---|---|---|
 | `/auth/callback` | GET | PKCE `code` → `exchangeCodeForSession` 写入 Auth cookie。成功 302 跳 `/forge`；缺配置 / 缺 code / provider 回带 error / 交换失败 → 跳 `/login?error=...` |
 | `/auth/signout` | POST | `signOut()` 清除 Auth cookie，303 跳 `/login`（POST→GET）。前端以原生 `<form method="post">` 提交，无需客户端 JS |
+| `/reset-password` | GET | 密码重置邮件落点。客户端兼容 PKCE `?code=` 与 hash token，建立恢复会话后调用 `updateUser({ password })`；无有效恢复会话时显示链接失效态 |
 
-登录入口（Google OAuth / 邮箱 Magic Link）由客户端 `/login` 页用 anon key 直接发起，`redirectTo` / `emailRedirectTo` 均指向 `/auth/callback`。
+登录入口（邮箱密码 / Google OAuth / 密码重置）由客户端 `/login` 页用 anon key 直接发起。Google `redirectTo` 指向 `/auth/callback`；密码重置 `redirectTo` 指向 `/reset-password`；登录页不再提供邮箱 Magic Link。
 
 受保护页面：`/forge` 为 Server Component，渲染前校验登录态，未登录（或 Supabase 未配置）→ 重定向 `/login`。这是贴近数据源的鉴权，与 `/api/forge` 的 RLS 共同构成纵深防护。`/login` 在已登录时反向重定向 `/forge`。
