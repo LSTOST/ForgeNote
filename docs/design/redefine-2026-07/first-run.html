@@ -6,22 +6,23 @@
 <title>ForgeNote — 冷启动首屏概念稿 (2026-07)</title>
 <style>
   .frame{
-    --paper-0:#F6F1E8; --paper-1:#F3EBDD; --paper-2:#EFE3D3; --paper-inset:#E9DDC9;
-    --card:#FBF7EF;
-    --ink-1:#2B2B2B; --ink-2:#6B6B6B; --ink-3:#9A9A9A; --ink-4:#C2C2C2;
-    --accent:#E86A2F; --accent-hover:#D85F24; --accent-ghost:#FBE7DE; --accent-border:#E07A3A;
-    --bd:#D8C9B6; --bd-soft:#E7D9C6; --bd-subtle:rgba(0,0,0,0.06);
+    --canvas:#EDE4CC; --dot:rgba(150,118,66,0.16);
+    --paper-0:#F5EDDB; --paper-1:#F1E7D3; --paper-2:#EBDFC8; --paper-inset:#E5D8BF;
+    --card:#FBF6E9;
+    --ink-1:#2A231B; --ink-2:#6D6051; --ink-3:#A0937C; --ink-4:#C6B99E;
+    --accent:#E8631F; --accent-hover:#D85A18; --accent-ghost:#FBE2CE; --accent-border:#E0702E;
+    --bd:#DAC6A5; --bd-soft:#E6D8BF; --bd-subtle:rgba(70,50,20,0.07);
     --sh-1:0 1px 0 rgba(0,0,0,0.03); --sh-2:0 2px 6px rgba(0,0,0,0.05);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#EDE5D5;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
-  .frame{max-width:1340px;margin:22px auto;border:1px solid var(--bd);border-radius:20px;background:var(--paper-0);overflow:hidden;color:var(--ink-1);line-height:1.6;box-shadow:var(--sh-1);display:flex;min-height:760px}
+  body{background:#E4DAC1;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
+  .frame{max-width:1340px;margin:22px auto;border:1px solid var(--bd);border-radius:20px;background-color:var(--canvas);background-image:radial-gradient(var(--dot) 1px,transparent 1.5px);background-size:20px 20px;overflow:hidden;color:var(--ink-1);line-height:1.6;box-shadow:var(--sh-1);display:flex;min-height:760px}
   h1{letter-spacing:-0.02em}
   button{font-family:inherit;cursor:pointer}
   a{text-decoration:none;color:inherit}
 
   /* ── 左栏（冷启动保留，对标 Laper 首页） ── */
-  .left{width:252px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column;background:var(--paper-0)}
+  .left{width:252px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column;background:transparent}
   .brand-row{display:flex;align-items:center;gap:9px;padding:16px 14px 10px}
   .logo{width:26px;height:26px;border-radius:8px;background:var(--ink-1);color:var(--paper-0);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
   .brand{font-weight:700;font-size:15px}
@@ -53,7 +54,7 @@
   .nic{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
   .left-foot{border-top:1px solid var(--bd-soft);padding:10px 12px;display:flex;align-items:center;gap:9px}
   /* 收起态：图标窄栏（对标 Laper） */
-  .mini{width:56px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:none;flex-direction:column;align-items:center;padding:14px 0;gap:4px;background:var(--paper-0)}
+  .mini{width:56px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:none;flex-direction:column;align-items:center;padding:14px 0;gap:4px;background:transparent}
   .mini.show{display:flex}
   .mbtn{width:36px;height:36px;border:none;background:transparent;border-radius:9px;color:var(--ink-2);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .mbtn:hover{background:var(--paper-2)}

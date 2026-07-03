@@ -3,25 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForgeNote — 工作台概念稿 v3.15 (2026-07)</title>
+<title>ForgeNote — 工作台概念稿 v3.16 (2026-07-03)</title>
 <style>
   .frame{
-    --paper-0:#F6F1E8; --paper-1:#F3EBDD; --paper-2:#EFE3D3; --paper-inset:#E9DDC9;
-    --card:#FBF7EF;
-    --ink-1:#2B2B2B; --ink-2:#6B6B6B; --ink-3:#9A9A9A; --ink-4:#C2C2C2;
-    --accent:#E86A2F; --accent-hover:#D85F24; --accent-ghost:#FBE7DE; --accent-border:#E07A3A;
-    --bd:#D8C9B6; --bd-soft:#E7D9C6; --bd-subtle:rgba(0,0,0,0.06);
-    --done:#3C3C3C; --idle:#B8B0A2;
+    --canvas:#EDE4CC; --dot:rgba(150,118,66,0.16);
+    --paper-0:#F5EDDB; --paper-1:#F1E7D3; --paper-2:#EBDFC8; --paper-inset:#E5D8BF;
+    --card:#FBF6E9;
+    --ink-1:#2A231B; --ink-2:#6D6051; --ink-3:#A0937C; --ink-4:#C6B99E;
+    --accent:#E8631F; --accent-hover:#D85A18; --accent-ghost:#FBE2CE; --accent-border:#E0702E;
+    --bd:#DAC6A5; --bd-soft:#E6D8BF; --bd-subtle:rgba(70,50,20,0.07);
+    --done:#3A322A; --idle:#B6AA90;
     --sh-1:0 1px 0 rgba(0,0,0,0.03); --sh-2:0 2px 6px rgba(0,0,0,0.05);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#EDE5D5;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
-  .frame{max-width:1340px;margin:22px auto;border:1px solid var(--bd);border-radius:20px;background:var(--paper-0);overflow:hidden;color:var(--ink-1);line-height:1.6;box-shadow:var(--sh-1);position:relative}
+  body{background:#E4DAC1;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
+  .frame{max-width:1340px;margin:22px auto;border:1px solid var(--bd);border-radius:20px;background-color:var(--canvas);background-image:radial-gradient(var(--dot) 1px,transparent 1.5px);background-size:20px 20px;overflow:hidden;color:var(--ink-1);line-height:1.6;box-shadow:var(--sh-1);position:relative}
   h1,h2,h3,h4{letter-spacing:-0.02em}
   button{font-family:inherit;cursor:pointer}
 
   /* ── 顶栏 ── */
-  .topbar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--bd-soft);background:var(--paper-0)}
+  .topbar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--bd-soft);background:transparent}
   .ibtn{border:none;background:transparent;border-radius:8px;color:var(--ink-2);padding:4px 10px;font-size:15px;text-decoration:none;cursor:pointer;line-height:1.2}
   .ibtn:hover{background:var(--paper-2);color:var(--ink-1)}
   .hiddenp{display:none!important}
@@ -35,7 +36,7 @@
   .cols{display:flex;min-height:760px}
 
   /* ── 左栏 ── */
-  .left{width:252px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column;background:var(--paper-0)}
+  .left{width:252px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column;background:transparent}
   .left-scroll{flex:1;overflow:auto;padding:14px 12px}
   .newbtn{width:100%;display:flex;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink-1)}
   .newbtn:hover{background:var(--paper-2)}
@@ -123,7 +124,7 @@
   .ed-foot .ops span:hover{color:var(--ink-1)}
 
   /* ── 右栏 · 结构控制 ── */
-  .right{width:296px;flex-shrink:0;border-left:1px solid var(--bd-soft);display:flex;flex-direction:column;background:var(--paper-0);position:relative}
+  .right{width:296px;flex-shrink:0;border-left:1px solid var(--bd-soft);display:flex;flex-direction:column;background:transparent;position:relative}
   .r-scroll{flex:1;overflow:auto;padding:16px}
   .r-title{font-size:14px;font-weight:700;margin-bottom:12px}
   .rc-tabs{display:flex;gap:4px;background:var(--paper-1);border:1px solid var(--bd-soft);border-radius:10px;padding:3px;margin-bottom:16px}
@@ -171,7 +172,7 @@
   .as-chip:hover{background:var(--paper-2)}
 
   /* ── 底栏 · 渲染层 ── */
-  .outbar{display:flex;align-items:center;gap:14px;border-top:1px solid var(--bd-soft);padding:12px 22px;background:var(--paper-0)}
+  .outbar{display:flex;align-items:center;gap:14px;border-top:1px solid var(--bd-soft);padding:12px 22px;background:transparent}
   .preview-btn{border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:7px 16px;font-size:13px;color:var(--ink-1);font-weight:500}
   .preview-btn:hover{background:var(--paper-2)}
   .gen-lab{font-size:12px;color:var(--ink-3)}
@@ -364,7 +365,7 @@
 </div>
 
 <p class="note">
-  概念稿 v3.15 · v3.14 + PRD 对齐五裁决：① 模态不再由用户选择——中栏顶部改为<b>内容方向</b>（内容原型「经验复盘」+ 系统推荐模态 + 主输出，均可改）；
+  概念稿 v3.16 · v3.15 + 暖化配色（A 方向）+ 点阵纸背景（墨色转暖褐、橙略提暖、canvas #EDE4CC 点阵）。以下同 v3.15。① 模态不再由用户选择——中栏顶部改为<b>内容方向</b>（内容原型「经验复盘」+ 系统推荐模态 + 主输出，均可改）；
   ② <b>token 默认隐藏</b>（骨架显示人类语言「问题钩子」，hover 才见 hook: problem_hook，回归 v3.12 映射原则）；
   ③ <b>配方显式化</b>（底栏「☆ 保存为配方」，只存生产方法不含正文）；④ 助手维持中区底部胶囊；⑤ M1 渲染范围以铁线为准。
   其余同 v3.14：段落卡↔骨架双向联动、黑白平台 chips、⌂/◧ 顶栏、回收站、助手胶囊点击弹出。可试：hover 骨架看 token、点「✦ 助手」。数据为示意。

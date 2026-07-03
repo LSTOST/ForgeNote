@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote 配色对照 · 当前 / A 暖化 / B 双色</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E7DECB;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;padding:28px 20px 60px;color:#2B2B2B}
+  h1{font-size:20px;letter-spacing:-.02em;margin-bottom:4px;text-align:center}
+  .lead{text-align:center;color:#7a7060;font-size:13px;margin-bottom:26px}
+  .grid{display:flex;gap:20px;max-width:1240px;margin:0 auto;align-items:stretch}
+  .col{flex:1}
+  .col-h{text-align:center;margin-bottom:12px}
+  .col-h .t{font-weight:700;font-size:15px}
+  .col-h .d{font-size:12px;margin-top:2px}
+
+  /* 每栏是一个迷你工作台条 */
+  .mini{border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .m-top{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:12px;font-weight:600}
+  .m-body{padding:16px 16px 18px}
+  .card{border-radius:12px;padding:13px 15px;margin-bottom:12px}
+  .card h4{font-size:14px;margin-bottom:6px}
+  .card p{font-size:12.5px;line-height:1.7}
+  .proto{display:inline-block;font-size:11.5px;border-radius:8px;padding:3px 11px;margin-bottom:12px;font-weight:600}
+  .slot{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid;}
+  .slot:last-of-type{border-bottom:none}
+  .prog-lab{display:flex;justify-content:space-between;font-size:11.5px;margin:14px 0 5px}
+  .prog{height:6px;border-radius:3px;overflow:hidden}
+  .prog i{display:block;height:100%;width:62%;border-radius:3px}
+  .verified{font-size:11.5px;font-weight:600;margin-top:12px}
+  .row-btn{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}
+  .btn-pri{border:none;border-radius:9px;padding:7px 16px;font-size:12.5px;font-weight:600;color:#fff}
+  .btn-sec{border-radius:9px;padding:6px 13px;font-size:12px}
+  .chips{display:flex;gap:6px;margin-top:12px}
+  .chip{display:flex;align-items:center;gap:5px;border-radius:8px;padding:4px 9px;font-size:11.5px}
+  .pdot{width:13px;height:13px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:800}
+
+  /* ── 当前 ── */
+  .cur .mini{background:#F6F1E8;border:1px solid #D8C9B6}
+  .cur .m-top{background:#F6F1E8;border-bottom:1px solid #E7D9C6;color:#6B6B6B}
+  .cur .card{background:#FBF7EF;border:1px solid #E7D9C6}
+  .cur .card h4{color:#2B2B2B}.cur .card p{color:#6B6B6B}
+  .cur .proto{background:#EFE3D3;color:#6B6B6B}
+  .cur .slot{color:#2B2B2B;border-color:rgba(0,0,0,.06)}
+  .cur .prog-lab{color:#9A9A9A}.cur .prog{background:#E9DDC9}.cur .prog i{background:#E86A2F}
+  .cur .verified{color:#6B6B6B}
+  .cur .btn-pri{background:#E86A2F}.cur .btn-sec{background:#F3EBDD;border:1px solid #D8C9B6;color:#2B2B2B}
+  .cur .chip{background:#FBF7EF;border:1px solid #E7D9C6;color:#2B2B2B}.cur .pdot{background:#6B6B6B}
+  .cur .col-h .d{color:#8a7f6d}
+
+  /* ── 方向 A：暖化（单橙不变，暖化墨色+提亮橙的呼吸空间） ── */
+  .a .mini{background:#F8F1E2;border:1px solid #DDC9A9}
+  .a .m-top{background:#F8F1E2;border-bottom:1px solid #E8DAC2;color:#6E6152}
+  .a .card{background:#FDF8EE;border:1px solid #E8DAC2}
+  .a .card h4{color:#2A231C}.a .card p{color:#6E6152}
+  .a .proto{background:#FBE3D0;color:#C1521A}
+  .a .slot{color:#2A231C;border-color:rgba(90,60,20,.09)}
+  .a .prog-lab{color:#A99B84}.a .prog{background:#EBDDC5}.a .prog i{background:#E8631F}
+  .a .verified{color:#6E6152}
+  .a .btn-pri{background:#E8631F}.a .btn-sec{background:#F3E9D6;border:1px solid #DDC9A9;color:#2A231C}
+  .a .chip{background:#FDF8EE;border:1px solid #E8DAC2;color:#2A231C}.a .pdot{background:#8a6a3f}
+  .a .col-h .d{color:#8a6a3f}
+
+  /* ── 方向 B：暖化 + 第二强调色（橙=当前/改动，青绿=已验证/成功） ── */
+  .b .mini{background:#F8F1E2;border:1px solid #DDC9A9}
+  .b .m-top{background:#F8F1E2;border-bottom:1px solid #E8DAC2;color:#6E6152}
+  .b .card{background:#FDF8EE;border:1px solid #E8DAC2}
+  .b .card h4{color:#2A231C}.b .card p{color:#6E6152}
+  .b .proto{background:#FBE3D0;color:#C1521A}
+  .b .slot{color:#2A231C;border-color:rgba(90,60,20,.09)}
+  .b .prog-lab{color:#A99B84}.b .prog{background:#EBDDC5}.b .prog i{background:#3B8270}
+  .b .verified{color:#2F6B5B}
+  .b .btn-pri{background:#E8631F}.b .btn-sec{background:#E4F0EB;border:1px solid #A9CFC2;color:#2F6B5B}
+  .b .chip{background:#FDF8EE;border:1px solid #E8DAC2;color:#2A231C}.b .pdot{background:#8a6a3f}
+  .b .col-h .d{color:#2F6B5B}
+  .b .verified::before{content:"● ";color:#3B8270}
+
+  .swatches{display:flex;gap:6px;justify-content:center;margin-top:14px}
+  .sw{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08)}
+  .note{max-width:1240px;margin:24px auto 0;color:#7a7060;font-size:12px;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+  <h1>ForgeNote 配色对照</h1>
+  <p class="lead">同一个工作台条，三套配色。看氛围，不看细节。</p>
+
+  <div class="grid">
+
+    <!-- 当前 -->
+    <div class="col cur">
+      <div class="col-h"><div class="t">当前（v3.15）</div><div class="d">纸底 + 中性灰墨 + 橙≤3%</div></div>
+      <div class="mini">
+        <div class="m-top">◌ ForgeNote · 内容工作区</div>
+        <div class="m-body">
+          <span class="proto">经验复盘</span>
+          <div class="card"><h4>砍掉的功能，教会我的一课</h4><p>上线前一晚，我删掉了做了三周的功能。这套判断方法分享给你。</p></div>
+          <div class="slot"><span>钩子</span><span>问题钩子</span></div>
+          <div class="slot"><span>洞察</span><span>预期反转</span></div>
+          <div class="prog-lab"><span>进度 3/5</span><span>60%</span></div>
+          <div class="prog"><i></i></div>
+          <div class="verified">✓ 已验证规律 ×6</div>
+          <div class="chips"><span class="chip"><span class="pdot">书</span>小红书</span><span class="chip"><span class="pdot">𝕏</span>X</span></div>
+          <div class="row-btn"><button class="btn-pri">生成内容</button><button class="btn-sec">保存为配方</button></div>
+        </div>
+      </div>
+      <div class="swatches"><span class="sw" style="background:#F6F1E8"></span><span class="sw" style="background:#6B6B6B"></span><span class="sw" style="background:#D8C9B6"></span><span class="sw" style="background:#E86A2F"></span></div>
+    </div>
+
+    <!-- 方向 A -->
+    <div class="col a">
+      <div class="col-h"><div class="t">方向 A · 暖化</div><div class="d">墨色转暖褐 + 橙多呼吸（不破单色规则）</div></div>
+      <div class="mini">
+        <div class="m-top">◌ ForgeNote · 内容工作区</div>
+        <div class="m-body">
+          <span class="proto">经验复盘</span>
+          <div class="card"><h4>砍掉的功能，教会我的一课</h4><p>上线前一晚，我删掉了做了三周的功能。这套判断方法分享给你。</p></div>
+          <div class="slot"><span>钩子</span><span>问题钩子</span></div>
+          <div class="slot"><span>洞察</span><span>预期反转</span></div>
+          <div class="prog-lab"><span>进度 3/5</span><span>60%</span></div>
+          <div class="prog"><i></i></div>
+          <div class="verified">✓ 已验证规律 ×6</div>
+          <div class="chips"><span class="chip"><span class="pdot">书</span>小红书</span><span class="chip"><span class="pdot">𝕏</span>X</span></div>
+          <div class="row-btn"><button class="btn-pri">生成内容</button><button class="btn-sec">保存为配方</button></div>
+        </div>
+      </div>
+      <div class="swatches"><span class="sw" style="background:#F8F1E2"></span><span class="sw" style="background:#6E6152"></span><span class="sw" style="background:#DDC9A9"></span><span class="sw" style="background:#E8631F"></span></div>
+    </div>
+
+    <!-- 方向 B -->
+    <div class="col b">
+      <div class="col-h"><div class="t">方向 B · 暖化 + 双强调</div><div class="d">A + 青绿：橙=当前/改动，绿=已验证/成功</div></div>
+      <div class="mini">
+        <div class="m-top">◌ ForgeNote · 内容工作区</div>
+        <div class="m-body">
+          <span class="proto">经验复盘</span>
+          <div class="card"><h4>砍掉的功能，教会我的一课</h4><p>上线前一晚，我删掉了做了三周的功能。这套判断方法分享给你。</p></div>
+          <div class="slot"><span>钩子</span><span>问题钩子</span></div>
+          <div class="slot"><span>洞察</span><span>预期反转</span></div>
+          <div class="prog-lab"><span>进度 3/5</span><span>60%</span></div>
+          <div class="prog"><i></i></div>
+          <div class="verified">已验证规律 ×6</div>
+          <div class="chips"><span class="chip"><span class="pdot">书</span>小红书</span><span class="chip"><span class="pdot">𝕏</span>X</span></div>
+          <div class="row-btn"><button class="btn-pri">生成内容</button><button class="btn-sec">保存为配方</button></div>
+        </div>
+      </div>
+      <div class="swatches"><span class="sw" style="background:#F8F1E2"></span><span class="sw" style="background:#6E6152"></span><span class="sw" style="background:#E8631F"></span><span class="sw" style="background:#3B8270"></span></div>
+    </div>
+
+  </div>
+
+  <p class="note">
+    <b>当前</b>灰在"暖纸 + 冷灰墨 + 橙被限到 3%"；<b>A</b> 把墨色从中性灰转成暖褐（最省事、不破你的单色规则，画面立刻不闷）；
+    <b>B</b> 在 A 基础上引入第二强调色青绿（橙管"当前/改动"，绿管"已验证/成功"），语义更清晰、活力更足，但会<b>推翻你 tokens 里"禁止多强调色共存"那条</b>——这是要你拍板的地方。
+  </p>
+</body>
+</html>

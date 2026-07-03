@@ -6,38 +6,55 @@
 
 ## 1. 基础色板（Foundation）
 
-### 背景系统（Paper Layer）——工作台的"纸感空间层级"
+> **v3.16 暖化修订（2026-07-03，Owner「A 方向 + 点阵纸」）**：原配色被 Owner 判为"灰沉沉"——
+> 根因是暖纸底叠中性冷灰墨。本次把墨色系整体转暖褐、橙色略提暖、并新增**点阵纸画布**。
+> 下表已是暖化后的值；括注为 v3.15 旧值。视觉气质不变（仍是极克制纸感），只是去掉了冷灰的闷感。
+
+### 画布与点阵（Canvas Layer，v3.16 新增）
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `bg-paper-0` | `#F6F1E8` | 默认背景 |
-| `bg-paper-1` | `#F3EBDD` | 卡片/编辑区主底 |
-| `bg-paper-2` | `#EFE3D3` | 浮层/hover 背景 |
-| `bg-paper-inset` | `#E9DDC9` | 内嵌区域/分栏底 |
+| `canvas` | `#EDE4CC` | 应用底画布（面板透明，露出连续点阵） |
+| `dot` | `rgba(150,118,66,0.16)` | 点阵颜色（暖褐，低透明） |
 
-### 文字系统（Ink Layer）
+点阵实现：`.frame` 上 `background-image: radial-gradient(var(--dot) 1px, transparent 1.5px); background-size: 20px 20px;`；
+大面板（顶栏/左栏/右栏/底栏）设 `background: transparent` 让点阵连续贯穿；内容卡用实底浮于其上。
 
-| Token | 值 |
-|---|---|
-| `text-primary` | `#2B2B2B`（正文，深炭黑） |
-| `text-secondary` | `#6B6B6B`（说明） |
-| `text-tertiary` | `#9A9A9A`（辅助信息） |
-| `text-disabled` | `#C2C2C2` |
+### 背景系统（Paper Layer）——浮于点阵之上的"纸感层级"
 
-### 强调色（Accent / Hermes Orange）
+| Token | 值（v3.16 暖化） | 旧值 | 用途 |
+|---|---|---|---|
+| `bg-paper-0` | `#F5EDDB` | ~~#F6F1E8~~ | 内容卡/段落卡实底 |
+| `bg-paper-1` | `#F1E7D3` | ~~#F3EBDD~~ | 次级卡/按钮底 |
+| `bg-paper-2` | `#EBDFC8` | ~~#EFE3D3~~ | hover 背景 |
+| `bg-paper-inset` | `#E5D8BF` | ~~#E9DDC9~~ | 内嵌/进度槽底 |
+| `card` | `#FBF6E9` | ~~#FBF7EF~~ | 最亮浮层卡（编辑区/任务卡） |
 
-| Token | 值 |
-|---|---|
-| `accent-strong` | `#E86A2F`（核心强调） |
-| `accent-soft` | `#F3A07A`（弱提示/hover） |
-| `accent-ghost` | `#FBE7DE`（浅背景标记） |
-| `accent-border` | `#E07A3A`（边框状态） |
+### 文字系统（Ink Layer，v3.16 转暖褐——去灰的关键）
 
-**规则：只能在"语义动作"上使用橙色**——关键改动、当前任务、风险提示、选中状态。
+| Token | 值（v3.16 暖化） | 旧值 |
+|---|---|---|
+| `text-primary` | `#2A231B`（暖炭黑） | ~~#2B2B2B~~ |
+| `text-secondary` | `#6D6051`（暖褐灰） | ~~#6B6B6B~~ |
+| `text-tertiary` | `#A0937C`（暖辅助） | ~~#9A9A9A~~ |
+| `text-disabled` | `#C6B99E` | ~~#C2C2C2~~ |
 
-## 2. 线框与边界（Stroke System）
+### 强调色（Accent / Hermes Orange，略提暖）
 
-`border-default: #D8C9B6` · `border-soft: #E7D9C6` · `border-focus: #E86A2F` · `border-subtle: rgba(0,0,0,0.06)`
+| Token | 值（v3.16） | 旧值 |
+|---|---|---|
+| `accent-strong` | `#E8631F`（核心强调） | ~~#E86A2F~~ |
+| `accent-hover` | `#D85A18` | ~~#D85F24~~ |
+| `accent-ghost` | `#FBE2CE`（浅背景标记） | ~~#FBE7DE~~ |
+| `accent-border` | `#E0702E`（边框状态） | ~~#E07A3A~~ |
+
+**规则不变：只能在"语义动作"上使用橙色**——关键改动、当前任务、风险提示、选中状态。
+仍是单强调色（方向 B 的第二强调色青绿未采纳，留作后续可选）。
+
+## 2. 线框与边界（Stroke System，v3.16 转暖）
+
+`border-default: #DAC6A5`（旧 #D8C9B6）· `border-soft: #E6D8BF`（旧 #E7D9C6）·
+`border-focus: #E8631F` · `border-subtle: rgba(70,50,20,0.07)`（旧 rgba(0,0,0,0.06)）
 
 ## 3. 阴影（极弱，不做"UI 感"）
 
