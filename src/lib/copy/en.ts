@@ -42,6 +42,8 @@ export const en: Copy = {
     passwordLabel: "Password",
     passwordPlaceholder: "Enter password",
     passwordPlaceholderSignup: "Set a password (min 8 chars)",
+    confirmPasswordLabel: "Confirm password",
+    confirmPasswordPlaceholder: "Confirm password",
     showPassword: "Show password",
     hidePassword: "Hide password",
     rememberFor30Days: "Stay signed in for 30 days",

@@ -38,7 +38,9 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const [view, setView] = useState<View>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [focusField, setFocusField] = useState<FocusField>(null);
   const [passwordState, setPasswordState] = useState<PasswordState>("idle");
@@ -61,6 +63,8 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const passwordValid = password.length >= 8;
   const isSignUp = view === "signUp";
+  const confirmPasswordValid = !isSignUp || confirmPassword === password;
+  const canSubmitPasswordAuth = emailValid && passwordValid && confirmPasswordValid;
   const resetCoolingDown = resetCooldown > 0;
 
   // 姿态：由当前状态推导，仅在交互/状态变化时发生（无首屏自动播放）。
@@ -187,6 +191,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
     setResetState("idle");
     setOauthState("idle");
     setError(null);
+    setConfirmPassword("");
   }
 
   async function handleGoogle() {
@@ -210,7 +215,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
 
   async function handlePasswordAuth(e: React.FormEvent) {
     e.preventDefault();
-    if (!(emailValid && passwordValid)) return;
+    if (!canSubmitPasswordAuth) return;
     setError(null);
     setPasswordState("submitting");
     try {
@@ -506,6 +511,43 @@ export function LoginForm({ initialError }: LoginFormProps) {
                         </button>
                       </div>
 
+                      {isSignUp ? (
+                        <div className="relative">
+                          <label htmlFor="confirm-password" className="sr-only">
+                            {copy.login.confirmPasswordLabel}
+                          </label>
+                          <input
+                            id="confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            autoComplete="new-password"
+                            placeholder={copy.login.confirmPasswordPlaceholder}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onFocus={() => setFocusField("password")}
+                            onBlur={() => setFocusField(null)}
+                            disabled={busy}
+                            className={`${FIELD_CLASS} pr-[46px]`}
+                          />
+                          <button
+                            type="button"
+                            aria-label={
+                              showConfirmPassword
+                                ? copy.login.hidePassword
+                                : copy.login.showPassword
+                            }
+                            aria-pressed={showConfirmPassword}
+                            onClick={() => setShowConfirmPassword((v) => !v)}
+                            className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-[9px] text-[#9c7a52] hover:text-[#33291F] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="size-[18px]" aria-hidden />
+                            ) : (
+                              <Eye className="size-[18px]" aria-hidden />
+                            )}
+                          </button>
+                        </div>
+                      ) : null}
+
                       {!isSignUp && (
                         <div className="flex items-center justify-between pt-0.5">
                           <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[#6f6253] select-none">
@@ -533,7 +575,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                       <Button
                         type="submit"
                         className={PRIMARY_BTN}
-                        disabled={!(emailValid && passwordValid) || busy}
+                        disabled={!canSubmitPasswordAuth || busy}
                       >
                         {passwordState === "submitting" ? (
                           <LoaderCircle className="size-4 animate-spin" aria-hidden />
