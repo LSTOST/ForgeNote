@@ -4,13 +4,13 @@
 M1
 
 ## 当前票
-当前唯一产品验证票：**V-01 Ready**。并行设计轨道 **DSN-03 Conditional Pass**：项目级 Core UX Map + Design System Baseline 已完成并通过 Codex 条件验收，不写产品代码。DSN-03 已拆出首张实现票 **I-24 / DSN-03-S1（假设条：账号级判断）Ready**；这是登录后 /forge 第一体验的最短高杠杆修正，不替代 V-01 真实用户证据。
+当前唯一产品验证票：**V-01 Ready**。并行设计轨道 **DSN-03 Conditional Pass**：项目级 Core UX Map + Design System Baseline 已完成并通过 Codex 条件验收，不写产品代码。首张实现切片 **I-24 / DSN-03-S1（假设条：账号级判断）已通过 PR #27 合入 main**，可作为后续工作区 UI 的基线，但不替代 V-01 真实用户证据。登录/auth 线 **DSN-02 / PR #28 Conditional Pass**：邮箱密码主路径、注册确认、密码重置、Resend SMTP、reset-sent 跨标签连续性已通过 Preview 真实路径复验；移动端细节仍作为非阻断残余风险。
 
 ## 当前分支
-当前代码基线：`main` / `origin/main` 已包含 PR #22 merge `7b78558` 与本次状态同步；V-01-FIX-08 已合入。当前工作分支：`codex/dsn-03-core-ux-map`。下一步：PR #25 Ready 后，按 I-24 派发 Claude Code 实现；同时不能暂停 V-01 真实用户验证。
+当前代码基线：`main` / `origin/main` 已包含 PR #25（DSN-03）与 PR #27（I-24）。当前工作分支：`claude/dsn-02-login-impl`，对应 PR #28。当前顺序：先收口 PR #28 DSN-02 登录融合，再基于已合入的 I-24 评审 I-25 / PR #30；暂不进入 PR #30 的工作区 UI 修正。
 
 ## 当前 PR
-PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #25：`https://github.com/LSTOST/ForgeNote/pull/25` Ready，DSN-03 文档票；已补 I-24 执行票。
+PR #10：`https://github.com/LSTOST/ForgeNote/pull/10` 已 squash merge。PR #11：`https://github.com/LSTOST/ForgeNote/pull/11` 已 squash merge。PR #12：`https://github.com/LSTOST/ForgeNote/pull/12` 已 squash merge。PR #13：`https://github.com/LSTOST/ForgeNote/pull/13` 已 squash merge。PR #15：`https://github.com/LSTOST/ForgeNote/pull/15` 已 squash merge。PR #16：`https://github.com/LSTOST/ForgeNote/pull/16` 已 squash merge。PR #17：`https://github.com/LSTOST/ForgeNote/pull/17` 已 squash merge。PR #18：`https://github.com/LSTOST/ForgeNote/pull/18` 已 squash merge。PR #19：`https://github.com/LSTOST/ForgeNote/pull/19` 已 squash merge。PR #20：`https://github.com/LSTOST/ForgeNote/pull/20` 已 squash merge。PR #21：`https://github.com/LSTOST/ForgeNote/pull/21` 已 squash merge。PR #22：`https://github.com/LSTOST/ForgeNote/pull/22` 已 squash merge。PR #25：`https://github.com/LSTOST/ForgeNote/pull/25` 已 merge，DSN-03 文档母版进入 main。PR #27：`https://github.com/LSTOST/ForgeNote/pull/27` 已 merge，I-24 假设条基线进入 main。PR #28：`https://github.com/LSTOST/ForgeNote/pull/28` open draft / CLEAN / CI pass / Vercel pass，DSN-02 Conditional Pass，待转 Ready/合并裁决。PR #30：`https://github.com/LSTOST/ForgeNote/pull/30` open draft / CLEAN / CI pass / Vercel pass，I-25 工作区 UI；暂不进入。
 
 ## 方向变更：v5 选择性折叠（2026-06-21，待技术负责人 Codex 确认）
 
