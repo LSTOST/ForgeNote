@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — 工作台概念稿 v3.1 (2026-07)</title>
+<style>
+  :root{
+    --bg:#141417; --panel:#1b1b1f; --panel-2:#202024; --line:#2b2b31; --line-soft:#26262c;
+    --ink:#e9e9ec; --ink-2:#9b9ba4; --ink-3:#63636d;
+    --accent:#3ecf8e; --accent-dim:rgba(62,207,142,.13);
+    --you:#a78bfa; --you-dim:rgba(167,139,250,.13);
+    --now:#f0a05a; --now-dim:rgba(240,160,90,.13);
+    --xhs:#ff5b74; --xhs-dim:rgba(255,91,116,.13);
+    --blue:#6cb2f7; --blue-dim:rgba(108,178,247,.12);
+    font-family:-apple-system,"Segoe UI","PingFang SC",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0e0e10;color:var(--ink);font-size:13px;line-height:1.55}
+  .frame{max-width:1280px;margin:22px auto;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+  /* ── title bar ── */
+  .titlebar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .dots{display:flex;gap:6px;margin-right:4px}
+  .dot{width:11px;height:11px;border-radius:50%;background:#3a3a41}
+  .titlebar .name{font-weight:700;font-size:13px}
+  .name span{color:var(--accent)}
+  .cmdk{margin-left:auto;color:var(--ink-3);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 12px;background:var(--bg)}
+
+  .cols{display:flex;min-height:660px}
+
+  /* ── left: assets ── */
+  .left{width:222px;flex-shrink:0;border-right:1px solid var(--line);background:var(--panel);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+  .sec{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3);padding:10px 8px 5px;font-weight:700}
+  .item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;color:var(--ink-2);cursor:pointer;white-space:nowrap;overflow:hidden}
+  .item:hover{background:var(--panel-2)}
+  .item.on{background:var(--panel-2);color:var(--ink)}
+  .item .n{margin-left:auto;color:var(--ink-3);font-size:11px}
+  .plat{width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;flex-shrink:0}
+  .plat.xhs{background:var(--xhs-dim);color:var(--xhs)}
+  .plat.x{background:var(--blue-dim);color:var(--blue)}
+  .live{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto}
+  .indent{padding-left:22px}
+
+  /* ── center: workspace ── */
+  .center{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+  .tabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+  .tab{padding:8px 16px;color:var(--ink-3);cursor:pointer;border-right:1px solid var(--line-soft);font-size:12.5px;display:flex;gap:7px;align-items:center}
+  .tab.on{color:var(--ink);background:var(--bg);box-shadow:inset 0 2px 0 var(--accent)}
+  .work{flex:1;overflow:auto;padding:18px 22px}
+
+  /* radar view */
+  .radar-head{margin-bottom:14px}
+  .radar-head h2{font-size:15px;letter-spacing:-.2px}
+  .radar-head p{color:var(--ink-2);font-size:12.5px;margin-top:2px}
+  .tcard{border:1px solid var(--line);border-radius:9px;padding:13px 15px;margin-bottom:10px;background:var(--panel);cursor:pointer}
+  .tcard:hover{border-color:#3a3a44}
+  .tcard.sel{border-color:var(--accent);background:var(--panel-2)}
+  .trow{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+  .badge{font-size:10.5px;font-weight:700;padding:1.5px 7px;border-radius:4px}
+  .badge.hi{background:var(--accent-dim);color:var(--accent)}
+  .badge.md{background:var(--now-dim);color:var(--now)}
+  .badge.pxhs{background:var(--xhs-dim);color:var(--xhs)}
+  .badge.px{background:var(--blue-dim);color:var(--blue)}
+  .badge.dual{background:var(--you-dim);color:var(--you)}
+  .tcard h3{font-size:13.5px;font-weight:600}
+  .tcard .hk{color:var(--ink-2);font-size:12.5px;font-style:italic;margin-top:2px}
+  .tacts{display:flex;gap:8px;margin-top:9px}
+  .btn{border:1px solid var(--line);background:transparent;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#0c281c}
+  .btn:hover:not(.pri){background:var(--panel-2)}
+
+  /* draft view */
+  .subtabs{display:flex;gap:6px;margin-bottom:14px}
+  .subtab{padding:4px 13px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);cursor:pointer;font-size:12px;font-weight:600;display:flex;gap:6px;align-items:center}
+  .subtab.on{border-color:var(--accent);color:var(--ink);background:var(--accent-dim)}
+  .draft-text{font-size:14.5px;line-height:1.7;white-space:pre-line;max-width:660px}
+  .draft-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--ink-3);font-size:12px;max-width:660px}
+  .vcheck{color:var(--accent)}
+
+  /* ── right: context / copilot ── */
+  .right{width:288px;flex-shrink:0;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+  .right-head{padding:11px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--ink-2)}
+  .right-body{flex:1;overflow:auto;padding:13px 14px}
+  .r-sec{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:14px 0 7px}
+  .r-sec:first-child{margin-top:0}
+  .ev{font-size:12px;border-radius:7px;padding:7px 10px;margin-bottom:6px;line-height:1.45}
+  .ev.you{background:var(--you-dim);color:var(--you)}
+  .ev.now{background:var(--now-dim);color:var(--now)}
+  .ev.this{background:var(--accent-dim);color:var(--accent)}
+  .ev .src{display:block;color:var(--ink-3);font-size:11px;margin-top:2px}
+  .belief{font-size:12px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--line-soft)}
+  .belief b{color:var(--ink);font-weight:600}
+  .belief .cnt{color:var(--accent);font-size:11px}
+  .hookopt{border:1px solid var(--line);border-radius:6px;padding:6px 9px;margin-bottom:5px;font-size:12px;color:var(--ink-2);cursor:pointer}
+  .hookopt.sel{border-color:var(--accent);color:var(--ink);background:var(--accent-dim)}
+  .chatbox{border-top:1px solid var(--line);padding:10px 12px}
+  .chat-in{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 11px;color:var(--ink-3);font-size:12px;background:var(--bg)}
+  .chat-in span:last-child{margin-left:auto;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:10px}
+
+  /* ── bottom: data & learning ── */
+  .bottom{border-top:1px solid var(--line);background:var(--panel)}
+  .btabs{display:flex;gap:2px;padding:0 12px;border-bottom:1px solid var(--line-soft)}
+  .btab{padding:7px 12px;font-size:12px;color:var(--ink-3);cursor:pointer;font-weight:600}
+  .btab.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+  .bbody{padding:9px 16px;min-height:108px}
+  table{border-collapse:collapse;width:100%;font-size:12px}
+  td,th{padding:4.5px 10px 4.5px 0;text-align:left;color:var(--ink-2);border-bottom:1px solid var(--line-soft)}
+  th{color:var(--ink-3);font-size:11px;font-weight:600}
+  td b{color:var(--ink);font-weight:600}
+  .up{color:var(--accent);font-weight:700}
+  .fill-btn{color:var(--accent);cursor:pointer;font-weight:600}
+  .llog{font-size:12.5px;color:var(--ink-2);padding:5px 0;border-bottom:1px solid var(--line-soft)}
+  .llog .d{color:var(--ink-3);margin-right:10px;font-size:11.5px}
+  .llog b{font-weight:700}
+  .v{color:var(--accent)} .r{color:var(--now)}
+  .statusbar{display:flex;gap:18px;padding:5px 16px;border-top:1px solid var(--line);color:var(--ink-3);font-size:11.5px;background:var(--bg)}
+  .statusbar .right-side{margin-left:auto}
+  .sb-dot{color:var(--accent)}
+
+  .note{max-width:1280px;margin:10px auto 40px;color:#63636d;font-size:12.5px;padding:0 8px}
+  .note b{color:#9b9ba4}
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <div class="titlebar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="name">Forge<span>Note</span></div>
+    <div class="cmdk">⌘K &nbsp;搜索选题、草稿、规律…</div>
+  </div>
+
+  <div class="cols">
+
+    <!-- ── LEFT · 资产区 ── -->
+    <nav class="left">
+      <div class="sec">平台账号</div>
+      <div class="item"><span class="plat xhs">书</span>独居生活指南<span class="live"></span></div>
+      <div class="item"><span class="plat x">𝕏</span>dennis_builds<span class="live"></span></div>
+      <div class="sec">内容库</div>
+      <div class="item on">◉ 本周选题池<span class="n">5</span></div>
+      <div class="item">▾ 草稿<span class="n">2</span></div>
+      <div class="item indent"><span class="plat x">𝕏</span>砍掉的功能…</div>
+      <div class="item indent"><span class="plat xhs">书</span>一个人住的厨房…</div>
+      <div class="item">▸ 已发布<span class="n">12</span></div>
+      <div class="sec">账号大脑</div>
+      <div class="item">◍ 已验证规律<span class="n">7</span></div>
+      <div class="item">✦ 最近学到的<span class="n">3</span></div>
+    </nav>
+
+    <!-- ── CENTER · 主工作区 ── -->
+    <main class="center">
+      <div class="tabs">
+        <div class="tab on" data-v="radar">◉ 本周雷达</div>
+        <div class="tab" data-v="draft">✎ 砍掉的功能 · 双平台</div>
+      </div>
+
+      <div class="work">
+
+        <!-- 雷达视图 -->
+        <div id="radar">
+          <div class="radar-head">
+            <h2>本周给你的 5 张牌</h2>
+            <p>按契合度排序 · 每张都标注了<b style="color:var(--ink)">凭什么、发哪边</b> · 跳过也会让我学到东西</p>
+          </div>
+
+          <div class="tcard sel">
+            <div class="trow"><span class="badge hi">高置信</span><span class="badge dual">双发 · 书+𝕏</span><span style="color:var(--ink-3);font-size:11px">thread / 图文</span></div>
+            <h3>你砍掉的那个功能，教会你的"范围"一课</h3>
+            <p class="hk">"昨晚我删掉了三周的工作量。这是我做过最对的决定。"</p>
+            <div class="tacts"><button class="btn pri">展开 →</button><button class="btn">不是我的菜</button></div>
+          </div>
+
+          <div class="tcard">
+            <div class="trow"><span class="badge hi">高置信</span><span class="badge pxhs">小红书</span><span style="color:var(--ink-3);font-size:11px">图文 · 清单体</span></div>
+            <h3>一个人住三年，我扔掉的 5 个"必买好物"</h3>
+            <p class="hk">"当初跟风买的，现在全在闲鱼。"</p>
+            <div class="tacts"><button class="btn pri">展开 →</button><button class="btn">不是我的菜</button></div>
+          </div>
+
+          <div class="tcard">
+            <div class="trow"><span class="badge hi">高置信</span><span class="badge px">𝕏</span><span style="color:var(--ink-3);font-size:11px">反共识</span></div>
+            <h3>为什么你在日活 200 时就该停掉 A/B 测试</h3>
+            <p class="hk">"Unpopular opinion: your startup doesn't have enough traffic to A/B test anything."</p>
+            <div class="tacts"><button class="btn pri">展开 →</button><button class="btn">不是我的菜</button></div>
+          </div>
+
+          <div class="tcard" style="opacity:.5">
+            <div class="trow"><span class="badge md">值得一试</span><span class="badge px">𝕏</span></div>
+            <h3>Stripe 后台截图：第 6 个月 vs 第 1 个月</h3>
+            <p class="hk">+ 还有 1 张…</p>
+          </div>
+        </div>
+
+        <!-- 草稿视图 -->
+        <div id="draft" style="display:none">
+          <div class="subtabs">
+            <div class="subtab on" data-p="px"><span class="plat x">𝕏</span>X 版 · thread</div>
+            <div class="subtab" data-p="pxhs"><span class="plat xhs">书</span>小红书版 · 图文</div>
+          </div>
+          <div class="draft-text" id="draft-x">I deleted 3 weeks of work last night. Best decision I made this quarter.
+
+The feature: CSV import. 14 users asked. I built it in 3 weeks.
+
+Then I watched the recordings — every requester used it exactly once.
+
+They didn't want CSV import. They wanted their old data to stop haunting them. →</div>
+          <div class="draft-text" id="draft-xhs" style="display:none">【封面钩子】做了三周的功能，我亲手删掉了
+
+正文：
+上线前一晚，我把做了三周的"表格导入"功能整个删掉了。
+不是做不出来——是我终于去看了用户录屏：
+14 个说"很需要"的人，每人只用了一次。
+
+他们要的从来不是导入功能，
+是"旧数据别再烦我"。
+
+一个人做产品最贵的学费：
+用户说的"想要"，和他会用的，是两回事。
+
+（配图方向：删代码的 diff 截图 + 一张手写"范围守则"）</div>
+          <div class="draft-foot">
+            <span>声音校验：<span class="vcheck">符合你的语域 ✓</span> · 数字开场 · 无 emoji 钩子</span>
+            <button class="btn pri">复制去发</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ── RIGHT · 上下文/副驾区 ── -->
+    <aside class="right">
+      <div class="right-head" id="ctx-head">上下文 · 选题「砍掉的功能」</div>
+      <div class="right-body">
+        <div class="r-sec">凭什么是这张牌</div>
+        <div class="ev you">你 · "踩坑复盘"类内容拿到你中位互动的 4.2×<span class="src">来源：你的 6 条历史帖 · 两个平台一致</span></div>
+        <div class="ev now">时机 · 你的 X 圈子这周在密集聊 build in public 复盘<span class="src">来源：你上周粘贴的 3 条观察</span></div>
+        <div class="ev this">写法 · 损失开场在你的账号胜过技巧开场 3:1<span class="src">小红书验证 ×3 → 迁移到 X（置信度降级）</span></div>
+        <div class="r-sec">钩子 · 选一个</div>
+        <div class="hookopt sel">"昨晚我删掉了三周的工作量…"（损失开场）</div>
+        <div class="hookopt">"用户说很需要，我做了，然后我删了它。"</div>
+        <div class="hookopt">"我运行过最难的命令：rm -rf 我最喜欢的功能"</div>
+        <div class="r-sec">账号大脑 · 相关信念</div>
+        <div class="belief"><b>受众要的是真数字，不是鸡汤</b> · <span class="cnt">验证 ×12</span></div>
+        <div class="belief"><b>克制、具体、自嘲；数字多于形容词</b> · 来自你的 20 条帖</div>
+      </div>
+      <div class="chatbox">
+        <div class="chat-in"><span>✦</span>和它讨论这个选题… 例如"换个角度，别太丧"<span>⏎</span></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ── BOTTOM · 数据与学习区 ── -->
+  <div class="bottom">
+    <div class="btabs">
+      <div class="btab on" data-b="perf">表现回填</div>
+      <div class="btab" data-b="learn">学习日志</div>
+    </div>
+    <div class="bbody">
+      <div id="perf">
+        <table>
+          <tr><th>已发布</th><th>平台</th><th>发布</th><th>互动</th><th>vs 你的中位</th><th></th></tr>
+          <tr><td><b>删掉三周工作量的那晚</b></td><td>𝕏</td><td>6/28</td><td>1.2k · 41 回复</td><td class="up">4.6×</td><td>已回填 ✓</td></tr>
+          <tr><td><b>一个人住的第 1000 天</b></td><td>小红书</td><td>6/26</td><td>856 赞 · 92 收藏</td><td class="up">2.1×</td><td>已回填 ✓</td></tr>
+          <tr><td><b>NPS 骗了我</b></td><td>𝕏</td><td>6/30</td><td>—</td><td>—</td><td class="fill-btn">+ 回填数据</td></tr>
+        </table>
+      </div>
+      <div id="learn" style="display:none">
+        <div class="llog"><span class="d">6/29</span><b class="v">验证：</b>反共识观点带来回复量（第 2 次）——升级为已验证规律，两平台通用</div>
+        <div class="llog"><span class="d">6/22</span><b class="r">推翻：</b>"早 9 点前发"——你最近 2 条晚间帖反而更好，此信念已移除</div>
+        <div class="llog"><span class="d">6/15</span><b>新观察：</b>小红书截图帖收藏高但不涨粉——降低优先级测试中</div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span><span class="sb-dot">●</span> 学习周期 6/29</span>
+      <span>1 条待回填</span>
+      <span>小红书 + 𝕏 · 数据互喂已开启</span>
+      <span class="right-side">ForgeNote 工作台概念稿 v3.1</span>
+    </div>
+  </div>
+
+</div>
+
+<p class="note">
+  【存档】概念稿 v3.1 · 双栖 + IDE 式工作台（暗色）：<b>左=资产</b>（平台账号/内容库树/账号大脑），
+  <b>中=标签页主工作区</b>（本周雷达 ↔ 草稿·平台子标签），<b>右=上下文副驾</b>（依据/钩子/信念/对话框），
+  <b>下=数据与学习</b>（表现回填/学习日志/状态栏）。
+</p>
+
+<script>
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    const v=t.dataset.v;
+    document.getElementById('radar').style.display=v==='radar'?'':'none';
+    document.getElementById('draft').style.display=v==='draft'?'':'none';
+    document.getElementById('ctx-head').textContent=v==='radar'?'上下文 · 选题「砍掉的功能」':'上下文 · 草稿「砍掉的功能」';
+  }));
+  document.querySelectorAll('.subtab').forEach(s=>s.addEventListener('click',()=>{
+    document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on');
+    document.getElementById('draft-x').style.display=s.dataset.p==='px'?'':'none';
+    document.getElementById('draft-xhs').style.display=s.dataset.p==='pxhs'?'':'none';
+  }));
+  document.querySelectorAll('.btab').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.btab').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('perf').style.display=b.dataset.b==='perf'?'':'none';
+    document.getElementById('learn').style.display=b.dataset.b==='learn'?'':'none';
+  }));
+  document.querySelectorAll('.hookopt').forEach(h=>h.addEventListener('click',()=>{
+    document.querySelectorAll('.hookopt').forEach(x=>x.classList.remove('sel'));
+    h.classList.add('sel');
+  }));
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — 工作台概念稿 v3.14 (2026-07)</title>
+<style>
+  .frame{
+    --paper-0:#F6F1E8; --paper-1:#F3EBDD; --paper-2:#EFE3D3; --paper-inset:#E9DDC9;
+    --card:#FBF7EF;
+    --ink-1:#2B2B2B; --ink-2:#6B6B6B; --ink-3:#9A9A9A; --ink-4:#C2C2C2;
+    --accent:#E86A2F; --accent-hover:#D85F24; --accent-ghost:#FBE7DE; --accent-border:#E07A3A;
+    --bd:#D8C9B6; --bd-soft:#E7D9C6; --bd-subtle:rgba(0,0,0,0.06);
+    --done:#3C3C3C; --idle:#B8B0A2;
+    --sh-1:0 1px 0 rgba(0,0,0,0.03); --sh-2:0 2px 6px rgba(0,0,0,0.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#EDE5D5;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
+  .frame{max-width:1340px;margin:22px auto;border:1px solid var(--bd);border-radius:20px;background:var(--paper-0);overflow:hidden;color:var(--ink-1);line-height:1.6;box-shadow:var(--sh-1);position:relative}
+  h1,h2,h3,h4{letter-spacing:-0.02em}
+  button{font-family:inherit;cursor:pointer}
+
+  /* ── 顶栏 ── */
+  .topbar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--bd-soft);background:var(--paper-0)}
+  .ibtn{border:none;background:transparent;border-radius:8px;color:var(--ink-2);padding:4px 10px;font-size:15px;text-decoration:none;cursor:pointer;line-height:1.2}
+  .ibtn:hover{background:var(--paper-2);color:var(--ink-1)}
+  .hiddenp{display:none!important}
+  .crumb{color:var(--ink-2);font-size:13px;margin-left:10px}
+  .crumb b{color:var(--ink-1);font-weight:600}
+  .top-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .save{font-size:12px;color:var(--ink-3)}
+  .tbtn{border:1px solid var(--bd);background:var(--card);border-radius:9px;padding:5px 13px;font-size:12.5px;color:var(--ink-1);font-weight:500}
+  .tbtn:hover{background:var(--paper-2)}
+
+  .cols{display:flex;min-height:760px}
+
+  /* ── 左栏 ── */
+  .left{width:252px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column;background:var(--paper-0)}
+  .left-scroll{flex:1;overflow:auto;padding:14px 12px}
+  .newbtn{width:100%;display:flex;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink-1)}
+  .newbtn:hover{background:var(--paper-2)}
+  .newbtn .kbd{margin-left:auto;font-size:11px;color:var(--ink-3);border:1px solid var(--bd-soft);border-radius:5px;padding:0 6px}
+  .lsec{display:flex;align-items:baseline;font-size:12px;color:var(--ink-3);font-weight:600;padding:18px 4px 8px}
+  .lsec .act{margin-left:auto;font-weight:400;cursor:pointer;font-size:11.5px}
+  .lsec .act:hover{color:var(--ink-2)}
+  .lsec .badge{margin-left:8px;font-size:10.5px;color:var(--accent);background:var(--accent-ghost);border-radius:5px;padding:0 7px;font-weight:600}
+
+  /* 当前任务卡 */
+  .taskcard{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:13px 14px;box-shadow:var(--sh-1)}
+  .taskcard h4{font-size:14px;line-height:1.5;margin-bottom:8px}
+  .tags{display:flex;gap:6px;margin-bottom:10px}
+  .tag{font-size:10.5px;border:1px solid var(--bd-soft);border-radius:5px;padding:1px 7px;color:var(--ink-2)}
+  .prog-lab{display:flex;font-size:11.5px;color:var(--ink-3);margin-bottom:5px}
+  .prog-lab span:last-child{margin-left:auto}
+  .prog{height:5px;border-radius:3px;background:var(--paper-inset)}
+  .prog i{display:block;height:100%;width:60%;border-radius:3px;background:var(--accent)}
+
+  /* 最近内容 */
+  .recent{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px;cursor:pointer}
+  .recent:hover{background:var(--paper-2)}
+  .recent.on{background:var(--accent-ghost)}
+  .thumb{width:38px;height:38px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,var(--paper-2),var(--paper-inset));border:1px solid var(--bd-soft)}
+  .recent .t{font-size:12.5px;font-weight:600;line-height:1.4;display:block}
+  .recent .m{font-size:11px;color:var(--ink-3)}
+  .more-link{font-size:12px;color:var(--ink-3);padding:6px 8px;cursor:pointer}
+  .more-link:hover{color:var(--ink-2)}
+
+  /* 选题雷达 */
+  .rtabs{display:flex;gap:4px;margin:2px 0 8px}
+  .rtab{border:none;background:transparent;border-radius:7px;padding:2px 10px;font-size:12px;color:var(--ink-3)}
+  .rtab.on{background:var(--paper-2);color:var(--ink-1);font-weight:600}
+  .rrow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--ink-1)}
+  .rrow:hover{background:var(--paper-2)}
+  .rrow .fire{color:var(--accent);font-size:11px}
+  .rrow .score{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
+
+  .navrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--ink-2);margin-top:14px}
+  .navrow:hover{background:var(--paper-2)}
+  .nic{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .left-foot{border-top:1px solid var(--bd-soft);padding:10px 12px;display:flex;align-items:center;gap:9px}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--ink-1);color:var(--paper-0);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px}
+  .left-foot .who{font-size:13px;line-height:1.3}
+  .left-foot .who small{color:var(--ink-3);font-size:11px;display:block}
+  .gear{margin-left:auto;border:none;background:transparent;color:var(--ink-3);font-size:14px;cursor:pointer;border-radius:7px;padding:4px 7px}
+  .gear:hover{background:var(--paper-2)}
+
+  /* ── 中栏 ── */
+  .center{flex:1;min-width:0;display:flex;flex-direction:column;padding:16px 22px 0;overflow:auto;position:relative}
+  .stype-row{display:flex;align-items:center;margin-bottom:14px}
+  .stype-lab{font-size:13px;font-weight:600;margin-right:14px}
+  .stypes{display:flex;gap:8px}
+  .stype{border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:7px 22px;font-size:13px;color:var(--ink-2)}
+  .stype:hover{background:var(--paper-2)}
+  .stype.on{border-color:var(--accent);color:var(--accent);font-weight:600;background:var(--accent-ghost)}
+  .tpl-btn{margin-left:auto;border:1px solid var(--bd);background:var(--card);border-radius:9px;padding:5px 13px;font-size:12.5px;color:var(--ink-1)}
+  .tpl-btn:hover{background:var(--paper-2)}
+
+  .ed-lab{font-size:13px;font-weight:600;margin-bottom:8px}
+  .editor{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh-1);flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .toolbar{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--bd-soft);color:var(--ink-2);font-size:13px}
+  .toolbar .sel{border:none;background:transparent;font-size:13px;color:var(--ink-1)}
+  .toolbar b,.toolbar i,.toolbar s{cursor:pointer;font-size:14px;color:var(--ink-2)}
+  .toolbar .ic{cursor:pointer;font-size:13px}
+  .toolbar .wc{margin-left:auto;font-size:12px;color:var(--ink-3)}
+  .ed-body{padding:26px 34px;overflow:auto}
+  .ed-body h1{font-size:22px;margin-bottom:12px}
+  .lede{color:var(--ink-2);font-size:14.5px;line-height:1.8;margin-bottom:20px}
+
+  /* 内容段落卡（每卡=一个结构槽位的实例，联动高亮） */
+  .sec-card{display:flex;gap:16px;background:var(--paper-0);border:1px solid var(--bd-soft);border-radius:12px;padding:16px 18px;margin-bottom:12px;transition:background .12s,border-color .12s}
+  .sec-card.hl{background:var(--accent-ghost);border-color:var(--accent-border)}
+  .sec-num{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-ghost);border-radius:7px;width:30px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sec-main{flex:1;min-width:0}
+  .sec-main h3{font-size:15px;margin-bottom:4px}
+  .sec-main p,.sec-main li{font-size:13.5px;color:var(--ink-2);line-height:1.75}
+  .sec-main ol,.sec-main ul{padding-left:18px}
+  .sec-img{width:88px;height:66px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#EFE3D3,#E9DDC9 55%,#F3A07A22);border:1px solid var(--bd-soft)}
+  .ed-foot{display:flex;align-items:center;padding:10px 18px;border-top:1px solid var(--bd-soft);font-size:12px;color:var(--ink-3)}
+  .ed-foot .ops{margin-left:auto;display:flex;gap:10px}
+  .ed-foot .ops span{cursor:pointer}
+  .ed-foot .ops span:hover{color:var(--ink-1)}
+
+  /* ── 右栏 · 结构控制 ── */
+  .right{width:296px;flex-shrink:0;border-left:1px solid var(--bd-soft);display:flex;flex-direction:column;background:var(--paper-0);position:relative}
+  .r-scroll{flex:1;overflow:auto;padding:16px}
+  .r-title{font-size:14px;font-weight:700;margin-bottom:12px}
+  .rc-tabs{display:flex;gap:4px;background:var(--paper-1);border:1px solid var(--bd-soft);border-radius:10px;padding:3px;margin-bottom:16px}
+  .rc-tab{flex:1;border:none;background:transparent;border-radius:8px;padding:5px 0;font-size:12.5px;color:var(--ink-3)}
+  .rc-tab.on{background:var(--card);color:var(--accent);font-weight:600;box-shadow:var(--sh-1)}
+  .r-sec{font-size:12.5px;font-weight:600;color:var(--ink-1);margin:16px 0 8px}
+  .skel{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd-soft);border-radius:10px;padding:9px 12px;margin-bottom:7px;cursor:pointer;font-size:12.5px}
+  .skel:hover{border-color:var(--bd)}
+  .skel.hl{border-color:var(--accent-border);background:var(--accent-ghost)}
+  .skel .k{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink-3)}
+  .skel .cn{color:var(--ink-2);font-size:11.5px}
+  .skel .v{margin-left:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-1)}
+  .skel .todo{margin-left:auto;font-size:10.5px;color:var(--accent);background:var(--accent-ghost);border-radius:5px;padding:1px 7px;font-weight:600}
+  .skel .ch{color:var(--ink-4);margin-left:6px}
+  .imp{display:flex;gap:7px;font-size:12px;color:var(--ink-2);padding:5px 2px;line-height:1.6}
+  .imp .q{color:var(--accent);font-weight:700;flex-shrink:0}
+  .imp .k{font-family:ui-monospace,Menlo,monospace;color:var(--ink-1)}
+  .dec{display:flex;gap:7px;font-size:12px;color:var(--ink-2);padding:5px 2px}
+  .dec .q{color:var(--accent);font-weight:700}
+  .dec .k{font-family:ui-monospace,Menlo,monospace;color:var(--ink-1)}
+
+  /* 助手（中区底部居中：默认胶囊，点击弹出，收起缩回） */
+  .assist-pill{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--ink-1);box-shadow:var(--sh-2);z-index:9}
+  .assist-pill:hover{background:var(--paper-2)}
+  .assist-pill .sp{color:var(--accent)}
+  .assist-pill.hidden{display:none}
+  .assist{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:min(520px,90%);background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh-2);overflow:hidden;display:none;z-index:9}
+  .assist.open{display:block}
+  .as-head{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--bd-soft);font-size:12.5px;font-weight:700}
+  .as-head .sp{color:var(--accent)}
+  .as-head .x{margin-left:auto;border:none;background:transparent;color:var(--ink-3);cursor:pointer}
+  .as-body{padding:10px 14px;max-height:190px;overflow:auto}
+  .as-msg{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin-bottom:8px}
+  .as-msg .tm{font-size:10.5px;color:var(--ink-4);margin-left:6px}
+  .as-user{text-align:right;margin-bottom:8px}
+  .as-user span{display:inline-block;background:var(--accent-ghost);border-radius:9px;padding:5px 11px;font-size:12.5px;color:var(--ink-1)}
+  .as-in{display:flex;align-items:center;border-top:1px solid var(--bd-soft);padding:8px 12px;gap:8px}
+  .as-in input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:12.5px;color:var(--ink-1)}
+  .as-in input::placeholder{color:var(--ink-3)}
+  .as-send{border:none;background:var(--accent);color:#fff;border-radius:7px;width:26px;height:24px;font-size:12px}
+  .as-chips{display:flex;gap:6px;padding:0 12px 10px}
+  .as-chip{border:1px solid var(--bd-soft);background:transparent;border-radius:7px;padding:2px 9px;font-size:11px;color:var(--ink-2)}
+  .as-chip:hover{background:var(--paper-2)}
+
+  /* ── 底栏 · 渲染层 ── */
+  .outbar{display:flex;align-items:center;gap:14px;border-top:1px solid var(--bd-soft);padding:12px 22px;background:var(--paper-0)}
+  .preview-btn{border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:7px 16px;font-size:13px;color:var(--ink-1);font-weight:500}
+  .preview-btn:hover{background:var(--paper-2)}
+  .gen-lab{font-size:12px;color:var(--ink-3)}
+  .plats{display:flex;gap:8px;align-items:center}
+  .plat{display:flex;align-items:center;gap:6px;border:1px solid var(--bd-soft);background:var(--card);border-radius:9px;padding:5px 12px;font-size:12.5px;color:var(--ink-1);cursor:pointer}
+  .plat:hover{background:var(--paper-2)}
+  .plat.on{border-color:var(--accent-border);background:var(--accent-ghost)}
+  /* 平台图标：黑白色调，保持克制 */
+  .pdot{width:14px;height:14px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--paper-0);font-weight:800;background:var(--ink-2)}
+  .plat.on .pdot{background:var(--ink-1)}
+  .pdot.more{background:var(--idle)}
+  .out-right{margin-left:auto}
+  .btn-pri{background:var(--accent);border:none;color:#fff;border-radius:10px;padding:9px 22px;font-size:13.5px;font-weight:600}
+  .btn-pri:hover{background:var(--accent-hover)}
+
+  .note{max-width:1340px;margin:12px auto 44px;color:#9A9A9A;font-size:12.5px;padding:0 10px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <!-- 顶栏：仅 home + 收起左栏（无 logo/产品名，对标 Laper 工作区） -->
+  <div class="topbar">
+    <a class="ibtn" href="first-run.html" title="返回首页">⌂</a>
+    <button class="ibtn" id="tgl-left" title="收起左栏">◧</button>
+    <div class="crumb">新内容 · <b>砍掉的功能</b></div>
+    <div class="top-r">
+      <span class="save">✓ 自动保存 10:24:36</span>
+      <button class="tbtn">功能请求</button>
+      <button class="tbtn">分享</button>
+    </div>
+  </div>
+
+  <div class="cols">
+
+    <!-- 左栏：新建 / 当前任务 / 最近内容 / 选题雷达 -->
+    <nav class="left">
+      <div class="left-scroll">
+        <button class="newbtn">＋ 新建内容<span class="kbd">⌘N</span></button>
+
+        <div class="lsec">当前任务<span class="badge">创作中</span></div>
+        <div class="taskcard">
+          <h4>砍掉的功能，教会我的「范围」一课</h4>
+          <div class="tags"><span class="tag">Narrative 文本</span><span class="tag">小红书</span></div>
+          <div class="prog-lab"><span>进度 3/5</span><span>已完成 60%</span></div>
+          <div class="prog"><i></i></div>
+        </div>
+
+        <div class="lsec">最近内容<span class="act">全部 ›</span></div>
+        <div class="recent"><span class="thumb"></span><span><span class="t">月薪 5k 独居指南</span><span class="m">小红书图文 · 8 卡片 · 昨天</span></span></div>
+        <div class="recent on"><span class="thumb"></span><span><span class="t">砍掉的功能，教会我的一课</span><span class="m">Narrative · 6 分钟前</span></span></div>
+        <div class="recent"><span class="thumb"></span><span><span class="t">我的周末独处日常</span><span class="m">公众号文章 · 1800 字 · 3 天前</span></span></div>
+        <div class="more-link">查看全部内容 →</div>
+
+        <div class="lsec">选题雷达<span class="act">换一批 ↻</span></div>
+        <div class="rtabs"><button class="rtab on">热门</button><button class="rtab">关注</button><button class="rtab">全部</button></div>
+        <div class="rrow"><span class="fire">◆</span>独居安全感建立清单<span class="score">86</span></div>
+        <div class="rrow"><span class="fire">◆</span>下班后如何高效充电<span class="score">82</span></div>
+        <div class="rrow"><span class="fire">◆</span>低成本自律生活方式<span class="score">78</span></div>
+        <div class="rrow"><span class="fire">◆</span>一个人旅行的意义<span class="score">74</span></div>
+        <div class="rrow"><span class="fire">◆</span>如何停止内耗<span class="score">72</span></div>
+        <div class="more-link">更多选题灵感 →</div>
+
+        <div class="navrow"><svg class="nic" viewBox="0 0 16 16"><path d="M3 4.5h10M6.3 4.5V3h3.4v1.5M4.5 4.5l.6 9h5.8l.6-9"/></svg>回收站</div>
+      </div>
+      <div class="left-foot">
+        <span class="avatar">D</span>
+        <span class="who">Dennis<small>Pro 计划</small></span>
+        <button class="gear">⚙</button>
+      </div>
+    </nav>
+
+    <!-- 中栏：结构类型 + 内容编辑区（始终可读） -->
+    <main class="center">
+      <div class="stype-row">
+        <span class="stype-lab">结构类型</span>
+        <div class="stypes">
+          <button class="stype on">Narrative 文本</button>
+          <button class="stype">Visual 图文</button>
+          <button class="stype">Temporal 视频</button>
+        </div>
+        <button class="tpl-btn">▤ 结构模板库</button>
+      </div>
+
+      <div class="ed-lab">内容编辑区</div>
+      <div class="editor">
+        <div class="toolbar">
+          <select class="sel"><option>正文</option></select>
+          <b>B</b><i>I</i><s>S</s>
+          <span class="ic">☰</span><span class="ic">≔</span><span class="ic">🔗</span><span class="ic">▣</span><span class="ic">⌗</span>
+          <span class="wc">字数：486</span><span class="ic">⛶</span>
+        </div>
+        <div class="ed-body">
+          <h1>砍掉的功能，教会我的「范围」一课</h1>
+          <p class="lede">上线前一晚，我删掉了做了三周的功能。<br>不是冲动——是我终于看懂了用户要什么。这套判断方法，分享给你。</p>
+
+          <div class="sec-card" data-seg="hook">
+            <span class="sec-num">01</span>
+            <div class="sec-main"><h3>为什么我删掉了三周的工作量？</h3>
+              <p>不是做不出来，而是它从一开始就不该做。<br>删掉的那一刻，比上线任何功能都清醒。</p>
+            </div><span class="sec-img"></span>
+          </div>
+
+          <div class="sec-card" data-seg="context">
+            <span class="sec-num">02</span>
+            <div class="sec-main"><h3>那个功能叫「表格导入」</h3>
+              <p>14 个用户要过它，我认认真真做了三周。<br>后来我去看了用户录屏——每一个说「很需要」的人，都只用了一次。</p>
+            </div><span class="sec-img"></span>
+          </div>
+
+          <div class="sec-card" data-seg="insight">
+            <span class="sec-num">03</span>
+            <div class="sec-main"><h3>他们要的从来不是导入功能</h3>
+              <p>是旧数据别再烦他们。<br>用户说的「想要」，和他会用的，是两回事。</p>
+            </div><span class="sec-img"></span>
+          </div>
+
+          <div class="sec-card" data-seg="resolution">
+            <span class="sec-num">04</span>
+            <div class="sec-main"><h3>我的范围守则（10 分钟判断法）</h3>
+              <ol><li>问「没有它你上周损失了什么」</li><li>看行为，不听嘴</li><li>能用运营顶住的，先不写代码</li></ol>
+            </div><span class="sec-img"></span>
+          </div>
+        </div>
+        <div class="ed-foot">版本 v1.2 · 最后编辑 2 分钟前<span class="ops"><span>↺</span><span>↻</span></span></div>
+      </div>
+
+      <!-- 助手：默认胶囊（中区底部居中），点击弹出 -->
+      <button class="assist-pill" id="assist-pill"><span class="sp">✦</span>助手</button>
+      <div class="assist" id="assist">
+        <div class="as-head"><span class="sp">✦</span>ForgeNote 助手<button class="x" id="assist-min">—</button></div>
+        <div class="as-body">
+          <div class="as-msg">基于你的想法，我建议采用「问题钩子」开场，能快速抓住读者注意力。你觉得如何？<span class="tm">10:24</span></div>
+          <div class="as-user"><span>同意，用问题开头。</span></div>
+          <div class="as-msg">好的，已应用到结构钩子中。需要我帮你扩写第一部分的内容吗？<span class="tm">10:25</span></div>
+        </div>
+        <div class="as-chips"><button class="as-chip">优化标题</button><button class="as-chip">补充案例</button><button class="as-chip">调整结构</button></div>
+        <div class="as-in"><input placeholder="告诉我你的想法…"><button class="as-send">↑</button></div>
+      </div>
+    </main>
+
+    <!-- 右栏：结构控制 + 助手浮窗 -->
+    <aside class="right">
+      <div class="r-scroll">
+        <div class="r-title">结构控制</div>
+        <div class="rc-tabs">
+          <button class="rc-tab on">结构</button><button class="rc-tab">规则</button><button class="rc-tab">约束</button><button class="rc-tab">影响</button>
+        </div>
+
+        <div class="r-sec">结构骨架</div>
+        <div class="skel" data-seg="hook"><span class="k">hook</span><span class="cn">钩子</span><span class="v">problem_hook</span><span class="ch">›</span></div>
+        <div class="skel" data-seg="context"><span class="k">context</span><span class="cn">情境</span><span class="v">case_evidence</span><span class="ch">›</span></div>
+        <div class="skel" data-seg="insight"><span class="k">insight</span><span class="cn">洞察</span><span class="v">expectation_reversal</span><span class="ch">›</span></div>
+        <div class="skel" data-seg="resolution"><span class="k">resolution</span><span class="cn">收束</span><span class="v">actionable_steps</span><span class="ch">›</span></div>
+        <div class="skel"><span class="k">layout</span><span class="cn">布局</span><span class="v">list + cards</span><span class="ch">›</span></div>
+
+        <div class="r-sec">结构影响解释</div>
+        <div class="imp"><span class="q">?</span><span><span class="k">hook</span> 决定开头吸引力与共鸣点</span></div>
+        <div class="imp"><span class="q">?</span><span><span class="k">context</span> 提供场景与可信度基础</span></div>
+        <div class="imp"><span class="q">?</span><span><span class="k">insight</span> 传递方法论与核心价值</span></div>
+        <div class="imp"><span class="q">?</span><span><span class="k">resolution</span> 提供可执行方案与行动驱动</span></div>
+        <div class="imp"><span class="q">?</span><span><span class="k">layout</span> 影响信息接收效率与节奏感</span></div>
+
+        <div class="r-sec">待决策（2）</div>
+        <div class="dec"><span class="q">?</span><span><span class="k">context.granularity</span>：exact ／ vague</span></div>
+        <div class="dec"><span class="q">?</span><span><span class="k">resolution.form</span>：list ／ steps</span></div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- 底栏：渲染层（预览 / 生成到平台 / 生成内容） -->
+  <div class="outbar">
+    <button class="preview-btn">◎ 预览（当前结构）▾</button>
+    <span class="gen-lab">生成到</span>
+    <div class="plats">
+      <span class="plat on"><span class="pdot xhs">书</span>小红书</span>
+      <span class="plat"><span class="pdot wx">公</span>公众号</span>
+      <span class="plat"><span class="pdot ig">IG</span>IG</span>
+      <span class="plat"><span class="pdot x">𝕏</span>X (Twitter)</span>
+      <span class="plat"><span class="pdot yt">▶</span>YouTube</span>
+      <span class="plat"><span class="pdot more">⋯</span>更多</span>
+    </div>
+    <div class="out-right"><button class="btn-pri">✦ 生成内容 ▾</button></div>
+  </div>
+
+</div>
+
+<p class="note">
+  概念稿 v3.14 · 配色与版块对标 Owner 提供的高保真稿，背景保留纸感 tokens（页面 #F6F1E8 / 卡片纸色）。
+  左=新建/当前任务卡(进度)/最近内容/选题雷达(热度分)；中=结构类型(Narrative/Visual/Temporal)+始终可读的内容编辑区
+  （段落卡=槽位实例，与右栏结构骨架<b>双向联动高亮</b>）+ <b>助手（中区底部居中胶囊，点击弹出、「—」收起）</b>；
+  右=结构控制(结构/规则/约束/影响 四页签+骨架+影响解释+待决策)；
+  底=渲染层（预览 / 生成到·平台 chips（<b>黑白色调</b>，tokens 无例外）/ 生成内容）；左栏含回收站。可试：hover 骨架或段落卡、点「✦ 助手」胶囊、顶栏 ◧ 收起左栏。数据为示意。
+</p>
+
+<script>
+  // 结构骨架 ↔ 内容段落卡 双向联动
+  document.querySelectorAll('.skel[data-seg]').forEach(s=>{
+    const seg=()=>document.querySelector('.sec-card[data-seg="'+s.dataset.seg+'"]');
+    s.addEventListener('mouseenter',()=>{seg()&&seg().classList.add('hl');s.classList.add('hl')});
+    s.addEventListener('mouseleave',()=>{seg()&&seg().classList.remove('hl');s.classList.remove('hl')});
+  });
+  document.querySelectorAll('.sec-card[data-seg]').forEach(c=>{
+    const skel=()=>document.querySelector('.skel[data-seg="'+c.dataset.seg+'"]');
+    c.addEventListener('mouseenter',()=>{c.classList.add('hl');skel()&&skel().classList.add('hl')});
+    c.addEventListener('mouseleave',()=>{c.classList.remove('hl');skel()&&skel().classList.remove('hl')});
+  });
+  // 收起左栏
+  document.getElementById('tgl-left').addEventListener('click',()=>document.querySelector('.left').classList.toggle('hiddenp'));
+  // 助手：胶囊 ↔ 弹出面板
+  const ap=document.getElementById('assist-pill'),aw=document.getElementById('assist');
+  ap.addEventListener('click',()=>{aw.classList.add('open');ap.classList.add('hidden')});
+  document.getElementById('assist-min').addEventListener('click',()=>{aw.classList.remove('open');ap.classList.remove('hidden')});
+  // 示意交互
+  document.querySelectorAll('.rtab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.rtab').forEach(x=>x.classList.remove('on'));t.classList.add('on')}));
+  document.querySelectorAll('.rc-tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.rc-tab').forEach(x=>x.classList.remove('on'));t.classList.add('on')}));
+  document.querySelectorAll('.stype').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.stype').forEach(x=>x.classList.remove('on'));t.classList.add('on')}));
+  document.querySelectorAll('.plat').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('on')));
+</script>
+</body>
+</html>

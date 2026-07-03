@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — 工作台概念稿 v3.2 (2026-07)</title>
+<style>
+  :root{
+    --bg:#141417; --panel:#1b1b1f; --panel-2:#202024; --panel-3:#25252b;
+    --line:#2b2b31; --line-soft:#26262c;
+    --ink:#e9e9ec; --ink-2:#9b9ba4; --ink-3:#63636d;
+    --accent:#3ecf8e; --accent-dim:rgba(62,207,142,.13);
+    --you:#a78bfa; --you-dim:rgba(167,139,250,.13);
+    --now:#f0a05a; --now-dim:rgba(240,160,90,.13);
+    --xhs:#ff5b74; --xhs-dim:rgba(255,91,116,.13);
+    --blue:#6cb2f7; --blue-dim:rgba(108,178,247,.12);
+    font-family:-apple-system,"Segoe UI","PingFang SC",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0e0e10;color:var(--ink);font-size:13px;line-height:1.55}
+  .frame{max-width:1300px;margin:22px auto;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+  /* ── top bar: logo + 任务栈 ── */
+  .topbar{display:flex;align-items:center;gap:14px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .brand{font-weight:700;font-size:13.5px;flex-shrink:0}
+  .brand span{color:var(--accent)}
+  .stack{display:flex;gap:6px;align-items:center;flex:1;min-width:0}
+  .stack-label{font-size:10.5px;color:var(--ink-3);letter-spacing:.6px;text-transform:uppercase;font-weight:700;margin-right:2px}
+  .task{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:7px;border:1px solid var(--line);color:var(--ink-2);cursor:pointer;font-size:12px;white-space:nowrap}
+  .task.on{border-color:var(--accent);background:var(--accent-dim);color:var(--ink)}
+  .task .st{width:6px;height:6px;border-radius:50%;background:var(--now)}
+  .task.on .st{background:var(--accent)}
+  .task.new{border-style:dashed;color:var(--ink-3)}
+  .top-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+  .icon-btn{border:1px solid var(--line);background:transparent;border-radius:6px;color:var(--ink-3);padding:3px 9px;cursor:pointer;font-size:12px}
+  .icon-btn:hover{color:var(--ink);background:var(--panel-2)}
+  .icon-btn.active-t{color:var(--accent);border-color:var(--accent)}
+  .cmdk{color:var(--ink-3);font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:3px 10px}
+
+  .cols{display:flex;min-height:640px}
+
+  /* ── left: 长期记忆 ── */
+  .left{width:225px;flex-shrink:0;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+  .left.hidden,.right.hidden{display:none}
+  .left-scroll{flex:1;overflow:auto;padding:10px 8px}
+  .sec{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3);padding:10px 8px 5px;font-weight:700}
+  .item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;color:var(--ink-2);cursor:pointer;white-space:nowrap;overflow:hidden;font-size:12.5px}
+  .item:hover{background:var(--panel-2)}
+  .item .n{margin-left:auto;color:var(--ink-3);font-size:11px}
+  .plat{width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;flex-shrink:0}
+  .plat.xhs{background:var(--xhs-dim);color:var(--xhs)}
+  .plat.x{background:var(--blue-dim);color:var(--blue)}
+  .live{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto}
+  .memo{margin:2px 8px 6px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:7px;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+  .memo b{color:var(--ink);font-weight:600}
+  .memo .cnt{color:var(--accent)}
+
+  /* left bottom: 设置+个人 */
+  .left-foot{border-top:1px solid var(--line);padding:8px;position:relative}
+  .foot-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;color:var(--ink-2)}
+  .foot-row:hover{background:var(--panel-2)}
+  .avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#3ecf8e,#a78bfa);color:#0c281c;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0}
+  .pop{position:absolute;bottom:76px;left:10px;width:250px;background:var(--panel-3);border:1px solid var(--line);border-radius:10px;padding:13px;box-shadow:0 12px 40px rgba(0,0,0,.55);display:none;z-index:9}
+  .pop.show{display:block}
+  .pop h5{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+  .pop .row{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:5px 0}
+  .pill{border:1px solid var(--line);border-radius:5px;padding:1.5px 8px;font-size:11px;color:var(--ink-2)}
+  .pill.on{border-color:var(--accent);color:var(--accent)}
+  .keyin{width:100%;margin-top:4px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 9px;color:var(--ink-3);font-size:11.5px;font-family:ui-monospace,monospace}
+  .pop .hint{font-size:11px;color:var(--ink-3);margin-top:6px}
+
+  /* ── center: 当前内容任务（对话流） ── */
+  .center{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+  .flow{flex:1;overflow:auto;padding:20px 26px;display:flex;flex-direction:column;gap:16px}
+  .msg{max-width:720px}
+  .msg .who{font-size:11px;color:var(--ink-3);margin-bottom:5px;font-weight:700;letter-spacing:.4px}
+  .msg .who .ai{color:var(--accent)}
+  .msg p{color:var(--ink-2);font-size:13.5px}
+  .msg p b{color:var(--ink);font-weight:600}
+  .msg.user{align-self:flex-end;text-align:right}
+  .msg.user .bubble{display:inline-block;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;color:var(--ink);text-align:left;font-size:13.5px}
+
+  /* 嵌入式选题牌 */
+  .deck{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+  .pick{border:1px solid var(--line);border-radius:9px;padding:10px 13px;background:var(--panel);cursor:pointer}
+  .pick:hover{border-color:#3a3a44}
+  .pick.sel{border-color:var(--accent);background:var(--accent-dim)}
+  .pick .prow{display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap}
+  .badge{font-size:10.5px;font-weight:700;padding:1.5px 7px;border-radius:4px}
+  .badge.hi{background:var(--accent-dim);color:var(--accent)}
+  .badge.md{background:var(--now-dim);color:var(--now)}
+  .badge.pxhs{background:var(--xhs-dim);color:var(--xhs)}
+  .badge.px{background:var(--blue-dim);color:var(--blue)}
+  .badge.dual{background:var(--you-dim);color:var(--you)}
+  .pick h4{font-size:13px;font-weight:600}
+  .pick .why{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+  .deck-more{font-size:12px;color:var(--ink-3);padding:2px 4px}
+
+  /* 嵌入式稿件卡片 */
+  .artifact{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+  .art-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);background:var(--panel-2);padding:0 8px}
+  .art-tab{padding:7px 13px;font-size:12px;color:var(--ink-3);cursor:pointer;font-weight:600;display:flex;gap:6px;align-items:center}
+  .art-tab.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+  .art-body{padding:15px 18px;font-size:13.5px;line-height:1.7;white-space:pre-line;color:var(--ink)}
+  .art-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:9px 14px;color:var(--ink-3);font-size:11.5px}
+  .vok{color:var(--accent)}
+  .btn{border:1px solid var(--line);background:transparent;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#0c281c}
+  .btn:hover:not(.pri){background:var(--panel-2)}
+
+  /* 对话输入框（中区底部） */
+  .composer{border-top:1px solid var(--line);padding:12px 22px;background:var(--panel)}
+  .comp-in{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--bg);color:var(--ink-3);font-size:13px}
+  .comp-in .send{margin-left:auto;color:var(--accent);font-weight:700}
+  .comp-meta{display:flex;gap:14px;margin-top:7px;font-size:11px;color:var(--ink-3)}
+  .comp-meta .model{color:var(--ink-2)}
+
+  /* ── right: 推理 + 控制 ── */
+  .right{width:280px;flex-shrink:0;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+  .r-head{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.6px;text-transform:uppercase}
+  .r-body{flex:1;overflow:auto;padding:12px 14px}
+  .r-sec{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:14px 0 7px}
+  .r-sec:first-child{margin-top:0}
+  .reason{font-size:12px;border-radius:7px;padding:7px 10px;margin-bottom:6px;line-height:1.45}
+  .reason.you{background:var(--you-dim);color:var(--you)}
+  .reason.now{background:var(--now-dim);color:var(--now)}
+  .reason.this{background:var(--accent-dim);color:var(--accent)}
+  .reason .src{display:block;color:var(--ink-3);font-size:11px;margin-top:2px}
+  .conf{margin:4px 0 2px}
+  .conf .bar{height:5px;border-radius:3px;background:var(--panel-3);overflow:hidden;margin-top:4px}
+  .conf .fill{height:100%;width:82%;background:var(--accent);border-radius:3px}
+  .conf .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3)}
+  .applied{font-size:11.5px;color:var(--ink-2);border:1px dashed var(--line);border-radius:7px;padding:6px 9px;margin-top:6px}
+  .applied b{color:var(--accent)}
+  .ctl{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12.5px;color:var(--ink-2);border-bottom:1px solid var(--line-soft)}
+  .toggle{display:flex;gap:5px}
+  .tg{border:1px solid var(--line);border-radius:5px;padding:1.5px 8px;font-size:11px;cursor:pointer;color:var(--ink-3)}
+  .tg.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+  .slider{width:110px;height:5px;background:var(--panel-3);border-radius:3px;position:relative}
+  .slider .knob{position:absolute;left:32%;top:-4px;width:13px;height:13px;border-radius:50%;background:var(--ink-2);border:2px solid var(--bg)}
+  .slider .tick{position:absolute;top:8px;font-size:9.5px;color:var(--ink-3)}
+  .ctl-btns{display:flex;gap:7px;margin-top:12px}
+  .r-model{margin-top:12px;font-size:11.5px;color:var(--ink-3);border-top:1px solid var(--line-soft);padding-top:10px}
+  .r-model b{color:var(--ink-2)}
+  .r-model a{color:var(--accent);text-decoration:none;cursor:pointer}
+
+  /* ── bottom: 时间轴 ── */
+  .bottom{border-top:1px solid var(--line);background:var(--panel);padding:13px 22px 9px}
+  .tl-head{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:11px}
+  .tl{display:flex;align-items:flex-start;position:relative}
+  .tl::before{content:"";position:absolute;top:7px;left:12px;right:12px;height:2px;background:var(--line)}
+  .node{flex:1;position:relative;text-align:center;cursor:pointer;min-width:0}
+  .node .pt{width:12px;height:12px;border-radius:50%;background:var(--panel);border:2.5px solid var(--ink-3);margin:1px auto 6px;position:relative;z-index:1}
+  .node.done .pt{border-color:var(--accent);background:var(--accent)}
+  .node.cur .pt{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 4px var(--accent-dim)}
+  .node.todo .pt{border-style:dashed;border-color:var(--ink-3)}
+  .node .t{font-size:11.5px;color:var(--ink-2);font-weight:600}
+  .node.cur .t{color:var(--ink)}
+  .node.todo .t{color:var(--ink-3);font-weight:500}
+  .node .d{font-size:10.5px;color:var(--ink-3)}
+  .statusbar{display:flex;gap:18px;margin-top:11px;padding-top:7px;border-top:1px solid var(--line-soft);color:var(--ink-3);font-size:11.5px}
+  .statusbar .sb-dot{color:var(--accent)}
+  .statusbar .rgt{margin-left:auto}
+
+  .note{max-width:1300px;margin:10px auto 40px;color:#63636d;font-size:12.5px;padding:0 8px}
+  .note b{color:#9b9ba4}
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <div class="topbar">
+    <div class="brand">Forge<span>Note</span></div>
+    <div class="stack">
+      <span class="stack-label">任务栈</span>
+      <div class="task on"><span class="st"></span>砍掉的功能</div>
+      <div class="task"><span class="st"></span>厨房好物清单</div>
+      <div class="task new">＋ 新内容</div>
+    </div>
+    <div class="top-actions">
+      <div class="cmdk">⌘K</div>
+      <button class="icon-btn active-t" id="tgl-left" title="收起左栏">◧</button>
+      <button class="icon-btn active-t" id="tgl-right" title="收起右栏">◨</button>
+    </div>
+  </div>
+
+  <div class="cols">
+
+    <!-- ── 左 · 长期记忆：你是谁 ── -->
+    <nav class="left" id="left">
+      <div class="left-scroll">
+        <div class="sec">你是谁</div>
+        <div class="item"><span class="plat xhs">书</span>独居生活指南<span class="live"></span></div>
+        <div class="item"><span class="plat x">𝕏</span>dennis_builds<span class="live"></span></div>
+        <div class="memo"><b>账号大脑</b> · <span class="cnt">7 条已验证规律</span><br>受众要真数字不要鸡汤 ×12<br>损失开场 &gt; 技巧开场 ×3<br><span style="color:var(--ink-3)">…点开查看/纠偏</span></div>
+        <div class="sec">你做过什么</div>
+        <div class="item">▸ 已发布<span class="n">12</span></div>
+        <div class="item">▸ 归档<span class="n">4</span></div>
+        <div class="sec">你遵循什么</div>
+        <div class="memo">钩子不用 emoji · 不追热点蹭词<br>每周 ≥1 条复盘向内容</div>
+      </div>
+      <div class="left-foot">
+        <div class="pop" id="pop">
+          <h5>设置 · AI 提供方</h5>
+          <div class="row"><span>内置模型（默认）</span><span class="pill on">使用中</span></div>
+          <div class="row"><span>自带 API Key</span><span class="pill">可选</span></div>
+          <input class="keyin" value="sk-••••••••••••  (Claude / OpenAI / 兼容端点)" readonly>
+          <div class="hint">填入后本产品的生成调用走你的 key，选题智能与账号大脑仍由订阅提供。</div>
+        </div>
+        <div class="foot-row" id="gear">⚙ &nbsp;设置 <span style="margin-left:auto;font-size:11px;color:var(--ink-3)">API·偏好</span></div>
+        <div class="foot-row"><div class="avatar">D</div> Dennis <span style="margin-left:auto;font-size:11px;color:var(--ink-3)">个人</span></div>
+      </div>
+    </nav>
+
+    <!-- ── 中 · 当前内容任务：对话主驾驶 ── -->
+    <main class="center">
+      <div class="flow">
+
+        <div class="msg">
+          <div class="who"><span class="ai">✦ FORGENOTE</span> · 周一 10:02</div>
+          <p>本周给你 <b>5 张牌</b>。依据上周回填的数据，我把"踩坑复盘"类提到了最前面——它连续第 6 次跑赢你的中位数。</p>
+          <div class="deck">
+            <div class="pick sel">
+              <div class="prow"><span class="badge hi">高置信 82%</span><span class="badge dual">双发 书+𝕏</span></div>
+              <h4>你砍掉的那个功能，教会你的"范围"一课</h4>
+              <div class="why">你的"踩坑复盘"拿到中位 4.2×（×6 验证）· 你的圈子这周在聊 build in public</div>
+            </div>
+            <div class="pick">
+              <div class="prow"><span class="badge hi">高置信</span><span class="badge pxhs">小红书</span></div>
+              <h4>一个人住三年，我扔掉的 5 个"必买好物"</h4>
+              <div class="why">清单体是你书号最稳的格式 · 反种草角度未测过，上限高</div>
+            </div>
+            <div class="pick">
+              <div class="prow"><span class="badge md">值得一试</span><span class="badge px">𝕏</span></div>
+              <h4>为什么日活 200 时就该停掉 A/B 测试</h4>
+              <div class="why">你的 2 条反共识帖都超 40 回复 · 跨平台迁移依据，置信度降级</div>
+            </div>
+            <div class="deck-more">▸ 还有 2 张，说"看剩下的"</div>
+          </div>
+        </div>
+
+        <div class="msg user">
+          <div class="bubble">第一张。但别太丧，结尾要落在方法上，不是教训上。</div>
+        </div>
+
+        <div class="msg">
+          <div class="who"><span class="ai">✦ FORGENOTE</span> · 10:14</div>
+          <p>收到——结尾从"学费"改成<b>可复用的范围守则</b>。这个纠偏我记下了（右侧可见）。初稿：</p>
+          <div class="artifact">
+            <div class="art-tabs">
+              <div class="art-tab on" data-p="x"><span class="plat x">𝕏</span>X 版 · thread</div>
+              <div class="art-tab" data-p="xhs"><span class="plat xhs">书</span>小红书版 · 图文</div>
+            </div>
+            <div class="art-body" id="art-x">I deleted 3 weeks of work last night. Best decision I made this quarter.
+
+The feature: CSV import. 14 users asked. I built it in 3 weeks.
+
+Then I watched the recordings — every requester used it exactly once.
+
+My scope rule now: don't build what users ask for. Build what they'd miss. Here's how I test that in 10 minutes →</div>
+            <div class="art-body" id="art-xhs" style="display:none">【封面钩子】做了三周的功能，我亲手删掉了
+
+上线前一晚，我删掉了做了三周的"表格导入"。
+不是做不出来——是我终于去看了用户录屏：
+14 个说"很需要"的人，每人只用了一次。
+
+现在我的范围守则只有一条：
+别做用户"想要"的，做他们"会想念"的。
+判断方法（10 分钟版）：👇
+1. 问"没有它你上周损失了什么"
+2. 看行为，不听嘴
+3. 能用运营顶住的，先不写代码
+
+（配图：删代码 diff 截图 + 手写守则卡）</div>
+            <div class="art-foot">
+              <span>声音校验 <span class="vok">✓ 符合你的语域</span> · 数字开场 · 结尾落在方法 ✓</span>
+              <button class="btn pri">复制去发</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 对话输入框：中区底部 -->
+      <div class="composer">
+        <div class="comp-in">✦ &nbsp;把想法丢给我，或者说"换个钩子""再来三张牌"…<span class="send">⏎ 发送</span></div>
+        <div class="comp-meta"><span class="model">◈ 内置模型</span><span>⌘K 命令</span><span>↑ 历史</span></div>
+      </div>
+    </main>
+
+    <!-- ── 右 · 推理 + 控制 ── -->
+    <aside class="right" id="right">
+      <div class="r-head">推理 · 为什么这样做</div>
+      <div class="r-body">
+        <div class="conf">
+          <div class="lab"><span>这张牌的置信度</span><span>82%</span></div>
+          <div class="bar"><div class="fill"></div></div>
+        </div>
+        <div class="r-sec">判断依据</div>
+        <div class="reason you">你 · "踩坑复盘"拿到你中位互动的 4.2×<span class="src">你的 6 条历史帖 · 两平台一致</span></div>
+        <div class="reason now">时机 · 你的 X 圈子本周密集聊 build in public<span class="src">你上周粘贴的 3 条观察</span></div>
+        <div class="reason this">写法 · 损失开场胜过技巧开场 3:1<span class="src">小红书验证 ×3 → 迁移到 X，置信度已降级</span></div>
+        <div class="applied">刚才的纠偏：结尾 教训→<b>方法论</b> ✓ 已应用，并记入本次偏好</div>
+
+        <div class="r-sec">控制 · 可以怎么改</div>
+        <div class="ctl"><span>平台</span><span class="toggle"><span class="tg on">书</span><span class="tg on">𝕏</span></span></div>
+        <div class="ctl"><span>语气</span><span class="slider"><span class="knob"></span><span class="tick" style="left:0">克制</span><span class="tick" style="right:0">锋利</span></span></div>
+        <div class="ctl"><span>长度</span><span class="toggle"><span class="tg">短</span><span class="tg on">标准</span><span class="tg">长</span></span></div>
+        <div class="ctl-btns"><button class="btn">换角度</button><button class="btn">换钩子</button><button class="btn">重新生成</button></div>
+        <div class="r-model">模型：<b>内置（默认）</b> · <a id="to-settings">用自己的 key？→ 设置</a></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ── 下 · 时间轴：内容生命周期 ── -->
+  <div class="bottom">
+    <div class="tl-head"><span>时间轴 · 「砍掉的功能」怎么变成现在这样</span><span>节点可点回看</span></div>
+    <div class="tl">
+      <div class="node done"><div class="pt"></div><div class="t">选题确定</div><div class="d">10:02 · 5 张牌选 1</div></div>
+      <div class="node done"><div class="pt"></div><div class="t">假设校准</div><div class="d">10:05 · 受众/角度确认</div></div>
+      <div class="node done"><div class="pt"></div><div class="t">初稿 v1</div><div class="d">10:11</div></div>
+      <div class="node done"><div class="pt"></div><div class="t">纠偏</div><div class="d">10:14 · "结尾落在方法"</div></div>
+      <div class="node cur"><div class="pt"></div><div class="t">定稿 v2</div><div class="d">现在</div></div>
+      <div class="node todo"><div class="pt"></div><div class="t">发布</div><div class="d">书 + 𝕏</div></div>
+      <div class="node todo"><div class="pt"></div><div class="t">表现回填</div><div class="d">发布后 72h 提醒</div></div>
+      <div class="node todo"><div class="pt"></div><div class="t">学到的</div><div class="d">写回账号大脑</div></div>
+    </div>
+    <div class="statusbar">
+      <span><span class="sb-dot">●</span> 学习周期 6/29</span>
+      <span>1 条旧内容待回填</span>
+      <span>书 + 𝕏 · 数据互喂已开启</span>
+      <span class="rgt">Web · 桌面感 · 概念稿 v3.2</span>
+    </div>
+  </div>
+
+</div>
+
+<p class="note">
+  【存档】概念稿 v3.2 · Owner 四区宣言版（暗色）：<b>左=你是谁</b>（长期记忆，左下角=设置(含 BYOK)+个人），
+  <b>顶=任务栈</b>，<b>中=你正在做什么</b>（对话主驾驶：选题牌在对话里送达，稿件是嵌入卡片，输入框在中区底部），
+  <b>右=为什么这样做 &amp; 可以怎么改</b>（推理+控制），<b>下=它怎么一步步变成现在这样</b>（内容生命周期时间轴）。
+</p>
+
+<script>
+  const L=document.getElementById('left'),R=document.getElementById('right');
+  document.getElementById('tgl-left').addEventListener('click',e=>{L.classList.toggle('hidden');e.target.classList.toggle('active-t')});
+  document.getElementById('tgl-right').addEventListener('click',e=>{R.classList.toggle('hidden');e.target.classList.toggle('active-t')});
+  const pop=document.getElementById('pop');
+  document.getElementById('gear').addEventListener('click',()=>pop.classList.toggle('show'));
+  const ts=document.getElementById('to-settings');
+  if(ts)ts.addEventListener('click',()=>{if(L.classList.contains('hidden')){L.classList.remove('hidden');document.getElementById('tgl-left').classList.add('active-t')}pop.classList.add('show')});
+  document.querySelectorAll('.art-tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.art-tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+    document.getElementById('art-x').style.display=t.dataset.p==='x'?'':'none';
+    document.getElementById('art-xhs').style.display=t.dataset.p==='xhs'?'':'none';
+  }));
+  document.querySelectorAll('.pick').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('.pick').forEach(x=>x.classList.remove('sel'));p.classList.add('sel')}));
+  document.querySelectorAll('.task:not(.new)').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.task').forEach(x=>x.classList.remove('on'));t.classList.add('on')}));
+  document.querySelectorAll('.toggle').forEach(g=>g.querySelectorAll('.tg').forEach(t=>t.addEventListener('click',()=>{
+    if(g.previousElementSibling&&g.parentElement.textContent.includes('平台')){t.classList.toggle('on')}
+    else{g.querySelectorAll('.tg').forEach(x=>x.classList.remove('on'));t.classList.add('on')}
+  })));
+</script>
+</body>
+</html>

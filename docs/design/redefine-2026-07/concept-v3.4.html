@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — 工作台概念稿 v3.4 (2026-07)</title>
+<style>
+  .frame{
+    --paper-0:#F6F1E8; --paper-1:#F3EBDD; --paper-2:#EFE3D3; --paper-inset:#E9DDC9;
+    --ink-1:#2B2B2B; --ink-2:#6B6B6B; --ink-3:#9A9A9A; --ink-4:#C2C2C2;
+    --accent:#E86A2F; --accent-hover:#D85F24; --accent-ghost:#FBE7DE; --accent-border:#E07A3A;
+    --bd:#D8C9B6; --bd-soft:#E7D9C6; --bd-subtle:rgba(0,0,0,0.06);
+    --done:#3C3C3C; --idle:#B8B0A2;
+    --sh-1:0 1px 0 rgba(0,0,0,0.03); --sh-2:0 2px 6px rgba(0,0,0,0.05);
+  }
+  .frame.dark{
+    --paper-0:#211D16; --paper-1:#282318; --paper-2:#2F2A1E; --paper-inset:#1B1811;
+    --ink-1:#EDE6D9; --ink-2:#A89F8F; --ink-3:#7A7263; --ink-4:#55503F;
+    --accent-ghost:rgba(232,106,47,0.14);
+    --bd:#3E382B; --bd-soft:#332E22; --bd-subtle:rgba(255,255,255,0.05);
+    --done:#CFC7B8; --idle:#5C5544;
+    --sh-1:none; --sh-2:0 2px 6px rgba(0,0,0,0.3);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#EDE5D5;font-family:"PingFang SC","Noto Sans CJK SC",-apple-system,sans-serif;font-size:14px}
+  .frame{max-width:1240px;margin:24px auto;border:1px solid var(--bd);border-radius:20px;background:var(--paper-0);overflow:hidden;color:var(--ink-1);line-height:1.7;box-shadow:var(--sh-1);position:relative}
+  h1,h2,h3,h4{letter-spacing:-0.02em}
+  button{font-family:inherit;cursor:pointer}
+
+  /* ── 顶栏 ── */
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--bd-soft)}
+  .ghostbtn{border:none;background:transparent;border-radius:8px;color:var(--ink-2);padding:4px 10px;font-size:13px}
+  .ghostbtn:hover{background:var(--paper-2)}
+  .brand{font-weight:700;font-size:14px}
+  .top-r{display:flex;gap:4px;align-items:center;margin-left:auto}
+  .kbd{color:var(--ink-3);font-size:12px;padding:3px 9px}
+
+  .cols{display:flex;min-height:640px}
+
+  /* ── 左 · 入口 + 资产 ── */
+  .left{width:216px;flex-shrink:0;border-right:1px solid var(--bd-soft);display:flex;flex-direction:column}
+  .hiddenp{display:none!important}
+  .left-scroll{flex:1;overflow:auto;padding:14px 10px}
+  .newbtn{width:100%;background:var(--paper-1);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--ink-1);font-size:13.5px;font-weight:600;text-align:left}
+  .newbtn:hover{background:var(--paper-2)}
+  .newbtn .sub{display:block;font-weight:400;font-size:11.5px;color:var(--ink-3)}
+  .newbtn .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:5px;vertical-align:1px}
+  .sec{font-size:11px;letter-spacing:.08em;color:var(--ink-3);padding:16px 10px 6px;font-weight:600}
+  .item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;color:var(--ink-2);cursor:pointer;font-size:13px}
+  .item:hover{background:var(--paper-2)}
+  .item.on{background:var(--accent-ghost);color:var(--ink-1)}
+  .item .n{margin-left:auto;color:var(--ink-3);font-size:12px}
+  .st{width:6px;height:6px;border-radius:50%;background:var(--idle);flex-shrink:0}
+  .item.on .st{background:var(--accent)}
+  .left-foot{border-top:1px solid var(--bd-soft);padding:10px;position:relative}
+  .foot-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;color:var(--ink-2);font-size:13px;line-height:1.3}
+  .foot-row:hover{background:var(--paper-2)}
+  .avatar{width:22px;height:22px;border-radius:50%;background:var(--ink-1);color:var(--paper-0);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px}
+
+  /* 帐户菜单 */
+  .pop{position:absolute;bottom:58px;left:10px;width:238px;background:var(--paper-2);border:1px solid var(--bd);border-radius:12px;padding:10px;box-shadow:var(--sh-2);display:none;z-index:9}
+  .pop.show{display:block}
+  .pop h5{font-size:11px;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px;font-weight:600}
+  .pop .grp{margin:10px 4px 4px}
+  .pills{display:flex;gap:6px}
+  .pill{border:1px solid var(--bd);border-radius:8px;padding:2px 12px;font-size:12px;color:var(--ink-2);background:transparent}
+  .pill.on{background:var(--ink-1);color:var(--paper-0);border-color:var(--ink-1)}
+  .keyin{width:100%;margin-top:8px;background:var(--paper-0);border:1px solid var(--bd-soft);border-radius:8px;padding:6px 10px;color:var(--ink-3);font-size:12px}
+  .pop .row{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);padding:3px 0}
+  .m-mail{font-size:12.5px;color:var(--ink-3);padding:4px 10px 8px;display:flex;align-items:center;gap:9px}
+  .m-div{height:1px;background:var(--bd-soft);margin:4px 0}
+  .m-row{padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--ink-1);cursor:pointer;display:flex;align-items:center;gap:9px}
+  .m-row:hover{background:var(--paper-1)}
+  .m-sub{color:var(--ink-3);font-size:12.5px;margin-left:2px}
+  .m-ic{width:15px;height:15px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;color:var(--ink-2)}
+  .m-mail .m-ic{color:var(--ink-3)}
+
+  /* ── 中 · 唯一主任务区 ── */
+  .center{flex:1;display:flex;flex-direction:column;min-width:0}
+  .stage{display:flex;align-items:baseline;gap:16px;padding:14px 48px 0;max-width:820px;margin:0 auto;width:100%}
+  .stage h2{font-size:16px;font-weight:600}
+  .steps{display:flex;gap:10px;font-size:11.5px;color:var(--ink-3);margin-left:auto}
+  .step.done{color:var(--ink-2)}
+  .step.cur{color:var(--accent);font-weight:600}
+  .flow{flex:1;overflow:auto;padding:22px 48px 30px;display:flex;flex-direction:column;gap:24px}
+  .msg{max-width:724px;width:100%;margin:0 auto}
+  .who{font-size:11px;color:var(--ink-3);margin-bottom:7px;letter-spacing:.08em;font-weight:600}
+  .msg p{font-size:14.5px}
+  .msg.user{text-align:right}
+  .msg.user .bubble{display:inline-block;background:var(--paper-2);border-radius:12px;padding:10px 16px;text-align:left;font-size:14px}
+
+  .artifact{margin-top:12px;border:1px solid var(--bd-soft);border-radius:16px;background:var(--paper-1);overflow:hidden}
+  .art-tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd-soft);padding:6px 14px 0}
+  .art-tab{padding:7px 12px;font-size:13px;color:var(--ink-3);border:none;background:transparent;border-bottom:2px solid transparent}
+  .art-tab.on{color:var(--ink-1);border-bottom-color:var(--accent)}
+  .art-body{padding:30px 36px;font-size:14.5px;line-height:1.8;white-space:pre-line}
+  .selline{background:var(--paper-2);border-bottom:1px dashed var(--bd);cursor:text;position:relative}
+  .edit-tip{display:inline-flex;gap:10px;margin-top:6px;background:var(--paper-2);border:1px solid var(--bd-soft);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--ink-2)}
+  .edit-tip span{cursor:pointer}
+  .edit-tip span:hover{color:var(--ink-1)}
+  .art-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd-soft);padding:12px 20px;color:var(--ink-2);font-size:12.5px}
+  .btn-pri{background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600}
+  .btn-pri:hover{background:var(--accent-hover)}
+  .btn-sec{background:var(--paper-1);border:1px solid var(--bd);color:var(--ink-1);border-radius:8px;padding:5px 14px;font-size:12.5px}
+  .btn-sec:hover{background:var(--paper-2)}
+
+  .composer{border-top:1px solid var(--bd-soft);padding:16px 48px 14px}
+  .comp-wrap{max-width:724px;margin:0 auto}
+  .comp-in{display:flex;align-items:center;border:1px solid var(--bd-soft);border-radius:12px;padding:12px 18px;color:var(--ink-3);font-size:14px}
+  .comp-in:hover{border-color:var(--bd)}
+  .comp-in .send{margin-left:auto;font-size:12px}
+
+  /* ── 右 · 轻量推理层 ── */
+  .right{width:248px;flex-shrink:0;border-left:1px solid var(--bd-soft);display:flex;flex-direction:column}
+  .r-body{flex:1;overflow:auto;padding:20px 18px}
+  .r-sec{font-size:11px;letter-spacing:.08em;color:var(--ink-3);font-weight:600;margin:22px 0 8px}
+  .r-sec:first-child{margin-top:0}
+  .asm{padding:7px 0;border-bottom:1px solid var(--bd-subtle);font-size:13px;cursor:text}
+  .asm:last-of-type{border-bottom:none}
+  .asm .lab{font-size:11px;color:var(--ink-3);display:block;letter-spacing:.06em}
+  .asm .val{color:var(--ink-1)}
+  .asm:hover .val::after{content:" ✎";color:var(--ink-3);font-size:12px}
+  .asm .chg{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:1px}
+  .dep-toggle{font-size:13px;color:var(--ink-2);cursor:pointer;padding:6px 0}
+  .dep-toggle:hover{color:var(--ink-1)}
+  .deps{display:none;padding-top:2px}
+  .deps.open{display:block}
+  .ev{padding:7px 0;border-bottom:1px solid var(--bd-subtle);font-size:12.5px;color:var(--ink-2)}
+  .ev:last-child{border-bottom:none}
+  .ev .lab{font-size:11px;color:var(--ink-3);display:block;letter-spacing:.06em}
+  .r-acts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+
+  /* ── 底 · 弱历史（抽屉） ── */
+  .hist-bar{display:flex;align-items:center;border-top:1px solid var(--bd-soft);padding:7px 48px;font-size:12px;color:var(--ink-3)}
+  .hist-toggle{cursor:pointer;color:var(--ink-2)}
+  .hist-toggle:hover{color:var(--ink-1)}
+  .hist-cur{margin-left:auto}
+  .hist-panel{display:none;border-top:1px solid var(--bd-soft);padding:14px 48px 16px}
+  .hist-panel.open{display:block}
+  .h-row{display:flex;align-items:center;gap:14px;padding:7px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--bd-subtle);max-width:724px}
+  .h-row:last-child{border-bottom:none}
+  .h-v{font-weight:600;color:var(--ink-1);width:30px}
+  .h-restore{margin-left:auto;font-size:12px;color:var(--ink-2);cursor:pointer;border:1px solid var(--bd);border-radius:8px;padding:1px 10px}
+  .h-restore:hover{background:var(--paper-2)}
+  .h-now{margin-left:auto;font-size:12px;color:var(--accent)}
+
+  /* ── 选题雷达（独立浮层） ── */
+  .radar-mask{position:absolute;inset:0;background:rgba(43,43,43,0.28);display:none;align-items:center;justify-content:center;z-index:20}
+  .radar-mask.show{display:flex}
+  .radar{width:560px;max-height:80%;overflow:auto;background:var(--paper-0);border:1px solid var(--bd);border-radius:20px;padding:28px 32px;box-shadow:var(--sh-2)}
+  .radar h3{font-size:16px;margin-bottom:2px}
+  .radar .rsub{font-size:13px;color:var(--ink-2);margin-bottom:16px}
+  .pick{border:1px solid var(--bd-soft);border-radius:12px;padding:14px 18px;background:var(--paper-1);cursor:pointer;margin-bottom:10px}
+  .pick:hover{background:var(--paper-2);border-color:var(--bd)}
+  .pick h4{font-size:14px;font-weight:600}
+  .pick .why{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+  .radar .more{font-size:12.5px;color:var(--ink-3);text-align:center;padding-top:4px}
+
+  .note{max-width:1240px;margin:12px auto 44px;color:#9A9A9A;font-size:12.5px;padding:0 10px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <div class="topbar">
+    <button class="ghostbtn" id="tgl-left">◧</button>
+    <div class="brand">ForgeNote</div>
+    <div class="top-r">
+      <span class="kbd">⌘K</span>
+      <button class="ghostbtn" id="tgl-theme">☾</button>
+      <button class="ghostbtn" id="tgl-right">◨</button>
+    </div>
+  </div>
+
+  <div class="cols">
+
+    <!-- 左 · 入口 + 资产 -->
+    <nav class="left" id="left">
+      <div class="left-scroll">
+        <button class="newbtn" id="open-radar">＋ 新内容<span class="sub"><span class="dot"></span>本周雷达 · 5 张牌待选</span></button>
+        <div class="sec">进行中</div>
+        <div class="item on"><span class="st"></span>砍掉的功能</div>
+        <div class="item"><span class="st"></span>厨房好物清单</div>
+        <div class="sec">资产</div>
+        <div class="item">已发布<span class="n">12</span></div>
+        <div class="item">配方库<span class="n">3</span></div>
+        <div class="item">归档<span class="n">4</span></div>
+        <div class="sec">账号记忆</div>
+        <div class="item">账号大脑<span class="n">7 条规律</span></div>
+        <div class="item">创作守则<span class="n">3</span></div>
+      </div>
+      <div class="left-foot">
+        <div class="pop" id="pop">
+          <div id="pop-menu">
+            <div class="m-mail"><svg class="m-ic" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.4"/><circle cx="8" cy="6.4" r="1.9"/><path d="M4.7 12.3c.8-1.5 1.9-2.3 3.3-2.3s2.5.8 3.3 2.3"/></svg>dennisliu1225@gmail.com</div>
+            <div class="m-div"></div>
+            <div class="m-row"><svg class="m-ic" viewBox="0 0 16 16"><circle cx="8" cy="5.4" r="2.7"/><path d="M3 13.4c1-2.3 2.8-3.5 5-3.5s4 1.2 5 3.5"/></svg>个人资料</div>
+            <div class="m-row" id="open-settings"><svg class="m-ic" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.9M8 12.2v1.9M1.9 8h1.9M12.2 8h1.9M3.7 3.7L5 5M11 11l1.3 1.3M12.3 3.7L11 5M5 11l-1.3 1.3"/></svg>设置</div>
+            <div class="m-row"><svg class="m-ic" viewBox="0 0 16 16"><path d="M14 2.2L2.2 7.2l4.4 1.9 1.7 4.7L14 2.2z"/><path d="M6.6 9.1L14 2.2"/></svg>邀请好友</div>
+            <div class="m-div"></div>
+            <div class="m-row"><svg class="m-ic" viewBox="0 0 16 16"><path d="M2.6 11.2a5.9 5.9 0 1 1 10.8 0"/><path d="M8 9.6l2.8-3.2"/></svg>剩余用量 <span class="m-sub">62%</span></div>
+            <div class="m-row"><svg class="m-ic" viewBox="0 0 16 16"><path d="M6.2 2.4H3.2v11.2h3"/><path d="M10.2 5.2L13 8l-2.8 2.8M13 8H6.4"/></svg>退出登录</div>
+          </div>
+          <div id="pop-settings" style="display:none">
+            <div class="m-row" id="back-menu">‹ 设置</div>
+            <div class="m-div"></div>
+            <div class="grp">
+              <h5>语言版本</h5>
+              <div class="pills" id="lang"><button class="pill on">中文</button><button class="pill">English</button></div>
+            </div>
+            <div class="grp">
+              <h5>AI 提供方</h5>
+              <div class="row"><span>内置模型</span><span style="color:var(--ink-3);font-size:12px">默认 · 使用中</span></div>
+              <div class="row"><span>自带 API Key</span><span style="color:var(--ink-3);font-size:12px">可选</span></div>
+              <input class="keyin" value="sk-••••••••••••" readonly>
+            </div>
+          </div>
+        </div>
+        <div class="foot-row" id="account">
+          <span class="avatar">D</span>
+          <span>Dennis<br><span style="font-size:11px;color:var(--ink-3)">Plus</span></span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 中 · 唯一主任务区：一条内容的状态机 -->
+    <main class="center">
+      <div class="stage">
+        <h2>砍掉的功能</h2>
+        <div class="steps">
+          <span class="step done">输入</span><span class="step done">理解</span><span class="step done">假设</span><span class="step cur">生成</span><span class="step">编辑</span>
+        </div>
+      </div>
+      <div class="flow">
+
+        <div class="msg user">
+          <div class="bubble">想写：上线前一晚，我把做了三周的功能砍掉了。</div>
+        </div>
+
+        <div class="msg">
+          <div class="who">FORGENOTE</div>
+          <p>我把它理解为一条「踩坑复盘」。对这次内容的假设放在右侧，改任何一条我会重新生成。初稿：</p>
+          <div class="artifact">
+            <div class="art-tabs">
+              <button class="art-tab on" data-p="x">X 版</button>
+              <button class="art-tab" data-p="xhs">小红书版</button>
+            </div>
+            <div class="art-body" id="art-x">I deleted 3 weeks of work last night. Best decision I made this quarter.
+
+The feature: CSV import. 14 users asked. I built it in 3 weeks.
+
+<span class="selline">Then I watched the recordings — every requester used it exactly once.</span>
+<span class="edit-tip"><span>改写这句</span><span>更克制</span><span>删去</span></span>
+
+My scope rule now: don't build what users ask for. Build what they'd miss.</div>
+            <div class="art-body" id="art-xhs" style="display:none">【封面】做了三周的功能，我亲手删掉了
+
+上线前一晚，我删掉了做了三周的「表格导入」。
+不是做不出来，是我终于去看了用户录屏：
+14 个说「很需要」的人，每人只用了一次。
+
+现在我的范围守则只有一条：
+别做用户「想要」的，做他们「会想念」的。</div>
+            <div class="art-foot">
+              <span>声音校验 ✓ 符合你的语域</span>
+              <button class="btn-pri">复制去发</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="composer">
+        <div class="comp-wrap">
+          <div class="comp-in">继续说，或直接点选稿子里想改的句子<span class="send">⏎</span></div>
+        </div>
+      </div>
+
+      <!-- 底 · 弱历史：抽屉 -->
+      <div class="hist-bar">
+        <span class="hist-toggle" id="hist-toggle">历史 ▸</span>
+        <span class="hist-cur">当前 v2</span>
+      </div>
+      <div class="hist-panel" id="hist-panel">
+        <div class="h-row"><span class="h-v">v2</span>结尾从教训改为方法论<span class="h-now">当前</span></div>
+        <div class="h-row"><span class="h-v">v1</span>初稿<span class="h-restore">恢复</span></div>
+      </div>
+    </main>
+
+    <!-- 右 · 轻量推理层 -->
+    <aside class="right" id="right">
+      <div class="r-body">
+        <div class="r-sec">本次假设 · 可编辑</div>
+        <div class="asm"><span class="lab">受众</span><span class="val">早期 SaaS 独立开发者</span></div>
+        <div class="asm"><span class="lab">角度</span><span class="val">损失 → 方法论<span class="chg" title="已按你的纠偏更新"></span></span></div>
+        <div class="asm"><span class="lab">平台</span><span class="val">书 + 𝕏 双发</span></div>
+        <div class="asm"><span class="lab">语气</span><span class="val">克制 · 自嘲 · 数字优先</span></div>
+
+        <div class="r-sec">生成依据</div>
+        <div class="dep-toggle" id="dep-toggle">展开 3 条 ▸</div>
+        <div class="deps" id="deps">
+          <div class="ev"><span class="lab">你</span>踩坑复盘拿到你中位互动的 4.2 倍</div>
+          <div class="ev"><span class="lab">时机</span>你的圈子本周在聊 build in public</div>
+          <div class="ev"><span class="lab">写法</span>损失开场胜过技巧开场（书号验证）</div>
+        </div>
+
+        <div class="r-acts">
+          <button class="btn-sec">调整方向</button>
+          <button class="btn-sec">重新理解</button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- 选题雷达 · 独立浮层 -->
+  <div class="radar-mask" id="radar-mask">
+    <div class="radar">
+      <h3>本周雷达</h3>
+      <div class="rsub">5 张牌，选一张开始。跳过也会让我学到东西。</div>
+      <div class="pick"><h4>你砍掉的那个功能，教会你的「范围」一课</h4><div class="why">你的踩坑复盘拿到中位互动 4.2 倍 · 双发 书 + 𝕏</div></div>
+      <div class="pick"><h4>一个人住三年，我扔掉的 5 个「必买好物」</h4><div class="why">清单体是你书号最稳的格式 · 小红书</div></div>
+      <div class="pick"><h4>为什么日活 200 时就该停掉 A/B 测试</h4><div class="why">你的反共识帖都超 40 条回复 · 𝕏</div></div>
+      <div class="more">还有 2 张 · 或者直接丢一个自己的想法进来</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="note">
+  【存档】概念稿 v3.4 · 「单任务内容创作操作系统」——恢复自 2026-07-02 会话，用于与 v3.8 对照。
+  与 v3.8 的关键差异：中间还有平台 Tab（X 版/小红书版）+ 主按钮是「复制去发」；右侧是「本次假设」（含平台/语气字段）而非「当前结构」；
+  左侧还有「资产」区（已发布/归档）；顶部没有任务切换器（切任务走左侧「进行中」）；步进为 输入→理解→假设→生成→编辑。
+</p>
+
+<script>
+  const F=document.getElementById('frame'),L=document.getElementById('left'),R=document.getElementById('right');
+  document.getElementById('tgl-left').addEventListener('click',()=>L.classList.toggle('hiddenp'));
+  document.getElementById('tgl-right').addEventListener('click',()=>R.classList.toggle('hiddenp'));
+  const T=document.getElementById('tgl-theme');
+  T.addEventListener('click',()=>{F.classList.toggle('dark');T.textContent=F.classList.contains('dark')?'☀':'☾'});
+  const pop=document.getElementById('pop'),pMenu=document.getElementById('pop-menu'),pSet=document.getElementById('pop-settings');
+  document.getElementById('account').addEventListener('click',()=>{pop.classList.toggle('show');pMenu.style.display='';pSet.style.display='none'});
+  document.getElementById('open-settings').addEventListener('click',()=>{pMenu.style.display='none';pSet.style.display=''});
+  document.getElementById('back-menu').addEventListener('click',()=>{pSet.style.display='none';pMenu.style.display=''});
+  document.querySelectorAll('.art-tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.art-tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+    document.getElementById('art-x').style.display=t.dataset.p==='x'?'':'none';
+    document.getElementById('art-xhs').style.display=t.dataset.p==='xhs'?'':'none';
+  }));
+  const dt=document.getElementById('dep-toggle'),dp=document.getElementById('deps');
+  dt.addEventListener('click',()=>{dp.classList.toggle('open');dt.textContent=dp.classList.contains('open')?'收起 ▾':'展开 3 条 ▸'});
+  const ht=document.getElementById('hist-toggle'),hp=document.getElementById('hist-panel');
+  ht.addEventListener('click',()=>{hp.classList.toggle('open');ht.textContent=hp.classList.contains('open')?'历史 ▾':'历史 ▸'});
+  const rm=document.getElementById('radar-mask');
+  document.getElementById('open-radar').addEventListener('click',()=>rm.classList.add('show'));
+  rm.addEventListener('click',e=>{if(e.target===rm||e.target.closest('.pick'))rm.classList.remove('show')});
+  document.querySelectorAll('#lang .pill').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('#lang .pill').forEach(x=>x.classList.remove('on'));p.classList.add('on')}));
+</script>
+</body>
+</html>

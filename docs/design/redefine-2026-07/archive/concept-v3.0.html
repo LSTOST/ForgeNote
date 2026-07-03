@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeNote — Redefine Concept v3.0 (2026-07)</title>
+<style>
+  :root{
+    --bg:#fafaf8; --panel:#ffffff; --ink:#1a1a18; --ink-2:#6b6b64; --ink-3:#9c9c93;
+    --line:#e8e8e2; --accent:#0f6b4f; --accent-soft:#e5f2ec;
+    --warn:#8a6d1f; --warn-soft:#f7efd8;
+    --you:#5b4a9e; --you-soft:#ece8f7;
+    --now:#a04d1c; --now-soft:#f9e9dd;
+    --radius:10px;
+    font-family:-apple-system,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+  .frame{max-width:1180px;margin:24px auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.06)}
+  .app{display:flex;min-height:720px}
+
+  /* sidebar */
+  .side{width:200px;border-right:1px solid var(--line);padding:20px 12px;background:#fdfdfb;flex-shrink:0}
+  .logo{font-weight:700;font-size:15px;padding:0 10px 18px;letter-spacing:-.2px}
+  .logo span{color:var(--accent)}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;color:var(--ink-2);cursor:pointer;margin-bottom:2px;font-weight:500}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+  .nav-item:hover:not(.active){background:#f2f2ee}
+  .side .meta{margin-top:28px;padding:12px 10px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3)}
+  .side .meta b{color:var(--ink-2);font-weight:600;display:block;margin-bottom:2px}
+
+  .main{flex:1;padding:28px 32px;overflow:auto}
+  .screen{display:none}
+  .screen.active{display:block}
+  h1{font-size:19px;letter-spacing:-.3px;margin-bottom:4px}
+  .sub{color:var(--ink-2);margin-bottom:22px}
+  .sub b{color:var(--ink);font-weight:600}
+
+  /* evidence chips */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:12px;padding:3px 9px;border-radius:20px;font-weight:500}
+  .chip.you{background:var(--you-soft);color:var(--you)}
+  .chip.now{background:var(--now-soft);color:var(--now)}
+  .chip.this{background:var(--accent-soft);color:var(--accent)}
+
+  /* topic cards */
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;background:var(--panel);transition:box-shadow .15s}
+  .card:hover{box-shadow:0 4px 18px rgba(0,0,0,.07)}
+  .card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .conf{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:4px}
+  .conf.high{background:var(--accent-soft);color:var(--accent)}
+  .conf.med{background:var(--warn-soft);color:var(--warn)}
+  .fmt{font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:2px 8px}
+  .card h3{font-size:15.5px;letter-spacing:-.2px;margin-bottom:4px}
+  .hook{color:var(--ink-2);font-style:italic}
+  .card-actions{display:flex;gap:8px;margin-top:14px}
+  .btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#000}
+  .btn:hover:not(.primary){background:#f4f4f0}
+
+  /* develop */
+  .dev{display:grid;grid-template-columns:340px 1fr;gap:22px}
+  .brief{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:#fdfdfb;font-size:13px}
+  .brief h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-3);margin:16px 0 6px}
+  .brief h4:first-child{margin-top:0}
+  .brief p{color:var(--ink-2)}
+  .hook-opt{border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:6px;cursor:pointer;color:var(--ink-2)}
+  .hook-opt.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+  .editor{border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;background:var(--panel);display:flex;flex-direction:column}
+  .editor .who{display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--ink-3);font-size:12px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0f6b4f,#5b4a9e);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .editor .text{font-size:15px;line-height:1.65;color:var(--ink);flex:1;white-space:pre-line}
+  .editor .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:14px;margin-top:18px;color:var(--ink-3);font-size:12px}
+
+  /* brain */
+  .brain-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .panel{border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;background:var(--panel)}
+  .panel h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-3);margin-bottom:10px}
+  .belief{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f1f1ec;font-size:13px}
+  .belief:last-child{border-bottom:none}
+  .belief .b-text{color:var(--ink)}
+  .belief .b-ev{color:var(--ink-3);font-size:12px;white-space:nowrap}
+  .log-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f1f1ec;font-size:13px;color:var(--ink-2)}
+  .log-item:last-child{border-bottom:none}
+  .log-date{color:var(--ink-3);font-size:12px;white-space:nowrap;padding-top:1px}
+  .log-item b{color:var(--ink);font-weight:600}
+  .tag-verified{color:var(--accent);font-weight:700}
+  .tag-revised{color:var(--now);font-weight:700}
+  .edit-hint{font-size:12px;color:var(--ink-3);margin-top:10px}
+
+  .note{max-width:1180px;margin:10px auto 40px;color:var(--ink-3);font-size:12.5px;padding:0 8px}
+</style>
+</head>
+<body>
+
+<div class="frame"><div class="app">
+
+  <nav class="side">
+    <div class="logo">Forge<span>Note</span></div>
+    <div class="nav-item active" data-s="radar">◉ &nbsp;Radar</div>
+    <div class="nav-item" data-s="develop">✎ &nbsp;Develop</div>
+    <div class="nav-item" data-s="brain">◍ &nbsp;Account Brain</div>
+    <div class="meta">
+      <b>@dennis_builds</b>
+      X · indie SaaS · 4.8k followers<br><br>
+      Last learn cycle: Jun 29<br>
+      3 results backfilled
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- SCREEN 1 · RADAR -->
+    <section class="screen active" id="radar">
+      <h1>This week for @dennis_builds</h1>
+      <p class="sub">5 picks, ranked by fit. Each one shows <b>why it should work — for you, now</b>. Skipping teaches me too.</p>
+
+      <div class="card">
+        <div class="card-top"><span class="conf high">High confidence</span><span class="fmt">Story thread</span></div>
+        <h3>The feature you killed, and what it taught you about scope</h3>
+        <p class="hook">"I deleted 3 weeks of work last night. Here's why it was the right call."</p>
+        <div class="chips">
+          <span class="chip you">YOU · your "lesson learned" posts avg 4.2× your median engagement (n=6)</span>
+          <span class="chip now">NOW · "build in public" retros trending in your circle this week</span>
+          <span class="chip this">THIS · loss-framing hooks beat tips-framing 3:1 on your account</span>
+        </div>
+        <div class="card-actions"><button class="btn primary">Develop →</button><button class="btn">Not for me</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><span class="conf high">High confidence</span><span class="fmt">Contrarian take</span></div>
+        <h3>Why you stopped A/B testing your landing page at 200 visitors/day</h3>
+        <p class="hook">"Unpopular opinion: your startup doesn't have enough traffic to A/B test anything."</p>
+        <div class="chips">
+          <span class="chip you">YOU · your 2 contrarian posts both cleared 40+ replies</span>
+          <span class="chip this">THIS · numbers-in-hook outperform vague hooks on your account</span>
+        </div>
+        <div class="card-actions"><button class="btn primary">Develop →</button><button class="btn">Not for me</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><span class="conf med">Worth testing</span><span class="fmt">List post</span></div>
+        <h3>5 boring metrics that predicted your churn better than NPS</h3>
+        <p class="hook">"NPS told me my users were happy. My cancellation page told me the truth."</p>
+        <div class="chips">
+          <span class="chip now">NOW · retention talk spiking after last week's SaaS pricing drama</span>
+          <span class="chip you">YOU · untested angle for you — that's why confidence is lower</span>
+        </div>
+        <div class="card-actions"><button class="btn primary">Develop →</button><button class="btn">Not for me</button></div>
+      </div>
+
+      <div class="card" style="opacity:.55">
+        <div class="card-top"><span class="conf med">Worth testing</span><span class="fmt">Screenshot post</span></div>
+        <h3>Your actual Stripe dashboard, month 6 vs month 1</h3>
+        <p class="hook">+ 1 more pick below…</p>
+      </div>
+    </section>
+
+    <!-- SCREEN 2 · DEVELOP -->
+    <section class="screen" id="develop">
+      <h1>Develop</h1>
+      <p class="sub">The brief stays on the left. The right side is just you writing. Copy it out when it's ready.</p>
+      <div class="dev">
+        <aside class="brief">
+          <h4>Topic</h4>
+          <p style="color:var(--ink);font-weight:600">The feature you killed, and what it taught you about scope</p>
+          <h4>Angle</h4>
+          <p>Personal loss → universal lesson. Lead with the sunk cost, land on the decision rule you now use.</p>
+          <h4>Hook — pick one</h4>
+          <div class="hook-opt sel">"I deleted 3 weeks of work last night. Here's why it was the right call."</div>
+          <div class="hook-opt">"The hardest git command I ever ran: rm -rf on my favorite feature."</div>
+          <div class="hook-opt">"My users asked for it. I built it. Then I killed it."</div>
+          <h4>Structure</h4>
+          <p>1. The cut (concrete, numbers)<br>2. Why it felt wrong<br>3. The signal you almost ignored<br>4. Your new rule — one line, quotable</p>
+          <h4>Why this works for you</h4>
+          <div class="chips" style="margin-top:6px">
+            <span class="chip you">YOU · lesson posts 4.2× median</span>
+            <span class="chip this">THIS · loss-framing 3:1</span>
+          </div>
+        </aside>
+        <div class="editor">
+          <div class="who"><div class="avatar">D</div> Draft · thread · 1/4 shown</div>
+          <div class="text">I deleted 3 weeks of work last night. Here's why it was the right call.
+
+The feature: CSV import with field mapping. 14 users asked for it. I built it in 3 weeks.
+
+Then I watched the session recordings. Every single user who asked for it… used it once.
+
+They didn't want CSV import. They wanted their old data to stop haunting them. →</div>
+          <div class="foot">
+            <span>Voice check: matches your register ✓ &nbsp;·&nbsp; 268 chars/tweet avg</span>
+            <button class="btn primary">Copy thread</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3 · ACCOUNT BRAIN -->
+    <section class="screen" id="brain">
+      <h1>Account Brain</h1>
+      <p class="sub">Everything I currently believe about your account. <b>Every belief is editable</b> — correcting me here changes next week's picks.</p>
+      <div class="brain-grid">
+        <div class="panel">
+          <h4>Audience</h4>
+          <div class="belief"><span class="b-text">Early-stage SaaS founders & indie hackers, mostly pre-$10k MRR</span><span class="b-ev">from bio + reply analysis</span></div>
+          <div class="belief"><span class="b-text">They follow you for honest numbers, not motivation</span><span class="b-ev">12 posts of evidence</span></div>
+          <div class="edit-hint">✎ Click any belief to correct it</div>
+        </div>
+        <div class="panel">
+          <h4>Voice</h4>
+          <div class="belief"><span class="b-text">Dry, specific, self-deprecating. Numbers over adjectives.</span><span class="b-ev">from your 20 posts</span></div>
+          <div class="belief"><span class="b-text">Never uses emoji in hooks; occasional one mid-thread</span><span class="b-ev">consistent, n=20</span></div>
+        </div>
+        <div class="panel">
+          <h4>Proven patterns</h4>
+          <div class="belief"><span class="b-text">"Lesson learned" retros → 4.2× median engagement</span><span class="b-ev tag-verified">verified ×6</span></div>
+          <div class="belief"><span class="b-text">Loss-framing hooks beat tips-framing</span><span class="b-ev tag-verified">verified ×3</span></div>
+          <div class="belief"><span class="b-text">Threads > single posts for you</span><span class="b-ev">weak · n=2</span></div>
+        </div>
+        <div class="panel">
+          <h4>Recent learnings</h4>
+          <div class="log-item"><span class="log-date">Jun 29</span><span><b class="tag-verified">Verified:</b> contrarian takes drive replies (2nd time) — promoted to proven pattern</span></div>
+          <div class="log-item"><span class="log-date">Jun 22</span><span><b class="tag-revised">Revised:</b> "post before 9am ET" — your last 2 evening posts outperformed. Dropping this belief.</span></div>
+          <div class="log-item"><span class="log-date">Jun 15</span><span><b>New:</b> screenshot posts got saves but no follows — testing lower priority</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div></div>
+
+<p class="note">
+  【存档】概念稿 v3.0（2026-07-02 会话首版）· 选题引擎三屏：<b>Radar</b>（每周选题卡+三层依据），
+  <b>Develop</b>（brief + 编辑器），<b>Account Brain</b>（账号级画像）。当时定位：英文市场选题引擎，卡片流形态。
+</p>
+
+<script>
+  document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+    n.classList.add('active');
+    document.getElementById(n.dataset.s).classList.add('active');
+  }));
+  document.querySelectorAll('.hook-opt').forEach(h=>h.addEventListener('click',()=>{
+    document.querySelectorAll('.hook-opt').forEach(x=>x.classList.remove('sel'));
+    h.classList.add('sel');
+  }));
+</script>
+</body>
+</html>
