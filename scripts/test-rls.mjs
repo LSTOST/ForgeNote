@@ -8,11 +8,20 @@ import { spawnSync } from "node:child_process";
 
 const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
 const expectedTables = [
+  // 0001 Batch A（旧 M1，保留）
   "profiles",
   "sessions",
   "recipes",
   "profile_preferences",
   "usage_events",
+  // 0003 M2-02 Structure 管线核心
+  "content_tasks",
+  "structure_documents",
+  "render_artifacts",
+  "recipe_schemas",
+  "account_memory_items",
+  "radar_cards",
+  "performance_records",
 ];
 
 if (!databaseUrl) {
