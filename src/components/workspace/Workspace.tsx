@@ -56,6 +56,33 @@ export function Workspace() {
   const [renderLoading, setRenderLoading] = useState<RendererId | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
 
+  const [decidingKey, setDecidingKey] = useState<string | null>(null);
+
+  // 裁决一个待决策 → 重评稳定性 → 更新本地状态（解锁渲染）。
+  async function resolveDecision(key: string, value: string) {
+    if (!gen) return;
+    setDecidingKey(key);
+    setGenError(null);
+    try {
+      const res = await fetch(`/api/structure/${gen.structureId}/decision`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, resolvedValue: value }),
+      });
+      const json: GenResponse = await res.json();
+      if (!json.ok || !json.data) {
+        setGenError(json.error?.message ?? "裁决失败");
+        return;
+      }
+      // data.structure 缺 taskId/structureId（PATCH 只回结构+稳定性）→ 合并保留原 id
+      setGen({ ...gen, structure: json.data.structure, stability: json.data.stability });
+    } catch {
+      setGenError("网络错误，请稍后重试");
+    } finally {
+      setDecidingKey(null);
+    }
+  }
+
   async function generate() {
     setGenLoading(true);
     setGenError(null);
@@ -146,13 +173,32 @@ export function Workspace() {
           )}
           {structure.pendingDecisions.length > 0 && (
             <div className="mt-3 border-t border-border pt-3">
-              <div className="mb-1 text-xs font-medium text-muted-foreground">待裁决</div>
-              {structure.pendingDecisions.map((d: PendingDecision, i) => (
-                <div key={i} className="text-xs text-muted-foreground">
-                  <span className="text-primary">?</span> {d.key}
-                  {d.options ? `：${d.options.join(" / ")}` : ""}
-                </div>
-              ))}
+              <div className="mb-2 text-xs font-medium text-muted-foreground">待裁决</div>
+              <div className="space-y-2">
+                {structure.pendingDecisions.map((d: PendingDecision, i) => {
+                  const resolved = d.status === "user_resolved" || d.status === "accepted_default";
+                  return (
+                    <div key={i} className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className={resolved ? "text-muted-foreground" : "text-primary"}>{resolved ? "✓" : "?"}</span>
+                      <span className="text-foreground">{d.key}</span>
+                      {resolved ? (
+                        <span className="text-muted-foreground">已选：{d.resolvedValue}</span>
+                      ) : (
+                        (d.options ?? []).map((opt) => (
+                          <button
+                            key={opt}
+                            disabled={decidingKey !== null}
+                            onClick={() => resolveDecision(d.key, opt)}
+                            className="rounded-md border border-border bg-background px-2 py-0.5 hover:bg-muted disabled:opacity-50"
+                          >
+                            {decidingKey === d.key ? "…" : opt}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

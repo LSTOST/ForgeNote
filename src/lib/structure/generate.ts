@@ -144,7 +144,8 @@ export function buildStructureMessages(input: { rawIntent: string; prototypeKey?
     `slot key（只用这些）：${slotList}`,
     `strategy key（只用这些，且必须匹配 slot）：${stratList}`,
     "拿不准的结构级选择放进 pendingDecisions（如 context.granularity）。",
-    '仅输出 JSON：{"prototypeKey","modalityStack":[...],"slots":[{"key","strategyKey"}],"pendingDecisions":[{"key","required","options"}]}',
+    "决策默认 required=false 并给出安全默认（放进 options 第一项）；只有当它影响内容真实性、平台适配或结构完整性时才 required=true。",
+    '仅输出 JSON：{"prototypeKey","modalityStack":[...],"slots":[{"key","strategyKey"}],"pendingDecisions":[{"key","required":false,"options":["默认值","备选"]}]}',
   ].join("\n");
 
   const user = [input.prototypeKey ? `建议原型：${input.prototypeKey}` : "", `想法：${input.rawIntent}`]
