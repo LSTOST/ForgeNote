@@ -73,7 +73,7 @@
   .rrow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--ink-1)}
   .rrow:hover{background:var(--paper-2)}
   .rrow .fire{color:var(--accent);font-size:11px}
-  .rrow .score{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
+  .rrow .score{margin-left:auto;font-size:11px;color:var(--ink-3);border:1px solid var(--bd-soft);border-radius:6px;padding:0 7px}
 
   .navrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--ink-2);margin-top:14px}
   .navrow:hover{background:var(--paper-2)}
@@ -180,6 +180,7 @@
   .plat{display:flex;align-items:center;gap:6px;border:1px solid var(--bd-soft);background:var(--card);border-radius:9px;padding:5px 12px;font-size:12.5px;color:var(--ink-1);cursor:pointer}
   .plat:hover{background:var(--paper-2)}
   .plat.on{border-color:var(--accent-border);background:var(--accent-ghost)}
+  .plat.off{color:var(--ink-4);cursor:default;opacity:.7}.plat.off:hover{background:var(--card)}
   /* 平台图标：黑白色调，保持克制 */
   .pdot{width:14px;height:14px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--paper-0);font-weight:800;background:var(--ink-2)}
   .plat.on .pdot{background:var(--ink-1)}
@@ -230,11 +231,11 @@
 
         <div class="lsec">选题雷达<span class="act">换一批 ↻</span></div>
         <div class="rtabs"><button class="rtab on">热门</button><button class="rtab">关注</button><button class="rtab">全部</button></div>
-        <div class="rrow"><span class="fire">◆</span>独居安全感建立清单<span class="score">86</span></div>
-        <div class="rrow"><span class="fire">◆</span>下班后如何高效充电<span class="score">82</span></div>
-        <div class="rrow"><span class="fire">◆</span>低成本自律生活方式<span class="score">78</span></div>
-        <div class="rrow"><span class="fire">◆</span>一个人旅行的意义<span class="score">74</span></div>
-        <div class="rrow"><span class="fire">◆</span>如何停止内耗<span class="score">72</span></div>
+        <div class="rrow"><span class="fire">◆</span>独居安全感建立清单<span class="score">账号匹配强</span></div>
+        <div class="rrow"><span class="fire">◆</span>下班后如何高效充电<span class="score">近期信号</span></div>
+        <div class="rrow"><span class="fire">◆</span>低成本自律生活方式<span class="score">历史有效</span></div>
+        <div class="rrow"><span class="fire">◆</span>一个人旅行的意义<span class="score">账号匹配强</span></div>
+        <div class="rrow"><span class="fire">◆</span>如何停止内耗<span class="score">低证据</span></div>
         <div class="more-link">更多选题灵感 →</div>
 
         <div class="navrow"><svg class="nic" viewBox="0 0 16 16"><path d="M3 4.5h10M6.3 4.5V3h3.4v1.5M4.5 4.5l.6 9h5.8l.6-9"/></svg>回收站</div>
@@ -253,7 +254,6 @@
         <div class="brief-pills">
           <span class="bp" title="内容原型（M1 五类之一）· 点击修改">经验复盘</span>
           <span class="bp dim" title="表达模态由系统按原型推荐，用户不直接选择 · modality: narrative">Narrative · 系统推荐</span>
-          <span class="bp" title="本次主输出 · 点击修改">主输出 · 小红书</span>
         </div>
         <button class="tpl-btn">▤ 结构模板库</button>
       </div>
@@ -350,14 +350,14 @@
   <div class="outbar">
     <button class="preview-btn">◎ 预览（当前结构）▾</button>
     <button class="preview-btn" title="保存为可复用的内容生产方法（原型+结构+受众+语气+输出策略，不含正文）">☆ 保存为配方</button>
-    <span class="gen-lab">生成到</span>
+    <span class="gen-lab">生成到（选中=主输出）</span>
     <div class="plats">
-      <span class="plat on"><span class="pdot xhs">书</span>小红书</span>
-      <span class="plat"><span class="pdot wx">公</span>公众号</span>
-      <span class="plat"><span class="pdot ig">IG</span>IG</span>
-      <span class="plat"><span class="pdot x">𝕏</span>X (Twitter)</span>
-      <span class="plat"><span class="pdot yt">▶</span>YouTube</span>
-      <span class="plat"><span class="pdot more">⋯</span>更多</span>
+      <span class="plat on"><span class="pdot">书</span>小红书 · 主输出</span>
+      <span class="plat"><span class="pdot">𝕏</span>X</span>
+      <span class="plat"><span class="pdot">▦</span>图片 Prompt</span>
+      <span class="plat off" title="M1 后开放">公众号</span>
+      <span class="plat off" title="M1 后开放">IG</span>
+      <span class="plat off" title="M1 后开放">更多…</span>
     </div>
     <div class="out-right"><button class="btn-pri">✦ 生成内容 ▾</button></div>
   </div>
