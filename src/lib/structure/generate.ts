@@ -143,6 +143,7 @@ export function buildStructureMessages(input: { rawIntent: string; prototypeKey?
     `模态栈：["narrative"] 或 ["narrative","visual"]（M1 不用 temporal）`,
     `slot key（只用这些）：${slotList}`,
     `strategy key（只用这些，且必须匹配 slot）：${stratList}`,
+    "必填 slot（hook / insight / resolution）必须给出匹配的 strategyKey，不能留空；visual 模态还需 layout。",
     "拿不准的结构级选择放进 pendingDecisions（如 context.granularity）。",
     "决策默认 required=false 并给出安全默认（放进 options 第一项）；只有当它影响内容真实性、平台适配或结构完整性时才 required=true。",
     '仅输出 JSON：{"prototypeKey","modalityStack":[...],"slots":[{"key","strategyKey"}],"pendingDecisions":[{"key","required":false,"options":["默认值","备选"]}]}',

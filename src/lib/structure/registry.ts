@@ -181,6 +181,13 @@ export function getLabel(key: string, locale: Locale): string {
   return BY_KEY.get(key)?.labels[locale]?.label ?? key;
 }
 
+/** 某 slot 可用的 stable strategy（allowedParents 含该 slot）。供右栏结构编辑列可选项。 */
+export function strategiesForSlot(slotKey: string): readonly StructureToken[] {
+  return STRUCTURE_TOKENS.filter(
+    (t) => t.kind === "strategy" && t.status === "stable" && (t.allowedParents ?? []).includes(slotKey),
+  );
+}
+
 /** token 解析结果。模型输出必须过这一关。 */
 export type TokenResolution =
   | { known: true; token: StructureToken }

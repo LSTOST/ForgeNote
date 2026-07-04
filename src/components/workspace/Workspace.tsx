@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { getLabel } from "@/lib/structure/registry";
+import { getLabel, strategiesForSlot } from "@/lib/structure/registry";
 import type { RendererId } from "@/lib/render/contract";
 import type { PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
 
@@ -57,6 +57,33 @@ export function Workspace() {
   const [renderError, setRenderError] = useState<string | null>(null);
 
   const [decidingKey, setDecidingKey] = useState<string | null>(null);
+  const [editingSlot, setEditingSlot] = useState<string | null>(null);
+  const [busySlot, setBusySlot] = useState<string | null>(null);
+
+  // 设置/修改一个 slot 的策略 → 重评稳定性 → 更新本地状态。
+  async function setSlotStrategy(slotKey: string, strategyKey: string) {
+    if (!gen) return;
+    setBusySlot(slotKey);
+    setGenError(null);
+    try {
+      const res = await fetch(`/api/structure/${gen.structureId}/slot`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotKey, strategyKey }),
+      });
+      const json: GenResponse = await res.json();
+      if (!json.ok || !json.data) {
+        setGenError(json.error?.message ?? "编辑失败");
+        return;
+      }
+      setGen({ ...gen, structure: json.data.structure, stability: json.data.stability });
+      setEditingSlot(null);
+    } catch {
+      setGenError("网络错误，请稍后重试");
+    } finally {
+      setBusySlot(null);
+    }
+  }
 
   // 裁决一个待决策 → 重评稳定性 → 更新本地状态（解锁渲染）。
   async function resolveDecision(key: string, value: string) {
@@ -161,12 +188,38 @@ export function Workspace() {
             <StabilityBadge stable={gen!.stability.stable} />
           </div>
           <ul className="space-y-1.5">
-            {structure.slots.map((s: StructureSlot, i) => (
-              <li key={i} className="flex items-baseline gap-3 text-sm">
-                <span className="w-14 shrink-0 text-muted-foreground">{getLabel(s.key, "zh-Hans")}</span>
-                <span className="text-foreground">{s.strategyKey ? getLabel(s.strategyKey, "zh-Hans") : <em className="text-primary not-italic">待定义</em>}</span>
-              </li>
-            ))}
+            {structure.slots.map((s: StructureSlot, i) => {
+              const opts = strategiesForSlot(s.key);
+              const open = editingSlot === s.key;
+              return (
+                <li key={i} className="text-sm">
+                  <div className="flex items-baseline gap-3">
+                    <span className="w-14 shrink-0 text-muted-foreground">{getLabel(s.key, "zh-Hans")}</span>
+                    <button
+                      onClick={() => setEditingSlot(open ? null : s.key)}
+                      className="text-left hover:underline"
+                      title="点击修改策略"
+                    >
+                      {s.strategyKey ? getLabel(s.strategyKey, "zh-Hans") : <em className="text-primary not-italic">待定义 · 点击选择</em>}
+                    </button>
+                  </div>
+                  {open && opts.length > 0 && (
+                    <div className="ml-[68px] mt-1.5 flex flex-wrap gap-1.5">
+                      {opts.map((opt) => (
+                        <button
+                          key={opt.key}
+                          disabled={busySlot !== null}
+                          onClick={() => setSlotStrategy(s.key, opt.key)}
+                          className={`rounded-md border px-2 py-0.5 text-xs disabled:opacity-50 ${opt.key === s.strategyKey ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted"}`}
+                        >
+                          {busySlot === s.key ? "…" : getLabel(opt.key, "zh-Hans")}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           {!gen!.stability.stable && gen!.stability.blockers.length > 0 && (
             <p className="mt-3 text-xs text-muted-foreground">未就绪：{gen!.stability.blockers.join("；")}</p>
