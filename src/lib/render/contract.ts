@@ -58,6 +58,28 @@ export interface RenderArtifact {
   warnings: string[];
 }
 
+/** 渲染计划的一个输出单元（如一条推文 / 一张卡）。绑定它覆盖的 slot（可测的覆盖率来源）。 */
+export interface RenderUnit {
+  /** 单元角色（cover / card / tweet / summary / image …）。 */
+  role: string;
+  /** 该单元覆盖的 slot machine_key（用于 golden 覆盖率校验）。 */
+  slotKeys: string[];
+}
+
+/** 渲染计划：确定性地把结构映射为平台输出单元（纯函数产物，不含模型生成文本）。 */
+export interface RenderPlan {
+  format: RenderFormat;
+  units: RenderUnit[];
+}
+
+/** 计划覆盖的全部 slot（去重）。golden 校验用。 */
+export function planCoverage(plan: RenderPlan): string[] {
+  return [...new Set(plan.units.flatMap((u) => u.slotKeys))];
+}
+
+/** renderer 文本填充依赖（默认走 OpenRouter；测试注入 mock）。 */
+export type RendererFill = (messages: import("@/lib/ai/openrouter-client").ChatMessage[]) => Promise<string>;
+
 /** renderer 接口。加平台只新增实现，不改此契约。 */
 export interface Renderer {
   id: RendererId;

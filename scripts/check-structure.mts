@@ -91,8 +91,8 @@ const visual = parseStructure(JSON.stringify({
 }), { taskId: "t7" });
 console.log("⑦ visual 缺 layout");
 check("unstable（visual 需 layout）", !evaluateStability(visual.document!).stable);
-visual.document!.slots.push({ key: "layout", strategyKey: "list_cards" });
-check("补 layout 后 stable", evaluateStability(visual.document!).stable);
+const withLayout = { ...visual.document!, slots: [...visual.document!.slots, { key: "layout", strategyKey: "list_cards" }] };
+check("补 layout 后 stable", evaluateStability(withLayout).stable);
 
 console.log(allPass ? "\ncheck:structure PASS ✓" : "\ncheck:structure FAIL ✗");
 if (!allPass) process.exit(1);
