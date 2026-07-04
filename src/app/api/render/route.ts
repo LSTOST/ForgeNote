@@ -109,6 +109,10 @@ export async function POST(request: Request): Promise<Response> {
   const structure = rowToStructure(row);
   const rendererId = parsed.data.rendererId;
 
+  // 加载主题（"写什么"）：renderer 需要主题才能产出具体内容而非通用套话。
+  const { data: taskRow } = await supabase.from("content_tasks").select("raw_intent").eq("id", structure.taskId).single();
+  const intent = taskRow?.raw_intent ?? "";
+
   // 4) 稳定性门控：只渲染 stable 结构（以服务端重新评估为准，不信任落库标记被篡改）
   const stability = evaluateStability(structure, { targetRendererId: rendererId });
   if (!stability.stable) {
@@ -125,6 +129,7 @@ export async function POST(request: Request): Promise<Response> {
   let artifact;
   try {
     artifact = await renderer.render({
+      intent,
       structure,
       accountBrain: {},
       target: { rendererId, language: parsed.data.language, lengthHint: parsed.data.lengthHint },

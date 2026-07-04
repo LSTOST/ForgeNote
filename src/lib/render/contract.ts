@@ -34,6 +34,8 @@ export interface RendererConstraint {
 
 /** renderer 输入。structure 与 accountBrain 均只读，类型层强制 renderer 不可改结构。 */
 export interface RendererInput {
+  /** 内容主题/原始想法（"写什么"；结构定义"怎么写"，两者都需要才能产出具体内容）。 */
+  intent: string;
   structure: Readonly<StructureDocument>;
   accountBrain: Readonly<AccountBrainSnapshot>;
   target: {

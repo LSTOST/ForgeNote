@@ -45,7 +45,7 @@ const visual: StructureDocument = {
   slots: [...narrative.slots, { key: "layout", strategyKey: "list_cards" }, { key: "visual_hierarchy", strategyKey: "cover_hook" }],
 };
 const inputFor = (s: StructureDocument, rid: RendererInput["target"]["rendererId"]): RendererInput =>
-  ({ structure: s, accountBrain: {}, target: { rendererId: rid }, constraints: [] });
+  ({ intent: "应届生第一次租房", structure: s, accountBrain: {}, target: { rendererId: rid }, constraints: [] });
 
 // ── ① plan 覆盖率：不丢叙事 slot ──
 console.log("① plan 覆盖率");

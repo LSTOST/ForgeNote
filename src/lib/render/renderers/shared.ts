@@ -37,8 +37,9 @@ const fillSchema = z.object({
   units: z.array(z.object({ role: z.string(), text: z.string() })).default([]),
 });
 
-/** 组装填充消息：给模型结构 + 计划，要求逐单元产出文本（JSON）。 */
+/** 组装填充消息：给模型主题 + 结构 + 计划，要求逐单元产出**围绕主题**的具体文本（JSON）。 */
 export function buildFillMessages(
+  intent: string,
   structure: Readonly<StructureDocument>,
   plan: RenderPlan,
   platformNote: string,
@@ -50,11 +51,18 @@ export function buildFillMessages(
     .join("\n");
   const system = [
     `你是「${platformNote}」的内容渲染器。只做格式化表达，不改变结构与选题。`,
-    "按给定单元逐个产出文本，保持每个单元覆盖其 slot 的语义。",
+    "必须紧扣给定主题写具体内容——出现主题里的具体对象、场景、细节；禁止写与主题无关的通用套话/空泛励志。",
+    "按给定单元逐个产出文本，每个单元覆盖其 slot 的语义（如 hook 抓注意、resolution 给可执行收束）。",
     language ? `输出语言：${language}。` : "",
     '仅输出 JSON：{"units":[{"role","text"}]}，顺序与数量必须与输入单元一致。',
   ].filter(Boolean).join("\n");
-  const user = [`原型：${structure.prototypeKey}`, `模态：${structure.modalityStack.join("+")}`, "单元：", unitLines].join("\n");
+  const user = [
+    `主题（务必围绕它写）：${intent}`,
+    `原型：${structure.prototypeKey}`,
+    `模态：${structure.modalityStack.join("+")}`,
+    "单元：",
+    unitLines,
+  ].join("\n");
   return [
     { role: "system", content: system },
     { role: "user", content: user },
@@ -108,7 +116,7 @@ export async function runRender(args: {
   fill: RendererFill;
 }): Promise<RenderArtifact> {
   const { rendererId, rendererVersion, input, plan, platformNote, fill } = args;
-  const messages = buildFillMessages(input.structure, plan, platformNote, input.target.language);
+  const messages = buildFillMessages(input.intent, input.structure, plan, platformNote, input.target.language);
   const filledRaw = await fill(messages);
   return assembleArtifact({ rendererId, rendererVersion, structure: input.structure, plan, filledRaw });
 }
