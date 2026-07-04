@@ -91,6 +91,12 @@ export async function POST(request: Request): Promise<Response> {
   // 5) 生成结构（registry 校验在域核心内；缺 env / 上游错误内部降级）
   const result = await generateStructure({ rawIntent, prototypeKey: parsed.data.prototypeKey, taskId: task.id });
   if (!result.ok || !result.document) {
+    // 失败：把 task 标为 failed（+ error），避免留下永久 structuring 僵尸任务（Codex blocker 4）。
+    await supabase
+      .from("content_tasks")
+      .update({ status: "failed", error_code: result.errorCode ?? "GENERATION_FAILED", error_message: result.errorMessage ?? "结构生成失败" })
+      .eq("id", task.id)
+      .eq("user_id", user.id);
     return errorResponse(result.errorCode ?? "GENERATION_FAILED", result.errorMessage ?? "结构生成失败", true);
   }
   const doc = result.document;
@@ -115,7 +121,17 @@ export async function POST(request: Request): Promise<Response> {
     })
     .select("id")
     .single();
-  if (docErr || !saved) return errorResponse("DATABASE_ERROR", "结构保存失败，请稍后重试", true);
+  if (docErr || !saved) {
+    await supabase
+      .from("content_tasks")
+      .update({ status: "failed", error_code: "DATABASE_ERROR", error_message: "结构保存失败" })
+      .eq("id", task.id)
+      .eq("user_id", user.id);
+    return errorResponse("DATABASE_ERROR", "结构保存失败，请稍后重试", true);
+  }
+
+  // 成功：task 推进为 ready（有稳定/可编辑的结构）
+  await supabase.from("content_tasks").update({ status: "ready" }).eq("id", task.id).eq("user_id", user.id);
 
   // 8) 成功：返回结构 + 稳定性报告（含 blockers，供右栏"拿不准/待就绪"展示）
   return Response.json({

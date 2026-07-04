@@ -39,12 +39,15 @@ const SOURCE_SET = new Set<string>(MEMORY_SOURCES);
 /**
  * 纯函数：解析模型 JSON → 校验 → 反编造过滤 → 赋 freshness。
  * 可离线测试（无需 OpenRouter）。now 注入以便测试确定性。
+ * validRefs：本次输入生成的合法证据引用集合（profile / 帖N / 表现N）；
+ *   传入则强制 evidenceRefs 必须来自它（防模型伪造 [帖99]）。不传则退化为旧行为（只查数量）。
  */
 export function parseAccountMemory(
   rawJson: string,
-  opts?: { now?: () => Date },
+  opts?: { now?: () => Date; validRefs?: readonly string[] },
 ): AccountIntakeResult {
   const now = (opts?.now ?? (() => new Date()))().toISOString();
+  const validRefSet = opts?.validRefs ? new Set(opts.validRefs) : null;
 
   let parsed: z.infer<typeof modelOutputSchema>;
   try {
@@ -67,14 +70,15 @@ export function parseAccountMemory(
       dropped.push({ reason: `无效 source（不在来源账本内）: ${raw.source}`, raw });
       continue;
     }
-    // ③ 必须有证据引用（account_match 允许 0 证据，其余来源必须有据可查）
-    const evidenceRefs = raw.evidenceRefs ?? [];
+    // ③ 证据引用：先按 ledger 过滤（伪造的 [帖99] 被剔除），再要求非 account_match 至少剩 1 条
+    const rawRefs = raw.evidenceRefs ?? [];
+    const evidenceRefs = validRefSet ? rawRefs.filter((r) => validRefSet.has(r)) : rawRefs;
     if (raw.source !== "account_match" && evidenceRefs.length === 0) {
-      dropped.push({ reason: `来源 ${raw.source} 缺证据引用（疑似编造）`, raw });
+      dropped.push({ reason: `来源 ${raw.source} 无有效证据引用（伪造或缺失）`, raw });
       continue;
     }
-    // ④ body 必须是非空结构化对象，且不得夹带正文字段
-    const body = stripContentFields(raw.body);
+    // ④ body 递归清洗：禁用正文键（任意深度）、限字符长度、限数组长度、限深度；清洗后非空
+    const body = sanitizeBody(raw.body);
     if (Object.keys(body).length === 0) {
       dropped.push({ reason: "body 为空或仅含被剥离的正文字段", raw });
       continue;
@@ -84,8 +88,9 @@ export function parseAccountMemory(
       kind: raw.kind as MemoryKind,
       source: raw.source as MemorySource,
       body,
-      // 证据条数以实际引用数为上限（不信任模型自报超过引用的计数）
-      evidenceCount: Math.min(raw.evidenceCount ?? evidenceRefs.length, evidenceRefs.length),
+      evidenceRefs,
+      // 证据条数 = 有效引用数（不信任模型自报）
+      evidenceCount: evidenceRefs.length,
       freshnessAt: now,
       status: "active",
     });
@@ -94,15 +99,33 @@ export function parseAccountMemory(
   return { ok: true, items, dropped };
 }
 
-/** 剥离疑似正文/成稿字段（记忆只存结构化信念，不存文章）。 */
-function stripContentFields(body: Record<string, unknown>): Record<string, unknown> {
-  const BANNED = new Set(["content", "text", "article", "draft", "full_text", "body_text", "raw"]);
+/** 递归清洗 body（记忆只存结构化信念，不存文章）。防模型把正文藏进嵌套对象/数组。 */
+const BANNED_BODY_KEYS = new Set(["content", "text", "article", "draft", "full_text", "body_text", "raw", "html", "markdown"]);
+const MAX_STR = 280; // 单字符串上限（超长视为正文）
+const MAX_ARR = 12; // 数组长度上限
+const MAX_DEPTH = 4; // 嵌套深度上限
+
+function sanitizeValue(v: unknown, depth: number): unknown | undefined {
+  if (typeof v === "string") return v.length > MAX_STR ? undefined : v;
+  if (typeof v === "number" || typeof v === "boolean" || v === null) return v;
+  if (depth >= MAX_DEPTH) return undefined; // 太深，丢弃
+  if (Array.isArray(v)) {
+    const arr = v.slice(0, MAX_ARR).map((x) => sanitizeValue(x, depth + 1)).filter((x) => x !== undefined);
+    return arr.length ? arr : undefined;
+  }
+  if (v && typeof v === "object") {
+    const obj = sanitizeBody(v as Record<string, unknown>, depth + 1);
+    return Object.keys(obj).length ? obj : undefined;
+  }
+  return undefined; // 函数/symbol 等一律丢
+}
+
+function sanitizeBody(body: Record<string, unknown>, depth = 0): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
-    if (BANNED.has(k)) continue;
-    // 超长自由文本也视为疑似正文（>280 字），不进记忆
-    if (typeof v === "string" && v.length > 280) continue;
-    out[k] = v;
+    if (BANNED_BODY_KEYS.has(k.toLowerCase())) continue;
+    const cleaned = sanitizeValue(v, depth);
+    if (cleaned !== undefined) out[k] = cleaned;
   }
   return out;
 }
@@ -146,7 +169,10 @@ export function buildIntakeMessages(input: AccountIntakeInput): ChatMessage[] {
  * server 编排：调 OpenRouter → parseAccountMemory。仅服务端使用（动态 import server-only 客户端）。
  * 本环境无 OPENROUTER_API_KEY 时返回 MODEL_NOT_CONFIGURED（不白屏）。
  */
-export async function generateAccountMemory(input: AccountIntakeInput): Promise<AccountIntakeResult> {
+export async function generateAccountMemory(
+  input: AccountIntakeInput,
+  opts?: { validRefs?: readonly string[] },
+): Promise<AccountIntakeResult> {
   const { callOpenRouterJSON, ModelNotConfiguredError, ModelRequestError } = await import("@/lib/ai/openrouter-client");
   let rawJson: string;
   try {
@@ -160,5 +186,5 @@ export async function generateAccountMemory(input: AccountIntakeInput): Promise<
     }
     return { ok: false, items: [], dropped: [], errorCode: "GENERATION_FAILED", errorMessage: "生成失败，请稍后重试" };
   }
-  return parseAccountMemory(rawJson);
+  return parseAccountMemory(rawJson, { validRefs: opts?.validRefs });
 }

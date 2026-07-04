@@ -53,7 +53,9 @@ export interface AccountMemoryItem {
   /** 结构化信念（machine-friendly；不存正文文章）。 */
   body: Record<string, unknown>;
   source: MemorySource;
-  /** 证据条数（用于 UI 显示"验证 ×N"，不是伪精确热度）。 */
+  /** 证据引用（必须来自本次输入的 ledger：profile / 帖N / 表现N）。可复核，进学习/雷达/eval。 */
+  evidenceRefs: string[];
+  /** 证据条数（= 有效引用数；用于 UI 显示"验证 ×N"，不是伪精确热度）。 */
   evidenceCount: number;
   /** 证据新鲜度（ISO 时间戳；由入库时赋值）。 */
   freshnessAt: string;

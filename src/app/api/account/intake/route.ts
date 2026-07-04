@@ -44,12 +44,16 @@ function errorResponse(code: RouteErrorCode, message: string, retryable?: boolea
   return Response.json({ ok: false, error }, { status: httpStatusFor(code) });
 }
 
+// 数组条数上限（P2：防已登录用户构造超大 prompt）。
 const bodySchema = z.object({
   profileText: z.string(),
-  recentPosts: z.array(z.string().max(MAX_ACCOUNT_POST_CHARS)).default([]),
-  performanceNotes: z.array(z.string().max(MAX_ACCOUNT_POST_CHARS)).optional(),
+  recentPosts: z.array(z.string().max(MAX_ACCOUNT_POST_CHARS)).max(20).default([]),
+  performanceNotes: z.array(z.string().max(MAX_ACCOUNT_POST_CHARS)).max(20).optional(),
   platform: z.string().max(64).optional(),
 });
+
+/** 总输入字符上限（防超大模型调用）。 */
+const MAX_TOTAL_INTAKE_CHARS = 40_000;
 
 export async function POST(request: Request): Promise<Response> {
   // 1) body
@@ -76,14 +80,23 @@ export async function POST(request: Request): Promise<Response> {
   if (profileText.length > MAX_INPUT_CHARS) {
     return errorResponse("INPUT_TOO_LONG", `profile 已超过 ${MAX_INPUT_CHARS} 字`);
   }
+  const totalChars = profileText.length + recentPosts.join("").length + (parsed.data.performanceNotes ?? []).join("").length;
+  if (totalChars > MAX_TOTAL_INTAKE_CHARS) {
+    return errorResponse("INPUT_TOO_LONG", `总输入已超过 ${MAX_TOTAL_INTAKE_CHARS} 字`);
+  }
 
   // 4) 反编造生成（缺 env / 上游错误 / 解析失败均内部降级）
-  const result = await generateAccountMemory({
-    profileText,
-    recentPosts,
-    performanceNotes: parsed.data.performanceNotes,
-    platform: parsed.data.platform,
-  });
+  //    构建本次输入的合法证据 ledger（profile / 帖N / 表现N），强制 evidenceRefs 必须来自它。
+  const perfNotes = (parsed.data.performanceNotes ?? []).filter((p) => p.trim().length > 0);
+  const validRefs = [
+    "profile",
+    ...recentPosts.map((_, i) => `帖${i + 1}`),
+    ...perfNotes.map((_, i) => `表现${i + 1}`),
+  ];
+  const result = await generateAccountMemory(
+    { profileText, recentPosts, performanceNotes: perfNotes, platform: parsed.data.platform },
+    { validRefs },
+  );
   if (!result.ok) {
     return errorResponse(result.errorCode ?? "GENERATION_FAILED", result.errorMessage ?? "生成失败", true);
   }
@@ -97,6 +110,7 @@ export async function POST(request: Request): Promise<Response> {
       kind: it.kind,
       body: it.body,
       source: it.source,
+      evidence_refs: it.evidenceRefs,
       evidence_count: it.evidenceCount,
       freshness_at: it.freshnessAt,
       status: it.status,

@@ -32,6 +32,32 @@ const pass = r.ok && r.items.length === 3 && r.dropped.length === 4 && noLeak &&
 console.log(`保留 ${r.items.length} / 丢弃 ${r.dropped.length}`);
 for (const it of r.items) console.log(`  ✓ [${it.kind}/${it.source}] ${JSON.stringify(it.body)} 证据×${it.evidenceCount}`);
 for (const d of r.dropped) console.log(`  ✗ ${d.reason}`);
-console.log(pass ? "\ncheck:intake PASS ✓" : "\ncheck:intake FAIL ✗");
+// ── 对抗样例（Codex blocker 2）：ledger 校验 + 递归 sanitizer ──
+const longText = "这是被藏起来的正文".repeat(40);
+const adversarial = JSON.stringify({
+  items: [
+    // ✓ 合规：引用在 ledger 内
+    { kind: "proven_pattern", source: "pasted_post", body: { pattern: "复盘高互动" }, evidenceRefs: ["帖1", "帖2"] },
+    // ✗ 伪造引用 帖99（不在 ledger）→ 过滤后无有效引用 → 丢弃
+    { kind: "voice", source: "pasted_post", body: { tone: "克制" }, evidenceRefs: ["帖99"] },
+    // ✗ 嵌套正文：body.note.text 是正文键（深层）→ 剥离后 note 空 → body 空 → 丢弃
+    { kind: "topic", source: "pasted_post", body: { note: { text: longText } }, evidenceRefs: ["帖1"] },
+    // ✓ 数组里的长文本被剔除，短标签保留
+    { kind: "visual_pref", source: "pasted_post", body: { tags: ["简约", longText] }, evidenceRefs: ["帖3"] },
+  ],
+});
+const validRefs = ["profile", "帖1", "帖2", "帖3"];
+const a = parseAccountMemory(adversarial, { now: () => new Date("2026-07-04T00:00:00Z"), validRefs });
+const fakeDropped = a.dropped.some((d) => d.reason.includes("无有效证据引用"));
+const nestedStripped = !a.items.some((i) => JSON.stringify(i.body).includes("被藏起来"));
+const arrKept = a.items.find((i) => i.kind === "visual_pref");
+const arrOk = arrKept && Array.isArray((arrKept.body as { tags?: unknown }).tags) && (arrKept.body as { tags: string[] }).tags.length === 1;
+const refsPersisted = a.items.every((i) => Array.isArray(i.evidenceRefs));
+const advPass = a.items.length === 2 && fakeDropped && nestedStripped && arrOk && refsPersisted;
 
-if (!pass) process.exit(1);
+console.log(`\n对抗样例：保留 ${a.items.length} / 丢弃 ${a.dropped.length}`);
+console.log(`  伪造 帖99 被丢=${fakeDropped} 嵌套正文剥离=${nestedStripped} 数组长文本剔除=${arrOk} evidenceRefs 保留=${refsPersisted}`);
+
+const allPass = pass && advPass;
+console.log(allPass ? "\ncheck:intake PASS ✓" : "\ncheck:intake FAIL ✗");
+if (!allPass) process.exit(1);

@@ -135,7 +135,12 @@ export async function POST(request: Request): Promise<Response> {
       target: { rendererId, language: parsed.data.language, lengthHint: parsed.data.lengthHint },
       constraints: [],
     });
-  } catch {
+  } catch (error) {
+    // 区分配置缺失与生成失败（P2：不要把缺 env 误报成渲染失败）。
+    const { ModelNotConfiguredError } = await import("@/lib/ai/openrouter-client");
+    if (error instanceof ModelNotConfiguredError) {
+      return errorResponse("MODEL_NOT_CONFIGURED", error.message);
+    }
     return errorResponse("GENERATION_FAILED", "渲染失败，请稍后重试", true);
   }
 
