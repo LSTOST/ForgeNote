@@ -112,16 +112,21 @@ export function buildIntakeMessages(input: AccountIntakeInput): ChatMessage[] {
   const kinds = MEMORY_KINDS.join(" / ");
   const sources = MEMORY_SOURCES.join(" / ");
   const posts = input.recentPosts.map((p, i) => `[帖${i + 1}] ${p}`).join("\n");
-  const perf = (input.performanceNotes ?? []).join("\n") || "（未提供）";
+  const perf = (input.performanceNotes ?? []).map((p, i) => `[表现${i + 1}] ${p}`).join("\n") || "（未提供）";
 
   const system = [
-    "你是内容账号分析器。基于用户粘贴的资料，抽取结构化的账号记忆条目。",
+    "你是内容账号分析器。基于用户粘贴的资料，抽取结构化的账号记忆条目（覆盖受众/声音/规律/主题/视觉偏好，不要只写互动数据）。",
     "严格要求：",
-    `- 每条记忆必须标注 kind（${kinds}）与 source（${sources}）。`,
-    "- 每条记忆必须给出 evidenceRefs（指向哪条帖子/哪段表现/哪条观察）；除 account_match 外不得为空。",
-    "- 只输出结构化 body（键值信念），禁止输出正文文章、完整帖子、长段落。",
-    "- 拿不准、无证据的判断不要输出。宁缺毋编。",
-    '仅输出 JSON：{"items":[{"kind","source","body":{...},"evidenceRefs":[...],"evidenceCount"}]}',
+    `- 每条记忆标注 kind（${kinds}）与 source（${sources}）。`,
+    "- evidenceRefs 是关键：用输入里的标记引用证据——帖子用 [帖1][帖2]…，表现数据用 [表现1][表现2]…，profile 推断用 \"profile\"。",
+    "- source 怎么选：有具体帖子/表现佐证用 pasted_post；仅凭 profile 或整体印象推断（无具体帖子）用 account_match。source 只能是上面列出的值，不要用 \"profile\"。",
+    "- 除 account_match 外，每条都必须至少给 1 个 evidenceRef（引用帖子或表现）。",
+    "- body 只放结构化键值信念（如 {\"voice\":\"克制、具体\"}），禁止放正文、完整帖子、长段落。",
+    "- 宁缺毋编：真没有证据支撑的判断不要输出。",
+    "示例：",
+    '{"kind":"audience","source":"pasted_post","body":{"who":"独居的年轻人","cares_about":"实用与省钱"},"evidenceRefs":["帖1","帖3"]}',
+    '{"kind":"proven_pattern","source":"pasted_post","body":{"pattern":"反种草/复盘类高互动"},"evidenceRefs":["帖1","表现1"],"evidenceCount":2}',
+    '仅输出 JSON：{"items":[ … ]}',
   ].join("\n");
 
   const user = [
