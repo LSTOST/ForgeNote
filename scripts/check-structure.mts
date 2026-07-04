@@ -94,6 +94,17 @@ console.log("⑤ required 决策未裁");
 const us = evaluateStability(undecided.document!);
 check("unstable 且条件4 报未裁", !us.stable && us.blockers.some((x) => x.includes("条件4")));
 
+// ── 5b. 跨模态 slot 被丢（narrative-only 塞 layout）；超长 decision option 被丢 ──
+console.log("⑤b 跨模态 slot / 超长 decision（Fix 3）");
+const crossModal = parseStructure(JSON.stringify({
+  prototypeKey: "experience_recap", modalityStack: ["narrative"],
+  slots: [{ key: "hook", strategyKey: "loss_open" }, { key: "layout", strategyKey: "list_cards" }, { key: "insight", strategyKey: "root_cause" }, { key: "resolution", strategyKey: "reusable_rule" }],
+  pendingDecisions: [{ key: "context.granularity", required: false, options: ["a", "这是一个被塞进来的超长选项".repeat(5)] }],
+}), { taskId: "t5b" });
+check("narrative-only 的 layout(visual) slot 被丢", !crossModal.document!.slots.some((s) => s.key === "layout"));
+check("跨模态 slot 有 dropped 记录", crossModal.dropped.some((d) => d.reason.includes("不属于当前模态栈")));
+check("超长 option 的 decision 被丢", crossModal.document!.pendingDecisions.length === 0);
+
 // ── 6. 未知 prototype → parse 失败 ──
 console.log("⑥ 未知 prototype");
 check("parse 失败", !parseStructure(JSON.stringify({ prototypeKey: "meme_dump", modalityStack: ["narrative"], slots: [], pendingDecisions: [] }), { taskId: "t6" }).ok);

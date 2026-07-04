@@ -65,7 +65,8 @@ export function parseStructure(
   // ② 模态栈：过滤到 M1 合法模态（temporal / 未知丢弃），去重保序，保证含 narrative 基座
   const modalityStack = normalizeModalityStack(parsed.modalityStack, dropped);
 
-  // ③ slots：slot key 必须已知；strategy 必须能挂在该 slot 下，否则降级为待填
+  // ③ slots：slot key 必须已知；slot 必须属于当前模态栈；strategy 必须能挂在该 slot 下
+  const stackSet = new Set<string>(modalityStack);
   const slots: StructureSlot[] = [];
   for (const raw of parsed.slots) {
     const slotRes = resolveToken(raw.key, { expectedKind: "slot" });
@@ -74,6 +75,12 @@ export function parseStructure(
       continue;
     }
     const slotKey = slotRes.token.key;
+    // slot 的 allowedParents 是所属 modality；必须在当前栈内（防跨模态污染，如 narrative-only 塞 layout）
+    const slotModalities = slotRes.token.allowedParents ?? [];
+    if (slotModalities.length > 0 && !slotModalities.some((m) => stackSet.has(m))) {
+      dropped.push({ reason: `slot ${slotKey} 不属于当前模态栈 [${modalityStack.join(",")}]`, raw });
+      continue;
+    }
     let strategyKey: string | undefined;
     if (raw.strategyKey) {
       const stratRes = resolveToken(raw.strategyKey, { expectedKind: "strategy", parent: slotKey });
@@ -87,13 +94,19 @@ export function parseStructure(
     slots.push({ key: slotKey, strategyKey });
   }
 
-  // ④ pending decisions：透传 + 初始状态 detected
-  const pendingDecisions: PendingDecision[] = parsed.pendingDecisions.map((d) => ({
-    key: d.key,
-    status: "detected" as const,
-    required: d.required,
-    options: d.options,
-  }));
+  // ④ pending decisions：key/options 长度与数量限流（防自由长文本夹带），透传 + 初始 detected
+  const pendingDecisions: PendingDecision[] = parsed.pendingDecisions
+    .filter((d) => {
+      const ok = d.key.length <= 64 && (d.options ?? []).length <= 6 && (d.options ?? []).every((o) => o.length <= 40);
+      if (!ok) dropped.push({ reason: `pending decision ${d.key} 超长/超量，丢弃`, raw: d });
+      return ok;
+    })
+    .map((d) => ({
+      key: d.key,
+      status: "detected" as const,
+      required: d.required,
+      options: d.options,
+    }));
 
   const document: StructureDocument = {
     id: crypto.randomUUID(),

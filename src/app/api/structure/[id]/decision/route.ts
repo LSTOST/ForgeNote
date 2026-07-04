@@ -12,11 +12,12 @@ import { getAuthenticatedContext } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteErrorCode = "VALIDATION_FAILED" | "AUTH_REQUIRED" | "STRUCTURE_NOT_FOUND" | "DECISION_NOT_FOUND" | "DATABASE_ERROR";
+type RouteErrorCode = "VALIDATION_FAILED" | "AUTH_REQUIRED" | "STRUCTURE_NOT_FOUND" | "DECISION_NOT_FOUND" | "INVALID_OPTION" | "DATABASE_ERROR";
 
 function httpStatusFor(code: RouteErrorCode): number {
   switch (code) {
     case "VALIDATION_FAILED":
+    case "INVALID_OPTION":
       return 400;
     case "AUTH_REQUIRED":
       return 401;
@@ -86,6 +87,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const structure = rowToStructure(row);
   const target = structure.pendingDecisions.find((d) => d.key === parsed.data.key);
   if (!target) return errorResponse("DECISION_NOT_FOUND", `待决策 ${parsed.data.key} 不存在`);
+
+  // 防假门：resolvedValue 必须是该决策 options 之一（不允许任意文本解锁 stable）。
+  //   无 options 的决策不允许自由裁决（避免绕过合法性）。
+  if (!target.options || target.options.length === 0) {
+    return errorResponse("INVALID_OPTION", "该决策无可选项，不能自由裁决");
+  }
+  if (!target.options.includes(parsed.data.resolvedValue)) {
+    return errorResponse("INVALID_OPTION", `裁决值必须是 ${target.options.join(" / ")} 之一`);
+  }
 
   // 裁决：该决策 user_resolved + resolvedValue
   const updatedDecisions: PendingDecision[] = structure.pendingDecisions.map((d) =>
