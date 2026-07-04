@@ -14,6 +14,7 @@
     "check:intake": "tsx scripts/check-account-intake.mts",
     "check:structure": "tsx scripts/check-structure.mts",
     "check:renderers": "tsx scripts/check-renderers.mts",
+    "check:recipe": "tsx scripts/check-recipe.mts",
     "eval:forge": "node scripts/eval-forge.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
