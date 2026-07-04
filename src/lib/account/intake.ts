@@ -1,0 +1,159 @@
+// ForgeNote M2-05 — 账号接入编排（域核心：prompt + 解析 + 反编造校验 + freshness）。
+//
+// 依据：CODEX-REVIEW.md §M2-05 / §5、方向文档 v3.16、migration 0003。
+// 结构：沿用 generate.ts 的编排壳模式（buildMessages → callOpenRouterJSON → zod parse → 校验）。
+// 分层：`parseAccountMemory` 为纯函数（可离线测试）；`generateAccountMemory` 为 server 编排（调 OpenRouter）。
+//
+// 反编造铁律（Codex §5：Owner 自用最怕"看起来像数据其实是模型编的"）：
+//   - 每条记忆必须带 ledger 内的 source + 证据；否则丢弃并记入 dropped，不入账号大脑。
+//   - 不接受模型返回的正文/自由文章字段；只取结构化 body（防止把成稿塞进记忆）。
+
+import { z } from "zod";
+import type { ChatMessage } from "@/lib/ai/openrouter-client";
+import {
+  MEMORY_KINDS,
+  MEMORY_SOURCES,
+  type AccountIntakeInput,
+  type AccountIntakeResult,
+  type AccountMemoryItem,
+  type MemoryKind,
+  type MemorySource,
+} from "./types";
+
+/** 模型输出 schema。刻意宽松接收，再由 parse 逐条做 ledger 校验与丢弃（不信任模型）。 */
+const modelItemSchema = z.object({
+  kind: z.string(),
+  source: z.string(),
+  body: z.record(z.string(), z.unknown()).default({}),
+  evidenceCount: z.number().int().nonnegative().optional(),
+  // 证据引用：来源可追溯。空数组 = 无证据 = 疑似编造，将被丢弃。
+  evidenceRefs: z.array(z.string()).default([]),
+});
+const modelOutputSchema = z.object({
+  items: z.array(modelItemSchema).default([]),
+});
+
+const KIND_SET = new Set<string>(MEMORY_KINDS);
+const SOURCE_SET = new Set<string>(MEMORY_SOURCES);
+
+/**
+ * 纯函数：解析模型 JSON → 校验 → 反编造过滤 → 赋 freshness。
+ * 可离线测试（无需 OpenRouter）。now 注入以便测试确定性。
+ */
+export function parseAccountMemory(
+  rawJson: string,
+  opts?: { now?: () => Date },
+): AccountIntakeResult {
+  const now = (opts?.now ?? (() => new Date()))().toISOString();
+
+  let parsed: z.infer<typeof modelOutputSchema>;
+  try {
+    parsed = modelOutputSchema.parse(JSON.parse(rawJson));
+  } catch {
+    return { ok: false, items: [], dropped: [], errorCode: "GENERATION_FAILED", errorMessage: "模型返回无法解析为预期结构" };
+  }
+
+  const items: AccountMemoryItem[] = [];
+  const dropped: { reason: string; raw: unknown }[] = [];
+
+  for (const raw of parsed.items) {
+    // ① 类别必须在封闭集合内
+    if (!KIND_SET.has(raw.kind)) {
+      dropped.push({ reason: `未知 kind: ${raw.kind}`, raw });
+      continue;
+    }
+    // ② 来源必须在 ledger 内（无来源/未知来源 = 疑似编造）
+    if (!SOURCE_SET.has(raw.source)) {
+      dropped.push({ reason: `无效 source（不在来源账本内）: ${raw.source}`, raw });
+      continue;
+    }
+    // ③ 必须有证据引用（account_match 允许 0 证据，其余来源必须有据可查）
+    const evidenceRefs = raw.evidenceRefs ?? [];
+    if (raw.source !== "account_match" && evidenceRefs.length === 0) {
+      dropped.push({ reason: `来源 ${raw.source} 缺证据引用（疑似编造）`, raw });
+      continue;
+    }
+    // ④ body 必须是非空结构化对象，且不得夹带正文字段
+    const body = stripContentFields(raw.body);
+    if (Object.keys(body).length === 0) {
+      dropped.push({ reason: "body 为空或仅含被剥离的正文字段", raw });
+      continue;
+    }
+
+    items.push({
+      kind: raw.kind as MemoryKind,
+      source: raw.source as MemorySource,
+      body,
+      // 证据条数以实际引用数为上限（不信任模型自报超过引用的计数）
+      evidenceCount: Math.min(raw.evidenceCount ?? evidenceRefs.length, evidenceRefs.length),
+      freshnessAt: now,
+      status: "active",
+    });
+  }
+
+  return { ok: true, items, dropped };
+}
+
+/** 剥离疑似正文/成稿字段（记忆只存结构化信念，不存文章）。 */
+function stripContentFields(body: Record<string, unknown>): Record<string, unknown> {
+  const BANNED = new Set(["content", "text", "article", "draft", "full_text", "body_text", "raw"]);
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body)) {
+    if (BANNED.has(k)) continue;
+    // 超长自由文本也视为疑似正文（>280 字），不进记忆
+    if (typeof v === "string" && v.length > 280) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** 组装 system + user 两条消息，强约束 JSON 输出 + 反编造要求。 */
+export function buildIntakeMessages(input: AccountIntakeInput): ChatMessage[] {
+  const kinds = MEMORY_KINDS.join(" / ");
+  const sources = MEMORY_SOURCES.join(" / ");
+  const posts = input.recentPosts.map((p, i) => `[帖${i + 1}] ${p}`).join("\n");
+  const perf = (input.performanceNotes ?? []).join("\n") || "（未提供）";
+
+  const system = [
+    "你是内容账号分析器。基于用户粘贴的资料，抽取结构化的账号记忆条目。",
+    "严格要求：",
+    `- 每条记忆必须标注 kind（${kinds}）与 source（${sources}）。`,
+    "- 每条记忆必须给出 evidenceRefs（指向哪条帖子/哪段表现/哪条观察）；除 account_match 外不得为空。",
+    "- 只输出结构化 body（键值信念），禁止输出正文文章、完整帖子、长段落。",
+    "- 拿不准、无证据的判断不要输出。宁缺毋编。",
+    '仅输出 JSON：{"items":[{"kind","source","body":{...},"evidenceRefs":[...],"evidenceCount"}]}',
+  ].join("\n");
+
+  const user = [
+    input.platform ? `平台：${input.platform}` : "",
+    `Profile：\n${input.profileText}`,
+    `近期内容：\n${posts}`,
+    `表现数据：\n${perf}`,
+  ].filter(Boolean).join("\n\n");
+
+  return [
+    { role: "system", content: system },
+    { role: "user", content: user },
+  ];
+}
+
+/**
+ * server 编排：调 OpenRouter → parseAccountMemory。仅服务端使用（动态 import server-only 客户端）。
+ * 本环境无 OPENROUTER_API_KEY 时返回 MODEL_NOT_CONFIGURED（不白屏）。
+ */
+export async function generateAccountMemory(input: AccountIntakeInput): Promise<AccountIntakeResult> {
+  const { callOpenRouterJSON, ModelNotConfiguredError, ModelRequestError } = await import("@/lib/ai/openrouter-client");
+  let rawJson: string;
+  try {
+    rawJson = await callOpenRouterJSON(buildIntakeMessages(input));
+  } catch (error) {
+    if (error instanceof ModelNotConfiguredError) {
+      return { ok: false, items: [], dropped: [], errorCode: "MODEL_NOT_CONFIGURED", errorMessage: error.message };
+    }
+    if (error instanceof ModelRequestError) {
+      return { ok: false, items: [], dropped: [], errorCode: "GENERATION_FAILED", errorMessage: error.message };
+    }
+    return { ok: false, items: [], dropped: [], errorCode: "GENERATION_FAILED", errorMessage: "生成失败，请稍后重试" };
+  }
+  return parseAccountMemory(rawJson);
+}

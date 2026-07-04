@@ -11,6 +11,7 @@
     "doctor": "node scripts/doctor.mjs",
     "smoke:api": "node scripts/smoke-forge-api.mjs",
     "db:test-rls": "node scripts/test-rls.mjs",
+    "check:intake": "tsx scripts/check-account-intake.mts",
     "eval:forge": "node scripts/eval-forge.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
@@ -39,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.0",
     "typescript": "^5"
   }
 }
