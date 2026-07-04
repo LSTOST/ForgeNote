@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { structureHash } from "@/lib/render/contract";
 import type {
+  AccountBrainSnapshot,
   RenderArtifact,
   RenderPlan,
   RendererFill,
@@ -37,22 +38,46 @@ const fillSchema = z.object({
   units: z.array(z.object({ role: z.string(), text: z.string() })).default([]),
 });
 
-/** 组装填充消息：给模型主题 + 结构 + 计划，要求逐单元产出**围绕主题**的具体文本（JSON）。 */
+/**
+ * 把账号大脑快照转成 prompt 行（只读）。返回空数组 = 无账号上下文，prompt 不注入任何声音约束。
+ * 铁律：这些行只影响表达风格（语气/受众/长度/禁用词/标签习惯），绝不改主题、选题与结构。
+ */
+export function accountBrainPromptLines(brain?: Readonly<AccountBrainSnapshot>): string[] {
+  if (!brain) return [];
+  const lines: string[] = [];
+  if (brain.audience) lines.push(`- 受众：${brain.audience}`);
+  if (brain.voice) lines.push(`- 声音/语气：${brain.voice}`);
+  if (brain.rules?.length) lines.push(`- 必须遵守的规则（含禁用词/红线）：${brain.rules.join("；")}`);
+  if (brain.provenPatterns?.length) lines.push(`- 已验证的表达规律：${brain.provenPatterns.join("；")}`);
+  if (brain.visualPref) lines.push(`- 视觉偏好：${brain.visualPref}`);
+  return lines;
+}
+
+/** 组装填充消息：给模型主题 + 结构 + 计划 + 账号声音，要求逐单元产出**围绕主题、贴账号声音**的具体文本（JSON）。 */
 export function buildFillMessages(
   intent: string,
   structure: Readonly<StructureDocument>,
   plan: RenderPlan,
   platformNote: string,
   language?: string,
+  accountBrain?: Readonly<AccountBrainSnapshot>,
 ): ChatMessage[] {
   const slotStrategy = new Map(structure.slots.map((s) => [s.key, s.strategyKey]));
   const unitLines = plan.units
     .map((u, i) => `#${i} [${u.role}] 覆盖 slot: ${u.slotKeys.map((k) => `${k}(${slotStrategy.get(k) ?? "待填"})`).join(", ")}`)
     .join("\n");
+  const brainLines = accountBrainPromptLines(accountBrain);
   const system = [
     `你是「${platformNote}」的内容渲染器。只做格式化表达，不改变结构与选题。`,
     "必须紧扣给定主题写具体内容——出现主题里的具体对象、场景、细节；禁止写与主题无关的通用套话/空泛励志。",
     "按给定单元逐个产出文本，每个单元覆盖其 slot 的语义（如 hook 抓注意、resolution 给可执行收束）。",
+    ...(brainLines.length
+      ? [
+          "以下是本账号的声音设定，只影响表达风格（语气/受众/长度/禁用词/标签习惯），绝不改变主题、选题与结构：",
+          ...brainLines,
+          "严格遵守上述规则（如禁用词、不蹭热点、不用 emoji）；用该受众听得懂的语气写，但主题与单元结构保持不变。",
+        ]
+      : []),
     language ? `输出语言：${language}。` : "",
     '仅输出 JSON：{"units":[{"role","text"}]}，顺序与数量必须与输入单元一致。',
   ].filter(Boolean).join("\n");
@@ -116,7 +141,14 @@ export async function runRender(args: {
   fill: RendererFill;
 }): Promise<RenderArtifact> {
   const { rendererId, rendererVersion, input, plan, platformNote, fill } = args;
-  const messages = buildFillMessages(input.intent, input.structure, plan, platformNote, input.target.language);
+  const messages = buildFillMessages(
+    input.intent,
+    input.structure,
+    plan,
+    platformNote,
+    input.target.language,
+    input.accountBrain,
+  );
   const filledRaw = await fill(messages);
   return assembleArtifact({ rendererId, rendererVersion, structure: input.structure, plan, filledRaw });
 }

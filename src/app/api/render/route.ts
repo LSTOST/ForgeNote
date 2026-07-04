@@ -7,6 +7,8 @@ import { z } from "zod";
 
 import { getRenderer } from "@/lib/render/renderers";
 import type { RendererId } from "@/lib/render/contract";
+import { buildAccountBrainSnapshot } from "@/lib/account/brain-snapshot";
+import type { AccountMemoryItem, MemoryKind, MemorySource, MemoryStatus } from "@/lib/account/types";
 import type { ModalityKey, PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
 import { evaluateStability } from "@/lib/structure/stability";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
@@ -56,6 +58,30 @@ const bodySchema = z.object({
   language: z.string().max(32).optional(),
   lengthHint: z.string().max(64).optional(),
 });
+
+/** 加载账号记忆的条数上限（按证据/新鲜度取前 N；防 prompt 过大，快照再逐类限量）。 */
+const ACCOUNT_MEMORY_RENDER_LIMIT = 40;
+
+/** account_memory_items 行（snake_case）→ AccountMemoryItem（camelCase）。 */
+function rowToMemoryItem(row: {
+  kind: string;
+  body: unknown;
+  source: string;
+  evidence_refs: unknown;
+  evidence_count: number | null;
+  freshness_at: string | null;
+  status: string;
+}): AccountMemoryItem {
+  return {
+    kind: row.kind as MemoryKind,
+    body: (row.body as Record<string, unknown>) ?? {},
+    source: row.source as MemorySource,
+    evidenceRefs: (row.evidence_refs as string[]) ?? [],
+    evidenceCount: row.evidence_count ?? 0,
+    freshnessAt: row.freshness_at ?? "",
+    status: row.status as MemoryStatus,
+  };
+}
 
 /** DB 行（snake_case jsonb）→ StructureDocument（camelCase）。 */
 function rowToStructure(row: {
@@ -113,6 +139,18 @@ export async function POST(request: Request): Promise<Response> {
   const { data: taskRow } = await supabase.from("content_tasks").select("raw_intent").eq("id", structure.taskId).single();
   const intent = taskRow?.raw_intent ?? "";
 
+  // 加载账号大脑（"用谁的声音写"）：Owner 已存的账号记忆，只读地贴合声音/受众/规则。
+  //   按 RLS 只读自己的（user_id = auth.uid() 隐含）；只取 active，按证据/新鲜度取前 N，防 prompt 过大。
+  //   铁律（Codex §4）：renderer 只能用它调格式/语气/长度/禁用词/标签习惯，绝不反向改结构、选题或回写账号大脑。
+  const { data: memoryRows } = await supabase
+    .from("account_memory_items")
+    .select("kind, body, source, evidence_refs, evidence_count, freshness_at, status")
+    .eq("status", "active")
+    .order("evidence_count", { ascending: false })
+    .order("freshness_at", { ascending: false, nullsFirst: false })
+    .limit(ACCOUNT_MEMORY_RENDER_LIMIT);
+  const accountBrain = buildAccountBrainSnapshot((memoryRows ?? []).map(rowToMemoryItem));
+
   // 4) 稳定性门控：只渲染 stable 结构（以服务端重新评估为准，不信任落库标记被篡改）
   const stability = evaluateStability(structure, { targetRendererId: rendererId });
   if (!stability.stable) {
@@ -125,13 +163,13 @@ export async function POST(request: Request): Promise<Response> {
     return errorResponse("RENDERER_INCOMPATIBLE", `${rendererId} 不支持当前结构的模态`);
   }
 
-  // 6) 渲染（accountBrain 暂传空切片；缺 env / 上游错误内部由 fill 抛出）
+  // 6) 渲染（accountBrain 只读传入，贴账号声音；缺 env / 上游错误内部由 fill 抛出）
   let artifact;
   try {
     artifact = await renderer.render({
       intent,
       structure,
-      accountBrain: {},
+      accountBrain,
       target: { rendererId, language: parsed.data.language, lengthHint: parsed.data.lengthHint },
       constraints: [],
     });

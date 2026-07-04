@@ -18,10 +18,20 @@ export type RendererId = "xiaohongshu" | "x_thread" | "image_prompt";
 /** artifact 输出格式。 */
 export type RenderFormat = "text" | "thread" | "carousel_copy" | "image_prompt";
 
-/** 账号大脑快照（renderer 只读；只用于格式/语气/长度/禁用词/标签习惯，不得反向改结构）。 */
+/**
+ * 账号大脑快照（renderer 只读；只用于格式/语气/长度/禁用词/标签习惯，不得反向改结构）。
+ * 全部字段为短文本 / 短数组：账号大脑定义"用谁的声音写"，主题(intent)定义"写什么"，结构定义"怎么写"——三者分离。
+ * 刻意不含"选题/主题"字段：那属于 intent，混进来会诱导 renderer 改选题（违反 Codex §4 铁律）。
+ */
 export interface AccountBrainSnapshot {
   audience?: string;
   voice?: string;
+  /** 长期遵循的规则 / 红线（如"不蹭热点""不用 emoji""禁用词：xxx"）。renderer 必须遵守。 */
+  rules?: readonly string[];
+  /** 已验证的表达规律（如"反种草/复盘类高互动"）。只影响表达节奏，不改结构与选题。 */
+  provenPatterns?: readonly string[];
+  /** 视觉偏好短文本（如"极简、暖色、大字封面"）。用于 image_prompt / 分页配图语气。 */
+  visualPref?: string;
   /** 平台切片：某平台的格式惯例（machine_key / 轻量文本）。renderer 只读这一片。 */
   platformSlice?: Readonly<Record<string, unknown>>;
 }

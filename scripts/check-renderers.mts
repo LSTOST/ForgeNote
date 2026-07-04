@@ -15,6 +15,9 @@ import {
   planImagePrompt,
   artifactCoverage,
 } from "@/lib/render/renderers";
+import { buildFillMessages } from "@/lib/render/renderers/shared";
+import { buildAccountBrainSnapshot } from "@/lib/account/brain-snapshot";
+import type { AccountMemoryItem } from "@/lib/account/types";
 
 let allPass = true;
 const check = (name: string, cond: boolean) => {
@@ -86,6 +89,38 @@ console.log("④ supports 门控");
 check("图片Prompt 不支持纯 narrative", createImagePromptRenderer(mockFill).supports(narrative) === false);
 check("图片Prompt 支持含 visual", createImagePromptRenderer(mockFill).supports(visual) === true);
 check("小红书支持 narrative", createXiaohongshuRenderer(mockFill).supports(narrative) === true);
+
+// ── ⑤ 账号大脑：蒸馏 → 注入 → 只读（不改结构） ──
+console.log("⑤ 账号大脑（read-only 贴声音）");
+const fresh = "2026-07-01T00:00:00Z";
+const sampleMemory: AccountMemoryItem[] = [
+  { kind: "voice", body: { voice: "克制、具体、数字优先" }, source: "pasted_post", evidenceRefs: ["帖1"], evidenceCount: 3, freshnessAt: fresh, status: "active" },
+  { kind: "audience", body: { who: "独居年轻人", cares_about: "省钱与实用" }, source: "pasted_post", evidenceRefs: ["帖1", "帖2"], evidenceCount: 2, freshnessAt: fresh, status: "active" },
+  { kind: "rule", body: { avoid_words: ["绝绝子", "yyds"] }, source: "user_observation", evidenceRefs: ["表现1"], evidenceCount: 1, freshnessAt: fresh, status: "active" },
+  { kind: "rule", body: { rule: "不蹭热点" }, source: "user_observation", evidenceRefs: ["表现1"], evidenceCount: 1, freshnessAt: fresh, status: "active" },
+  { kind: "topic", body: { topic: "租房避坑" }, source: "pasted_post", evidenceRefs: ["帖1"], evidenceCount: 5, freshnessAt: fresh, status: "active" },
+  { kind: "voice", body: { voice: "已废弃的旧声音" }, source: "pasted_post", evidenceRefs: [], evidenceCount: 0, freshnessAt: fresh, status: "dismissed" },
+];
+const brain = buildAccountBrainSnapshot(sampleMemory);
+check("蒸馏出 voice", brain.voice === "克制、具体、数字优先");
+check("蒸馏出 audience（保留 who/cares_about 语义）", (brain.audience ?? "").includes("独居年轻人") && (brain.audience ?? "").includes("省钱"));
+check("蒸馏出 rules（禁用词保留 avoid_words 语义 + 不蹭热点）", (brain.rules ?? []).some((r) => r.includes("avoid_words") && r.includes("绝绝子")) && (brain.rules ?? []).includes("不蹭热点"));
+check("刻意不含 topic（选题归 intent，不进账号大脑）", JSON.stringify(brain).includes("租房避坑") === false);
+check("dismissed 记忆被忽略", JSON.stringify(brain).includes("旧声音") === false);
+check("空记忆 → 空快照", JSON.stringify(buildAccountBrainSnapshot([])) === "{}");
+
+const brainMsgs = buildFillMessages("应届生第一次租房", narrative, planXThread(narrative), "X（Twitter）thread", "zh-Hans", brain);
+const brainSys = brainMsgs.find((m) => m.role === "system")?.content ?? "";
+check("账号声音注入 system prompt", brainSys.includes("克制、具体、数字优先") && brainSys.includes("独居年轻人"));
+check("注入带只读护栏（不改主题/选题/结构）", brainSys.includes("绝不改变主题、选题与结构"));
+const emptySys = buildFillMessages("应届生第一次租房", narrative, planXThread(narrative), "X（Twitter）thread", "zh-Hans", {}).find((m) => m.role === "system")?.content ?? "";
+check("空账号大脑不注入声音块", emptySys.includes("声音设定") === false);
+
+const beforeBrain = JSON.stringify(narrative);
+const brainInput: RendererInput = { intent: "应届生第一次租房", structure: narrative, accountBrain: brain, target: { rendererId: "x_thread" }, constraints: [] };
+const repBrain = await runGoldenCoverage(xt, brainInput, ["hook", "context", "insight", "resolution"], artifactCoverage);
+check("带账号大脑 golden 仍 PASS（hash 不变 / 不丢 slot）", repBrain.passed && repBrain.hashMatches && repBrain.missingSlots.length === 0);
+check("带账号大脑渲染未改结构", JSON.stringify(narrative) === beforeBrain);
 
 console.log(allPass ? "\ncheck:renderers PASS ✓" : "\ncheck:renderers FAIL ✗");
 if (!allPass) process.exit(1);
