@@ -59,6 +59,21 @@ const missing = parseStructure(JSON.stringify({
 console.log("③ 缺必填 slot");
 check("unstable 且条件3 报缺失", !evaluateStability(missing.document!).stable);
 
+// ── 3b. 必填 slot 按原型细化：清单指南不强求 insight ──
+console.log("③b 按原型细化必填 slot");
+const checklist = parseStructure(JSON.stringify({
+  prototypeKey: "checklist_guide", modalityStack: ["narrative"],
+  slots: [{ key: "hook", strategyKey: "number_hook" }, { key: "resolution", strategyKey: "actionable_steps" }],
+  pendingDecisions: [],
+}), { taskId: "t3b" });
+check("清单指南 hook+resolution（无 insight）即 stable", evaluateStability(checklist.document!).stable);
+const recap = parseStructure(JSON.stringify({
+  prototypeKey: "experience_recap", modalityStack: ["narrative"],
+  slots: [{ key: "hook", strategyKey: "loss_open" }, { key: "resolution", strategyKey: "reusable_rule" }],
+  pendingDecisions: [],
+}), { taskId: "t3c" });
+check("经验复盘缺 insight 仍 unstable", !evaluateStability(recap.document!).stable);
+
 // ── 4. 非法模态栈（含 temporal）→ temporal 被过滤，剩 narrative ──
 const temporal = parseStructure(JSON.stringify({
   prototypeKey: "knowledge_explainer", modalityStack: ["narrative", "temporal"],

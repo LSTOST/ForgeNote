@@ -12,12 +12,25 @@ import type { RendererId } from "@/lib/render/contract";
 /** M1 合法模态栈（去重保序后应等于其一）。 */
 const VALID_STACKS: readonly (readonly ModalityKey[])[] = [["narrative"], ["narrative", "visual"]];
 
-/** 各模态的必填 slot（v0 启发式）。narrative 是叙事脊椎；visual 需要分页布局。 */
-const REQUIRED_SLOTS: Record<ModalityKey, readonly string[]> = {
-  narrative: ["hook", "insight", "resolution"],
-  visual: ["layout"],
-  temporal: [], // M1 不用
+/**
+ * 叙事必填 slot 按内容原型细化（对齐 PRD §3 各原型的核心结构；避免对清单类强求洞察）。
+ * 通用底线：hook（开场）+ resolution（收束）。复盘/知识/观点/案例额外要求 insight（洞察）。
+ */
+const NARRATIVE_REQUIRED_BY_PROTOTYPE: Record<string, readonly string[]> = {
+  experience_recap: ["hook", "insight", "resolution"],
+  knowledge_explainer: ["hook", "insight", "resolution"],
+  opinion_argument: ["hook", "insight", "resolution"],
+  case_breakdown: ["hook", "insight", "resolution"],
+  checklist_guide: ["hook", "resolution"], // 清单指南：场景→清单→使用条件，不强求 insight
 };
+const NARRATIVE_REQUIRED_FALLBACK: readonly string[] = ["hook", "resolution"];
+
+/** 各模态必填 slot。narrative 按原型；visual 需分页布局。 */
+function requiredSlotsFor(modality: ModalityKey, prototypeKey: string): readonly string[] {
+  if (modality === "narrative") return NARRATIVE_REQUIRED_BY_PROTOTYPE[prototypeKey] ?? NARRATIVE_REQUIRED_FALLBACK;
+  if (modality === "visual") return ["layout"];
+  return [];
+}
 
 /** renderer 所需模态（condition 5）。 */
 const RENDERER_REQUIRES: Record<RendererId, readonly ModalityKey[]> = {
@@ -69,7 +82,7 @@ export function evaluateStability(
   const filled = new Map(s.slots.map((sl) => [sl.key, sl.strategyKey]));
   const missing: string[] = [];
   for (const modality of s.modalityStack) {
-    for (const req of REQUIRED_SLOTS[modality] ?? []) {
+    for (const req of requiredSlotsFor(modality, s.prototypeKey)) {
       const strat = filled.get(req);
       if (!filled.has(req)) {
         missing.push(`${req}(缺)`);
