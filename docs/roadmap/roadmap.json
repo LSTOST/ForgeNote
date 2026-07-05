@@ -126,8 +126,8 @@
       "phase": "C · 壳与 UI",
       "status": "todo",
       "deps": ["M2-02", "M2-03", "M2-09"],
-      "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
-      "note": "⚠ 收尾的落点翻转：登录默认落点当前硬编码 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 docs/acceptance/v3.17-visual.md）。**依赖 M2-09**——待 /workspace 建到与 /forge 功能对齐后，再一次翻 redirect + 停写 /forge，让 v3.17 无回退窗口地到达日常界面。不可提前单独做（否则落在薄壳=功能回退）。"
+      "done": "src/app/login/page.tsx 的 redirect(\"/forge\") 与 LoginForm 各处 window.location.assign(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
+      "note": "⚠ 收尾的落点翻转：登录落点当前硬编码 /forge（src/app/login/page.tsx redirect + LoginForm 多处 assign，见 docs/acceptance/v3.17-visual.md）。根路由 / 的 redirect(\"/forge\") 已不存在——M2-16 官网首页替换了它：未登录用户落官网，CTA 指 /login。**依赖 M2-09**——待 /workspace 与 /forge 功能对齐后，再翻 /login 落点 + 停写 /forge。不可提前单独做（否则落在薄壳=功能回退）。"
     },
     {
       "id": "M2-05",
@@ -218,6 +218,14 @@
       "status": "todo",
       "deps": ["M2-10", "M2-14"],
       "done": "旧路径删除，旧 DB 表停写（drop 另票）"
+    },
+    {
+      "id": "M2-16",
+      "title": "官网落地页（借 laper.ai 骨架 · 暖纸白 · 获客转化）",
+      "phase": "C · 壳与 UI",
+      "status": "in_progress",
+      "deps": [],
+      "done": "根路由 / 变官网首页（替换 redirect /forge）+ /pricing + /blog /docs 骨架；v3.17 令牌；CTA 全指 /login；文案用 v3 定位（结构生成系统），不写未实现能力"
     }
   ]
 }
