@@ -42,12 +42,18 @@ for (const t of roadmap.tickets) {
   commitsByTicket.set(t.id, logLines.filter((l) => re.test(l)));
 }
 
+// 实现类 commit：排除 docs/chore/style 等——它们提到票号只是「谈论」不是「实现」。
+// 仅用于「todo 却有 commit」判定，避免本文件这种「docs(roadmap): M2-04 …」把未起步票误报成有实现。
+// 「done 却无 commit」判定用全部 commit：裁决/文档类票（如 M2-00）的实现本就是 docs commit，也算证据。
+const isImplCommit = (line) => !/^\S+\s+(docs|chore|style|test|ci)[(:]/.test(line);
+
 // 漂移检测：事实源状态与 git 证据互相矛盾时告警
 const drift = [];
 for (const t of roadmap.tickets) {
   const commits = commitsByTicket.get(t.id);
-  if (t.status === "todo" && commits.length > 0) {
-    drift.push(`${t.id} 标记为「待开发」，但已有 ${commits.length} 个相关 commit——状态可能没更新`);
+  const implCommits = commits.filter(isImplCommit);
+  if (t.status === "todo" && implCommits.length > 0) {
+    drift.push(`${t.id} 标记为「待开发」，但已有 ${implCommits.length} 个实现类 commit——状态可能没更新`);
   }
   if (DONE_STATES.has(t.status) && commits.length === 0) {
     drift.push(`${t.id} 标记为「${STATUS[t.status].label}」，但 git log 找不到相关 commit——请核对`);
