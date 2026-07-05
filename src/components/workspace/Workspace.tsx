@@ -46,8 +46,8 @@ const RENDERERS: { id: RendererId; label: string; needsVisual?: boolean }[] = [
   { id: "image_prompt", label: "图片 Prompt", needsVisual: true },
 ];
 
-export function Workspace() {
-  const [idea, setIdea] = useState("");
+export function Workspace({ initialIdea = "" }: { initialIdea?: string }) {
+  const [idea, setIdea] = useState(initialIdea);
   const [gen, setGen] = useState<GenResponse["data"] | null>(null);
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
