@@ -122,11 +122,12 @@
     },
     {
       "id": "M2-04",
-      "title": "旧 /forge 停写切换到 /workspace",
+      "title": "登录落点切到 /workspace（旧 /forge 停写）",
       "phase": "C · 壳与 UI",
       "status": "todo",
       "deps": ["M2-02", "M2-03"],
-      "done": "旧 /forge 停止写入（返回迁移提示），auth 后进入新 /workspace；旧数据保留"
+      "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
+      "note": "⚠ 登录默认落点当前硬编码为 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 v3.17 验收 docs/acceptance/v3.17-visual.md）——本票是让 M2-09 的 v3.17 四区工作台对用户真正可见的前提。与 M2-09 配套：可先切到 /workspace 壳、再由 M2-09 建全，避免用户长期停在旧深绿 /forge。"
     },
     {
       "id": "M2-05",
