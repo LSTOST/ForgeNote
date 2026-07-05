@@ -15,7 +15,7 @@ const OUT = join(root, "docs/roadmap/dashboard.html");
 const STATUS = {
   todo: { label: "待开发", color: "#6B6252", bg: "#EFEBE1" },
   in_progress: { label: "进行中", color: "#B4490F", bg: "#FBE7D2" },
-  code_done: { label: "代码完成", color: "#8A6D2E", bg: "#F3EAD2" },
+  code_done: { label: "代码完成", color: "#7A5F26", bg: "#F3EAD2" },
   accepted: { label: "已验收", color: "#4F7A43", bg: "#E8EFDB" },
 };
 const DONE_STATES = new Set(["code_done", "accepted"]);
@@ -58,6 +58,14 @@ for (const t of roadmap.tickets) {
 }
 
 const byId = new Map(roadmap.tickets.map((t) => [t.id, t]));
+
+// 悬空依赖：deps 指向不存在的票号 → depsMet 会把它永久算作未满足并静默 block，故告警
+for (const t of roadmap.tickets) {
+  const unknown = t.deps.filter((d) => !byId.has(d));
+  if (unknown.length) {
+    drift.push(`${t.id} 的依赖指向未知票号 ${unknown.join("、")}——请核对 roadmap.json 的 deps 是否写错`);
+  }
+}
 
 // 传递依赖的下游数量 = 这张票解锁多少后续工作（用于「下一步」排序）
 function unlockCount(id, seen = new Set()) {
