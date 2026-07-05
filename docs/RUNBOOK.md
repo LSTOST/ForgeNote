@@ -56,7 +56,7 @@ http://localhost:3000/forge
 2. 看 `docs/OPERATING-MODEL.md`，明确本票经过哪条真实用户路径验收。
 3. 看当前票对应的 `docs/acceptance/*.md`。
 4. 涉及 Next.js API、路由、缓存或运行时，先读 `node_modules/next/dist/docs/` 对应文档（本仓库 Next 与训练数据有出入）。
-5. 确认 `docs/TICKETS.md` 中当前票状态。
+5. 确认 `docs/roadmap/roadmap.json` 中当前票状态（可视化：`npm run progress`）。
 
 ## 每票提交前
 
@@ -166,7 +166,8 @@ npm run metrics        # SKIP exit 0
 
 完成任何一张票后，必须同步：
 
-- `docs/PROJECT-STATUS.md`
-- `docs/TICKETS.md`
+- `docs/roadmap/roadmap.json`（进度唯一事实源：票状态 + 验收证据链接）
 - 对应 `docs/acceptance/*.md`
 - 必要时同步 `docs/DECISIONS.md`
+
+> 旧的 `PROJECT-STATUS.md` / `TICKETS.md` / `PROJECT-GANTT.md` 已归档至 `docs/archive/`，不再更新。

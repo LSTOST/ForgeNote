@@ -1,0 +1,223 @@
+{
+  "_readme": [
+    "项目进度唯一事实源（方向 → 里程碑 → 票）。可视化：npm run progress。",
+    "状态词表：todo（未开始）/ in_progress（进行中）/ code_done（代码完成且 Codex review 通过）/ accepted（Owner 真实路径验收，有 docs/acceptance/*.md 证据）。",
+    "规则：每完成/验收/新开一张票，在同一个 PR 内更新本文件；code review 通过 ≠ accepted。",
+    "commits 证据由生成脚本从 git log 按票号自动采集，不在本文件手工维护。"
+  ],
+  "version": 1,
+  "updated": "2026-07-05",
+  "direction": {
+    "title": "ForgeNote = 结构生成系统",
+    "summary": "不是「AI 帮你写内容」，而是把创作者的账号大脑变成可复用的结构资产：账号接入 → 选题雷达 → 结构生成（稳定性判定）→ 多 renderer 渲染 → 发布回填学习。",
+    "anchor": "Gate 0 锚点：Owner 连续 4 周用 ForgeNote 完成真实周更选题 + 发布闭环，且不想回 ChatGPT 裸聊。",
+    "doc": "docs/ForgeNote_重定义方向_v3.md"
+  },
+  "finalForm": {
+    "oneLiner": "打开产品 60 秒内，它对你账号的判断比空白 ChatGPT 深一个量级。",
+    "statement": "一个内容结构生成引擎 + 单任务创作操作系统。核心承诺不是「帮你写」，而是告诉你下一条做什么、为什么会成、发在哪儿——基于你的账号，不是给所有人的通用建议。自用价值成立后顺便成为商业项目：服务不分国界的文字型创作者，任意语言、任意平台（小红书/公众号/B站/X/Instagram/YouTube…），以文字为主、可产出图片/视频的生成 prompt。",
+    "loop": [
+      "账号接入：粘贴 profile + 近期帖子和表现",
+      "账号大脑：AI 对你账号的判断，可看可纠偏",
+      "选题推荐：每周 N 张选题卡，每张带依据",
+      "展开成稿：结构生成 → 多 renderer → 复制导出",
+      "表现回填：发完带数据回来，按平台手动归因",
+      "学习可见：更新账号大脑 → 下周更准 → 回到 ③"
+    ],
+    "moat": "差异化在选题卡的「依据」（别人给不了），留存靠学习闭环（用得越久越准；多平台数据在同一个大脑里，迁移成本随时间翻倍）。成稿保留但降级为顺手的下游。"
+  },
+  "futureDirections": [
+    {
+      "horizon": "Gate 0 · 现在",
+      "title": "Owner 自用闭环",
+      "detail": "小红书「独居生活指南」+（即将开的）英文 X 两个真实账号，跑通选题→回填→学习；M2 全部票收口。",
+      "status": "in_progress"
+    },
+    {
+      "horizon": "Gate 1",
+      "title": "外部创作者 + 商业化",
+      "detail": "10 个多语言创作者（中/非中文主场各 ≥3）盲测选题卡质量过强 baseline；启动商业化（对标 Hypefury $35/mo、Taplio $49/mo）。此前不投任何增长。",
+      "status": "todo"
+    },
+    {
+      "horizon": "Gate 2",
+      "title": "留存信号 + 第三平台",
+      "detail": "design partner 第 2/3/4 周主动回来要下一批牌后，才允许加第三个平台（公众号/抖音/LinkedIn/YouTube…）。",
+      "status": "todo"
+    },
+    {
+      "horizon": "守边界 · 长期不做",
+      "title": "明确不做",
+      "detail": "排程与自动发布、平台 API/实时趋势爬虫、视觉媒体生成本身、同平台多账号、团队协作、内容日历、独立数据看板。",
+      "status": "never"
+    }
+  ],
+  "currentMilestone": "M2",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "M1 · 小红书内容包 MVP",
+      "status": "done",
+      "note": "计划票 I-08~I-23 全部完成；v5 选择性折叠后转向 v3 重定义。历史记录见 docs/archive/。"
+    },
+    {
+      "id": "M2",
+      "title": "M2 · 结构生成脊椎 + 工作台",
+      "status": "in_progress",
+      "note": "以 Gate 0 为唯一目标倒排；脊椎先于 UI。票表与 done 标准见 M2-BUILD-PLAN。",
+      "doc": "docs/design/redefine-2026-07/M2-BUILD-PLAN.md"
+    },
+    {
+      "id": "GATE0",
+      "title": "Gate 0 · Owner 自用 4 周",
+      "status": "todo",
+      "note": "连续 4 周真实周更选题 + 发布闭环，不想回 ChatGPT 裸聊。证据：M2-14 验收包。"
+    },
+    {
+      "id": "GATE1",
+      "title": "Gate 1 · 外部创作者盲测",
+      "status": "todo",
+      "note": "10 个外部创作者（中文/非中文主场各 ≥3），eval 盲测过强 baseline。未过之前不加平台、不做排程、不投增长。"
+    },
+    {
+      "id": "GATE2",
+      "title": "Gate 2 · design partner 留存",
+      "status": "todo",
+      "note": "第 2/3/4 周是否主动回来要下一批牌（不催）。"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "M2-00",
+      "title": "冲突裁决（雷达标签 / 平台位置 / Gate 0 聚焦）",
+      "phase": "A · 脊椎",
+      "status": "accepted",
+      "deps": [],
+      "done": "3 项 Owner 裁决落地概念稿 + 文档",
+      "acceptance": "docs/design/redefine-2026-07/CODEX-REVIEW.md"
+    },
+    {
+      "id": "M2-01",
+      "title": "Structure Token Registry v0",
+      "phase": "A · 脊椎",
+      "status": "code_done",
+      "deps": ["M2-00"],
+      "done": "StructureToken 类型 + 5 原型/2 模态 + slot/strategy 词表 + zh/en label + validateToken 降级"
+    },
+    {
+      "id": "M2-02",
+      "title": "结构核心数据模型（含 usage_events 词表）",
+      "phase": "A · 脊椎",
+      "status": "code_done",
+      "deps": ["M2-01"],
+      "done": "迁移 0003：content_tasks / structure_documents / render_artifacts / recipe_schemas / radar_cards / performance_records + RLS，db:test-rls 通过"
+    },
+    {
+      "id": "M2-03",
+      "title": "Renderer 契约 + golden-test 骨架",
+      "phase": "A · 脊椎",
+      "status": "code_done",
+      "deps": ["M2-01"],
+      "done": "Renderer 接口 + structureHash() + structure 对 renderer 只读（Readonly 类型层）"
+    },
+    {
+      "id": "M2-04",
+      "title": "登录落点切到 /workspace（旧 /forge 停写）",
+      "phase": "C · 壳与 UI",
+      "status": "todo",
+      "deps": ["M2-02", "M2-03", "M2-09"],
+      "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
+      "note": "⚠ 收尾的落点翻转：登录默认落点当前硬编码 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 docs/acceptance/v3.17-visual.md）。**依赖 M2-09**——待 /workspace 建到与 /forge 功能对齐后，再一次翻 redirect + 停写 /forge，让 v3.17 无回退窗口地到达日常界面。不可提前单独做（否则落在薄壳=功能回退）。"
+    },
+    {
+      "id": "M2-05",
+      "title": "首屏账号接入（account intake，反编造）",
+      "phase": "B · AI 核心",
+      "status": "accepted",
+      "deps": ["M2-02"],
+      "done": "粘贴 profile+内容+表现 → 生成带 source ledger 的 account_memory snapshot，不编正文",
+      "acceptance": "docs/acceptance/M2-05-account-intake.md"
+    },
+    {
+      "id": "M2-06",
+      "title": "选题雷达（每周 5 卡，来源标签，无伪热度）",
+      "phase": "B · AI 核心",
+      "status": "code_done",
+      "deps": ["M2-05"],
+      "done": "5 张雷达卡，来源标签（账号匹配强/近期信号/历史有效/低证据），每卡带依据"
+    },
+    {
+      "id": "M2-07",
+      "title": "结构生成 + 稳定性判定",
+      "phase": "B · AI 核心",
+      "status": "code_done",
+      "deps": ["M2-01", "M2-02"],
+      "done": "idea/雷达卡 → Narrative(+Visual) structure，registry 合法 token + pending decisions + 稳定性六条件；主稿不被稳定性阻塞"
+    },
+    {
+      "id": "M2-08",
+      "title": "三 renderer（小红书 / X thread / 图片 prompt）",
+      "phase": "B · AI 核心",
+      "status": "code_done",
+      "deps": ["M2-03", "M2-07"],
+      "done": "artifact 带 sourceStructureHash，不改 structure，各配 golden test（slot 覆盖率不丢），renderer 只读贴账号声音"
+    },
+    {
+      "id": "M2-09",
+      "title": "first-run + 四区工作台（v3.16 概念稿）",
+      "phase": "C · 壳与 UI",
+      "status": "in_progress",
+      "deps": ["M2-07", "M2-08"],
+      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens；功能与旧 /forge 对齐（方向判断/输出语言/配方库入口）",
+      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色（旧 /forge 硬编码 #18322f 等绕令牌致 v3.17 落空，见 docs/acceptance/v3.17-visual.md）。本阶段最大一块、v3.17 到达用户主界面的关键；**排在 M2-04 之前**——建成并与 /forge 功能对齐后，再由 M2-04 一次翻登录落点，避免用户落在空壳/回退窗口。"
+    },
+    {
+      "id": "M2-10",
+      "title": "RecipeSchema 保存 / 换输入复用",
+      "phase": "D · 学习与验证",
+      "status": "code_done",
+      "deps": ["M2-07", "M2-08"],
+      "done": "只存 slot_schema + 生产方法 + signal_refs（禁存正文），换输入可复用"
+    },
+    {
+      "id": "M2-11",
+      "title": "Gate 0 看板 + Owner 周记模板",
+      "phase": "D · 学习与验证",
+      "status": "todo",
+      "deps": ["M2-02", "M2-09"],
+      "done": "周任务数/发布/雷达采用/结构编辑/复制导出/回填/chatgpt_fallback 次数+原因"
+    },
+    {
+      "id": "M2-12",
+      "title": "发布后回填 → 写回 account memory",
+      "phase": "D · 学习与验证",
+      "status": "todo",
+      "deps": ["M2-05", "M2-11"],
+      "done": "手动回填 → 本周验证/推翻了什么 → 写回 signal"
+    },
+    {
+      "id": "M2-13",
+      "title": "ChatGPT baseline eval harness",
+      "phase": "D · 学习与验证",
+      "status": "todo",
+      "deps": ["M2-06", "M2-08"],
+      "done": "固定材料包 + 强 baseline prompt + A/B 匿名 + judgment 记录（Gate 1 用）"
+    },
+    {
+      "id": "M2-14",
+      "title": "Gate 0 验收包",
+      "phase": "D · 学习与验证",
+      "status": "todo",
+      "deps": ["M2-11", "M2-12", "M2-13"],
+      "done": "每周真实路径模板 + 证据归档 docs/acceptance/*.md + 四周总结"
+    },
+    {
+      "id": "M2-15",
+      "title": "清理旧 /recipes、旧 eval/metrics、旧 copy",
+      "phase": "D · 学习与验证",
+      "status": "todo",
+      "deps": ["M2-10", "M2-14"],
+      "done": "旧路径删除，旧 DB 表停写（drop 另票）"
+    }
+  ]
+}

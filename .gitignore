@@ -46,3 +46,6 @@ next-env.d.ts
 .claude/
 # local Obsidian vault config (not project docs)
 .obsidian/
+
+# progress dashboard (generated; run `npm run progress`)
+/docs/roadmap/dashboard.html

@@ -18,3 +18,13 @@ Before changing product behavior, read `docs/OPERATING-MODEL.md` and apply the r
 - Real user feedback + analytics = product validation loop.
 
 Codex must not treat code review as acceptance. For user-visible work, acceptance must include a real user path and evidence in `docs/acceptance/*.md`.
+
+## Progress Source of Truth
+
+- 项目进度唯一事实源：`docs/roadmap/roadmap.json`（方向 → 里程碑 → 票）。
+- 每完成 / 验收 / 新开一张票，必须在同一个 PR 内更新 roadmap.json 的票状态。
+  状态词表：`todo` / `in_progress` / `code_done`（Codex review 通过）/ `accepted`
+  （Owner 真实路径验收，必须挂 `docs/acceptance/*.md` 证据）。code review 通过 ≠ accepted。
+- 可视化面板：`npm run progress`（生成 `docs/roadmap/dashboard.html` 并打开；生成物不入库）。
+  面板会对「状态与 git commit 证据不一致」发漂移告警，告警必须处理而不是忽略。
+- 旧的 `docs/PROJECT-STATUS.md` / `TICKETS.md` / `PROJECT-GANTT.md` 已归档至 `docs/archive/`，不再更新。

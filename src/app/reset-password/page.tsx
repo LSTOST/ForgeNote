@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F5EFE6] bg-[radial-gradient(rgba(120,90,50,0.045)_1px,transparent_1px)] px-5 py-8 text-[#33291F] [background-size:5px_5px] sm:px-6 sm:py-12">
+    <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F4F1E9] px-5 py-8 text-[#33291F] sm:px-6 sm:py-12">
       <div className="w-full max-w-[380px]">
         <div className="mb-6 flex flex-col items-center text-center">
           <EmberMascot ref={mascot} mode="single" className="size-[110px]" />
