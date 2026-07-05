@@ -41,7 +41,6 @@
 ## Docs Updated
 
 - [ ] `docs/OPERATING-MODEL.md`（若角色 / gate / 验收协议变更）
-- [ ] `docs/PROJECT-STATUS.md`
-- [ ] `docs/TICKETS.md`
+- [ ] `docs/roadmap/roadmap.json`（票状态 + 验收证据链接）
 - [ ] `docs/acceptance/*.md`
 - [ ] `docs/DECISIONS.md`（若决策变更）

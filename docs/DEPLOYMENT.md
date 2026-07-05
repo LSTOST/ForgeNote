@@ -84,7 +84,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 **2. Supabase Auth（Production）**
 
 - Site URL / Redirect URLs 加入 Production 域名的 `/auth/callback`。
-- Google provider：enabled + Client ID + **Client Secret 必须填**（Preview 期 blocker 根因即 Client Secret 为空 → `400 validation_failed` / `missing OAuth secret`，见 `docs/PROJECT-STATUS.md`）。
+- Google provider：enabled + Client ID + **Client Secret 必须填**（Preview 期 blocker 根因即 Client Secret 为空 → `400 validation_failed` / `missing OAuth secret`，见 `docs/archive/PROJECT-STATUS.md`）。
 - 邮箱 Magic Link 如启用，确认发信配置可用。
 
 **3. 数据库迁移（Production DB）**
@@ -140,7 +140,7 @@ FORGENOTE_BASE_URL=https://your-preview-url.vercel.app npm run smoke:api
 
 1. Vercel Dashboard 找到上一个稳定 deployment。
 2. Promote / Rollback 到稳定版本。
-3. 在 `docs/PROJECT-STATUS.md` 记录：回滚时间 / 原因 / 影响范围 / 后续修复票号。
+3. 在对应票的 `docs/acceptance/*.md`（或 `docs/DECISIONS.md`）记录：回滚时间 / 原因 / 影响范围 / 后续修复票号。
 
 ## 发布记录模板
 
