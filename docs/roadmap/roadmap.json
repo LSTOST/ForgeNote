@@ -125,9 +125,9 @@
       "title": "登录落点切到 /workspace（旧 /forge 停写）",
       "phase": "C · 壳与 UI",
       "status": "todo",
-      "deps": ["M2-02", "M2-03"],
+      "deps": ["M2-02", "M2-03", "M2-09"],
       "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
-      "note": "⚠ 登录默认落点当前硬编码为 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 v3.17 验收 docs/acceptance/v3.17-visual.md）——本票是让 M2-09 的 v3.17 四区工作台对用户真正可见的前提。与 M2-09 配套：可先切到 /workspace 壳、再由 M2-09 建全，避免用户长期停在旧深绿 /forge。"
+      "note": "⚠ 收尾的落点翻转：登录默认落点当前硬编码 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 docs/acceptance/v3.17-visual.md）。**依赖 M2-09**——待 /workspace 建到与 /forge 功能对齐后，再一次翻 redirect + 停写 /forge，让 v3.17 无回退窗口地到达日常界面。不可提前单独做（否则落在薄壳=功能回退）。"
     },
     {
       "id": "M2-05",
@@ -167,9 +167,9 @@
       "title": "first-run + 四区工作台（v3.16 概念稿）",
       "phase": "C · 壳与 UI",
       "status": "in_progress",
-      "deps": ["M2-04", "M2-07", "M2-08"],
-      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens",
-      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色——旧 /forge 硬编码 #18322f 等绕过令牌导致 v3.17 落空（见 docs/acceptance/v3.17-visual.md）；本票是 v3.17 全量到达应用主界面的落点，需配合 M2-04 把登录默认切到 /workspace"
+      "deps": ["M2-07", "M2-08"],
+      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens；功能与旧 /forge 对齐（方向判断/输出语言/配方库入口）",
+      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色（旧 /forge 硬编码 #18322f 等绕令牌致 v3.17 落空，见 docs/acceptance/v3.17-visual.md）。本阶段最大一块、v3.17 到达用户主界面的关键；**排在 M2-04 之前**——建成并与 /forge 功能对齐后，再由 M2-04 一次翻登录落点，避免用户落在空壳/回退窗口。"
     },
     {
       "id": "M2-10",
