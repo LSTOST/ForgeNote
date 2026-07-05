@@ -167,8 +167,8 @@
       "phase": "C · 壳与 UI",
       "status": "in_progress",
       "deps": ["M2-04", "M2-07", "M2-08"],
-      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、点阵纸暖化 tokens",
-      "note": "first-run 接入页 + paper tokens 已落地；四区工作台未按概念稿实现"
+      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens",
+      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色——旧 /forge 硬编码 #18322f 等绕过令牌导致 v3.17 落空（见 docs/acceptance/v3.17-visual.md）；本票是 v3.17 全量到达应用主界面的落点，需配合 M2-04 把登录默认切到 /workspace"
     },
     {
       "id": "M2-10",
