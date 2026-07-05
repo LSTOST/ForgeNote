@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: Georgia, "Songti SC", "Noto Serif SC", serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,26 +48,27 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* v3.17 暖纸白（2026-07-05，Owner 定）：弃点阵 + 暖黄环境色，转暖象牙底 + 暖白内容卡。
+   不回闷黄、不走冷白——暖意保留在纸调与墨色里，橙色仅做语义动作，标题走衬线。
+   旧暖黄值见 git 历史 / design-tokens.md v3.16。 */
 :root {
-  --canvas: #EDE4CC;
-  --dot: rgba(150, 118, 66, 0.16);
-  --background: #F5EDDB;
-  --foreground: #2A231B;
-  --card: #FBF6E9;
-  --card-foreground: #2A231B;
-  --popover: #FBF6E9;
-  --popover-foreground: #2A231B;
+  --background: #F4F1E9;
+  --foreground: #26211A;
+  --card: #FCFAF5;
+  --card-foreground: #26211A;
+  --popover: #FCFAF5;
+  --popover-foreground: #26211A;
   --primary: #E8631F;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1E7D3;
-  --secondary-foreground: #2A231B;
-  --muted: #EBDFC8;
-  --muted-foreground: #6D6051;
-  --accent: #EBDFC8;
-  --accent-foreground: #2A231B;
+  --secondary: #EFEBE1;
+  --secondary-foreground: #26211A;
+  --muted: #EFEBE1;
+  --muted-foreground: #6B6252;
+  --accent: #EAE4D8;
+  --accent-foreground: #26211A;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #DAC6A5;
-  --input: #E6D8BF;
+  --border: #E6DFD1;
+  --input: #E6DFD1;
   --ring: #E0702E;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -75,49 +76,47 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: #F1E7D3;
-  --sidebar-foreground: #2A231B;
+  --sidebar: #EFEBE1;
+  --sidebar-foreground: #26211A;
   --sidebar-primary: #E8631F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EBDFC8;
-  --sidebar-accent-foreground: #2A231B;
-  --sidebar-border: #DAC6A5;
+  --sidebar-accent: #EAE4D8;
+  --sidebar-accent-foreground: #26211A;
+  --sidebar-border: #E6DFD1;
   --sidebar-ring: #E0702E;
 }
 
 .dark {
-  --canvas: #211D16;
-  --dot: rgba(232, 106, 47, 0.14);
-  --background: #211D16;
-  --foreground: #EDE6D9;
-  --card: #282318;
-  --card-foreground: #EDE6D9;
-  --popover: #282318;
-  --popover-foreground: #EDE6D9;
+  --background: #191817;
+  --foreground: #EAE8E3;
+  --card: #232220;
+  --card-foreground: #EAE8E3;
+  --popover: #232220;
+  --popover-foreground: #EAE8E3;
   --primary: #E8631F;
   --primary-foreground: #FFFFFF;
-  --secondary: #2F2A1E;
-  --secondary-foreground: #EDE6D9;
-  --muted: #2F2A1E;
-  --muted-foreground: #A89F8F;
-  --accent: #2F2A1E;
-  --accent-foreground: #EDE6D9;
+  --secondary: #2A2825;
+  --secondary-foreground: #EAE8E3;
+  --muted: #2A2825;
+  --muted-foreground: #A6A29A;
+  --accent: #2A2825;
+  --accent-foreground: #EAE8E3;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: #3E382B;
-  --input: #332E22;
+  --border: #34322E;
+  --input: #302E2A;
   --ring: #E0702E;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: #282318;
-  --sidebar-foreground: #EDE6D9;
+  --sidebar: #201F1D;
+  --sidebar-foreground: #EAE8E3;
   --sidebar-primary: #E8631F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #2F2A1E;
-  --sidebar-accent-foreground: #EDE6D9;
-  --sidebar-border: #3E382B;
+  --sidebar-accent: #2A2825;
+  --sidebar-accent-foreground: #EAE8E3;
+  --sidebar-border: #34322E;
   --sidebar-ring: #E0702E;
 }
 

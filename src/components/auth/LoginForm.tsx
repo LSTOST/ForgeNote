@@ -291,7 +291,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
         {/* 桌面左侧角色区 */}
         <div
           ref={charPanel}
-          className="relative hidden shrink-0 items-end justify-center bg-[#EEE0C9] bg-[radial-gradient(rgba(120,90,50,0.05)_1px,transparent_1px)] p-6 [background-size:6px_6px] lg:flex lg:w-[372px]"
+          className="relative hidden shrink-0 items-end justify-center bg-[#EEE0C9] p-6 lg:flex lg:w-[372px]"
         >
           <div className="absolute top-7 left-8 flex items-center gap-2.5">
             <span className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#B5562B] text-[#FDF7EF] shadow-[0_2px_8px_rgba(150,70,30,0.25)]">
