@@ -127,7 +127,7 @@
       "status": "in_progress",
       "deps": ["M2-02", "M2-03", "M2-09"],
       "done": "登录成功落点由 /forge 改为 /workspace（login bounce / LoginForm / auth callback）；旧 /forge 停止写入 + 移除入口 + nav 改指；旧数据保留",
-      "note": "✅ 落点已切（commit 0dca6db，4 处：login 已登录 bounce / LoginForm 密码·注册·魔法链接·OAuth / auth callback 默认 nextPath），解锁 Owner dogfood v3 工作台。根路由 / 由并行官网(M2-16) 改为落地页，非本票。⏳ 剩余（非 dogfood 必需，暂缓）：旧 /forge 停写 + 移除内容包入口 + TopNav 链接改指。标尺=v3 方向（登录进结构生成工作台），非追平 /forge。真人证明待 Owner 登录落到 /workspace。"
+      "note": "✅ 落点已切（commit 0dca6db，4 处：login 已登录 bounce / LoginForm 密码·注册·魔法链接·OAuth / auth callback 默认 nextPath），解锁 Owner dogfood v3 工作台。根路由 / 已由 M2-16 官网首页替换（未登录落官网，CTA 指 /login）。⏳ 剩余（非 dogfood 必需，暂缓）：旧 /forge 停写 + 移除内容包入口 + TopNav 链接改指。标尺=v3 方向（登录进结构生成工作台），非追平 /forge。真人证明待 Owner 登录落到 /workspace。"
     },
     {
       "id": "M2-05",
@@ -218,6 +218,14 @@
       "status": "todo",
       "deps": ["M2-10", "M2-14"],
       "done": "旧路径删除，旧 DB 表停写（drop 另票）"
+    },
+    {
+      "id": "M2-16",
+      "title": "官网落地页（借 laper.ai 骨架 · 暖纸白 · 获客转化）",
+      "phase": "C · 壳与 UI",
+      "status": "in_progress",
+      "deps": [],
+      "done": "根路由 / 变官网首页（替换 redirect /forge）+ /pricing + /blog /docs 骨架；v3.17 令牌；CTA 全指 /login；文案用 v3 定位（结构生成系统），不写未实现能力"
     }
   ]
 }
