@@ -47,6 +47,14 @@ const RENDERERS: { id: RendererId; label: string; glyph: string; needsVisual?: b
   { id: "image_prompt", label: "图片 Prompt", glyph: "▦", needsVisual: true },
 ];
 
+// I-16 输出语言 / 表达偏好预设（value 即传给 /api/render 的 language；自由文本，非枚举）。
+const OUTPUT_LOCALES: { value: string; label: string }[] = [
+  { value: "zh-Hans", label: "中文" },
+  { value: "English", label: "English" },
+  { value: "English for Instagram carousel", label: "English · Instagram" },
+  { value: "English for LinkedIn carousel", label: "English · LinkedIn" },
+];
+
 export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: string; userEmail?: string }) {
   const [idea, setIdea] = useState(initialIdea);
   const [gen, setGen] = useState<GenData | null>(null);
@@ -57,6 +65,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [renderLoading, setRenderLoading] = useState<RendererId | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [target, setTarget] = useState<RendererId>("xiaohongshu");
+  const [outputLocale, setOutputLocale] = useState("");
 
   const [decidingKey, setDecidingKey] = useState<string | null>(null);
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -147,7 +156,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
       const res = await fetch("/api/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ structureId: gen.structureId, rendererId }),
+        body: JSON.stringify({ structureId: gen.structureId, rendererId, language: outputLocale.trim() || undefined }),
       });
       const json: RenderResponse = await res.json();
       if (!json.ok || !json.data) {
@@ -459,6 +468,26 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 </div>
               </>
             )}
+
+            <div className="mb-2 mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">输出语言 · 表达偏好（可选）</div>
+            <div className="flex flex-wrap gap-1.5">
+              {OUTPUT_LOCALES.map((loc) => (
+                <button
+                  key={loc.value}
+                  onClick={() => setOutputLocale(outputLocale === loc.value ? "" : loc.value)}
+                  className={`rounded-md border px-2 py-0.5 text-[11px] ${outputLocale === loc.value ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}
+                >
+                  {loc.label}
+                </button>
+              ))}
+            </div>
+            <input
+              value={outputLocale}
+              onChange={(e) => setOutputLocale(e.target.value.slice(0, 32))}
+              placeholder="也可自定义，如 English for X thread"
+              className="mt-2 w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-[12px] outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">留空 = 按结构默认。点底栏「生成内容」时生效。</p>
           </aside>
         )}
       </div>
