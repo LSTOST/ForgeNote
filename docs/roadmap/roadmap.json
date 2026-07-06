@@ -124,10 +124,10 @@
       "id": "M2-04",
       "title": "登录落点切到 /workspace（旧 /forge 停写）",
       "phase": "C · 壳与 UI",
-      "status": "todo",
+      "status": "in_progress",
       "deps": ["M2-02", "M2-03", "M2-09"],
-      "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
-      "note": "⚠ 收尾的落点翻转：登录默认落点当前硬编码 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 docs/acceptance/v3.17-visual.md）。**依赖 M2-09**——待 /workspace 建到与 /forge 功能对齐后，再一次翻 redirect + 停写 /forge，让 v3.17 无回退窗口地到达日常界面。不可提前单独做（否则落在薄壳=功能回退）。"
+      "done": "登录成功落点由 /forge 改为 /workspace（login bounce / LoginForm / auth callback）；旧 /forge 停止写入 + 移除入口 + nav 改指；旧数据保留",
+      "note": "✅ 落点已切（commit 0dca6db，4 处：login 已登录 bounce / LoginForm 密码·注册·魔法链接·OAuth / auth callback 默认 nextPath），解锁 Owner dogfood v3 工作台。根路由 / 由并行官网(M2-16) 改为落地页，非本票。⏳ 剩余（非 dogfood 必需，暂缓）：旧 /forge 停写 + 移除内容包入口 + TopNav 链接改指。标尺=v3 方向（登录进结构生成工作台），非追平 /forge。真人证明待 Owner 登录落到 /workspace。"
     },
     {
       "id": "M2-05",
@@ -168,8 +168,8 @@
       "phase": "C · 壳与 UI",
       "status": "in_progress",
       "deps": ["M2-07", "M2-08"],
-      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens；功能与旧 /forge 对齐（方向判断/输出语言/配方库入口）",
-      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色（旧 /forge 硬编码 #18322f 等绕令牌致 v3.17 落空，见 docs/acceptance/v3.17-visual.md）。本阶段最大一块、v3.17 到达用户主界面的关键；**排在 M2-04 之前**——建成并与 /forge 功能对齐后，再由 M2-04 一次翻登录落点，避免用户落在空壳/回退窗口。"
+      "done": "按 concept.html 四区（v3.16 布局 + v3.17 暖纸白 tokens）：中区结构（可读卡片，不做成稿主稿）、右栏结构控制、底部 renderer、助手胶囊；功能与旧 /forge 对齐（输出语言选择 / 配方库入口）",
+      "note": "first-run 接入页已落地。四区工作台外壳已实现（顶/左/中/右/底，全 v3.17 暖纸白、禁硬编码；离线 mock 预览验证布局）：真实流程接入（想法→结构生成→槽位编辑/裁决→渲染），中区展示「结构为可读卡片」+ 段落卡↔右栏骨架 hover 联动。**Owner 2026-07-05 裁定：不做「可读主稿散文」，那是旧方案；产品中区=结构本身——中区当前设计正确、非缺口。** **标尺=v3 方向本身，不是追平旧 /forge（/forge 是被弃的旧范式，非对标对象）。** 核心创作链 idea→结构→渲染 已在。已补：①输出语言选择（commit fd72d3c，凭 v3 多语言价值，非 parity）。可选增强（按 v3 需要，非 parity 要求）：配方库入口=v3 RecipeSchema(M2-10) 复用，M2-10 只做了 domain core、未做持久化 API+复用页，是真 slice，Owner 定是否/何时做。**M2-04 翻落点的条件**：/workspace 作为 v3 日常创作面够好、不丢真实工作流（v3 的结构生成流，非 /forge 内容包）——而非追平 /forge。"
     },
     {
       "id": "M2-10",
