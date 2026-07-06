@@ -10,14 +10,12 @@
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.mjs",
     "progress": "node scripts/progress-dashboard.mjs --open",
-    "smoke:api": "node scripts/smoke-forge-api.mjs",
     "db:test-rls": "node scripts/test-rls.mjs",
     "check:intake": "tsx scripts/check-account-intake.mts",
     "check:structure": "tsx scripts/check-structure.mts",
     "check:renderers": "tsx scripts/check-renderers.mts",
     "check:recipe": "tsx scripts/check-recipe.mts",
     "check:radar": "tsx scripts/check-radar.mts",
-    "eval:forge": "node scripts/eval-forge.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
   "dependencies": {

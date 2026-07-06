@@ -215,9 +215,10 @@
       "id": "M2-15",
       "title": "清理旧 /recipes、旧 eval/metrics、旧 copy",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "in_progress",
       "deps": ["M2-10", "M2-14"],
-      "done": "旧路径删除，旧 DB 表停写（drop 另票）"
+      "done": "旧路径删除，旧 DB 表停写（drop 另票）",
+      "note": "⏩ 已提前清（随 M2-04 dogfood 化）：旧 /forge（页面+API+8组件）、旧 /recipes（页面+API+2组件）、死脚本 smoke:api/eval:forge（含 doctor 白名单同步）。剩余：旧 copy（copy.nav.forge/recipes、copy.recipes.* 等未清，无害数据）+ 旧 DB 表停写/drop（另票）。lib/recipe domain core 保留（M2-10 复用用）。"
     },
     {
       "id": "M2-16",

@@ -82,9 +82,7 @@ for (const script of [
   "typecheck",
   "build",
   "doctor",
-  "smoke:api",
   "db:test-rls",
-  "eval:forge",
   "metrics",
 ]) {
   checkScript(pkg, script);
@@ -93,9 +91,7 @@ for (const script of [
 // ── 工程脚本与资产（当前仓库事实：migration 为 0001_init.sql）──
 for (const file of [
   "scripts/doctor.mjs",
-  "scripts/smoke-forge-api.mjs",
   "scripts/test-rls.mjs",
-  "scripts/eval-forge.mjs",
   "scripts/metrics.mjs",
   "eval/cases/content-package.json",
   "supabase/migrations/0001_init.sql",
