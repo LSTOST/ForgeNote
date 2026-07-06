@@ -375,7 +375,7 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
         {hasFilters ? c.emptyFilteredBody : c.emptyBody}
       </p>
       {!hasFilters && (
-        <Link href="/forge" className={buttonVariants()}>
+        <Link href="/workspace" className={buttonVariants()}>
           {c.goCreate}
         </Link>
       )}

@@ -48,8 +48,9 @@ export function RecipeRerun({ recipeId }: RecipeRerunProps) {
       const json = await res.json().catch(() => null);
 
       if (json?.ok && json.data?.sessionId) {
-        // 成功：把用户带到能看到新生成结果的位置（复用 /forge 的 session 读取）。
-        router.push(`/forge?session=${json.data.sessionId}`);
+        // 成功：/forge 已删（M2-04），带用户到 v3 工作台。注：session 结果展示是旧 /forge 能力，
+        // /workspace 不消费 session；M1 recipe 重跑流的结果回看待 v3 化（或随 /recipes 退役）。
+        router.push("/workspace");
         return;
       }
 

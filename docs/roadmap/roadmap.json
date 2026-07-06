@@ -127,7 +127,7 @@
       "status": "in_progress",
       "deps": ["M2-02", "M2-03", "M2-09"],
       "done": "登录成功落点由 /forge 改为 /workspace（login bounce / LoginForm / auth callback）；旧 /forge 停止写入 + 移除入口 + nav 改指；旧数据保留",
-      "note": "✅ 落点已切（commit 0dca6db，4 处：login 已登录 bounce / LoginForm 密码·注册·魔法链接·OAuth / auth callback 默认 nextPath），解锁 Owner dogfood v3 工作台。根路由 / 已由 M2-16 官网首页替换（未登录落官网，CTA 指 /login）。⏳ 剩余（非 dogfood 必需，暂缓）：旧 /forge 停写 + 移除内容包入口 + TopNav 链接改指。标尺=v3 方向（登录进结构生成工作台），非追平 /forge。真人证明待 Owner 登录落到 /workspace。"
+      "note": "✅ 落点已切（4 处：login bounce / LoginForm 4 路径 / auth callback）。✅ 旧 /forge 已整体删除：src/app/forge + src/app/api/forge + src/components/forge（8 组件）；nav/工作台 home/recipe 重跑等引用改指 /workspace（home→/），DB 表保留（drop 归 M2-15）。根路由 / 由 M2-16 官网替换（未登录落官网，CTA 指 /login）。标尺=v3 方向，非追平 /forge。真人证明待 Owner 登录落到 /workspace 走真实周更。"
     },
     {
       "id": "M2-05",

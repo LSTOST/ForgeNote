@@ -129,7 +129,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
               {copy.recipes.description}
             </p>
           </div>
-          <Link href="/forge" className={buttonVariants()}>
+          <Link href="/workspace" className={buttonVariants()}>
             <Plus className="size-4" aria-hidden />
             {copy.recipes.newRecipe}
           </Link>

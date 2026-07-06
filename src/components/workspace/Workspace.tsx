@@ -7,6 +7,7 @@
 // 给最小占位或诚实禁用，不伪造数据。段落卡 ↔ 右栏骨架按 slotKey 双向高亮联动。
 
 import { useState } from "react";
+import Link from "next/link";
 import { Home, PanelLeft, Plus, Sparkles, LogOut, Radar, X } from "lucide-react";
 
 import { getLabel, strategiesForSlot } from "@/lib/structure/registry";
@@ -192,9 +193,9 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     <div className="relative flex h-dvh flex-col bg-background text-foreground">
       {/* ── 顶栏 ── */}
       <header className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-        <a href="/forge" title="返回首页" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+        <Link href="/" title="返回首页" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
           <Home className="size-4" aria-hidden />
-        </a>
+        </Link>
         <button onClick={() => setLeftOpen((v) => !v)} title="收起 / 展开左栏" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
           <PanelLeft className="size-4" aria-hidden />
         </button>
@@ -249,9 +250,9 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
 
               <div>
                 <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">选题雷达</div>
-                <a href="/radar" className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                <Link href="/radar" className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
                   <Radar className="size-4" aria-hidden /> 去选题雷达找灵感 →
-                </a>
+                </Link>
               </div>
             </div>
 
