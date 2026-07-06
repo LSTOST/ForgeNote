@@ -31,13 +31,13 @@ export async function GET(request: Request): Promise<Response> {
   // Supabase 在用户拒绝授权或 provider 未配置时会带 error 回跳。
   const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
 
-  // 成功后的落点：默认 /forge；next 只保留给明确的同源回跳。
+  // 成功后的落点：默认 /workspace（M2-04：登录进 v3 工作台）；next 只保留给明确的同源回跳。
   // 只接受同源相对路径，防开放重定向。
   const nextParam = url.searchParams.get("next");
   const nextPath =
     nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
       ? nextParam
-      : "/forge";
+      : "/workspace";
 
   const loginUrl = new URL("/login", url.origin);
 

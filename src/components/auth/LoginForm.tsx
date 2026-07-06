@@ -146,7 +146,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
       try {
         const { data } = await supabase.auth.getSession();
         if (active && data.session) {
-          window.location.assign("/forge");
+          window.location.assign("/workspace");
         }
       } catch {
         // 留在当前等待态；用户仍可返回登录或稍后重发。
@@ -169,7 +169,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
           event === "TOKEN_REFRESHED" ||
           event === "USER_UPDATED")
       ) {
-        window.location.assign("/forge");
+        window.location.assign("/workspace");
       }
     });
 
@@ -230,7 +230,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
           setPasswordState("error");
           return;
         }
-        window.location.assign("/forge");
+        window.location.assign("/workspace");
         return;
       }
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -244,7 +244,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
         return;
       }
       if (data.session) {
-        window.location.assign("/forge");
+        window.location.assign("/workspace");
         return;
       }
       setSentTo(email.trim());
