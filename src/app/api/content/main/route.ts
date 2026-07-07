@@ -146,5 +146,12 @@ export async function POST(request: Request): Promise<Response> {
     return errorResponse("GENERATION_FAILED", "主内容生成失败，请稍后重试", true);
   }
 
-  return Response.json({ ok: true, data: { outline, mainContent } });
+  // 账号记忆轻摘要（右栏"账号记忆"展示：用谁的声音写；只读、不含全文）。
+  const brainSummary = {
+    audience: accountBrain.audience ?? null,
+    voice: accountBrain.voice ?? null,
+    memoryCount: (memoryRows ?? []).length,
+  };
+
+  return Response.json({ ok: true, data: { outline, mainContent, accountBrain: brainSummary } });
 }

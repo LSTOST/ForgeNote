@@ -75,6 +75,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [draftSections, setDraftSections] = useState<{ heading: string; text: string }[]>([]);
   const [mainLoading, setMainLoading] = useState(false);
   const [mainError, setMainError] = useState<string | null>(null);
+  const [brain, setBrain] = useState<{ audience: string | null; voice: string | null; memoryCount: number } | null>(null);
 
   const [decidingKey, setDecidingKey] = useState<string | null>(null);
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -152,6 +153,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
       const mc: MainContent = json.data.mainContent;
       setMainContent(mc);
       setDraftSections(mc.sections.map((s) => ({ heading: s.heading, text: s.text })));
+      if (json.data.accountBrain) setBrain(json.data.accountBrain);
     } catch {
       setMainError("网络错误，请稍后重试");
     } finally {
@@ -166,6 +168,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setMainContent(null);
     setDraftSections([]);
     setMainError(null);
+    setBrain(null);
     try {
       const res = await fetch("/api/structure/generate", {
         method: "POST",
@@ -220,6 +223,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setMainContent(null);
     setDraftSections([]);
     setMainError(null);
+    setBrain(null);
   }
 
   const structure = gen?.structure;
@@ -450,26 +454,19 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
         {gen && (
           <aside className="flex w-[296px] shrink-0 flex-col overflow-auto border-l border-border p-4">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-              结构控制
+              内容设置
               <span className={`ml-auto rounded-md px-2 py-0.5 text-[11px] font-medium ${stable ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
-                {stable ? "结构稳定" : "未就绪"}
+                {stable ? "结构稳定" : "编辑中"}
               </span>
             </div>
 
-            <div className="mb-4 grid grid-cols-4 gap-1 rounded-[10px] border border-border bg-secondary p-0.5 text-xs">
-              {["结构", "规则", "约束", "影响"].map((t, i) => (
-                <button
-                  key={t}
-                  disabled={i > 0}
-                  title={i > 0 ? "即将上线" : undefined}
-                  className={`rounded-md py-1.5 ${i === 0 ? "bg-card font-medium text-foreground shadow-sm" : "text-muted-foreground disabled:opacity-50"}`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">内容原型</div>
+            <div className="mb-4 rounded-[10px] border border-border bg-card px-3 py-2 text-[12.5px]">
+              <span className="text-foreground">{getLabel(structure!.prototypeKey, "zh-Hans")}</span>
+              <span className="ml-1.5 text-muted-foreground">· {structure!.modalityStack.map((m) => getLabel(m, "zh-Hans")).join(" + ")}</span>
             </div>
 
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">结构骨架</div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">结构顺序</div>
             <div className="space-y-1.5">
               {structure!.slots.map((s: StructureSlot, i) => {
                 const opts = strategiesForSlot(s.key);
@@ -481,11 +478,11 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                       onMouseEnter={() => setHoverSlot(s.key)}
                       onMouseLeave={() => setHoverSlot(null)}
                       onClick={() => setEditingSlot(open ? null : s.key)}
-                      title={s.strategyKey ? `${s.key}: ${s.strategyKey}` : s.key}
                       className={`flex w-full items-center gap-2 rounded-[10px] border px-3 py-2 text-left text-[12.5px] transition-colors ${hl || open ? "border-primary/50 bg-accent" : "border-border bg-card hover:bg-muted"}`}
                     >
-                      <span className="text-muted-foreground">{getLabel(s.key, "zh-Hans")}</span>
-                      <span className="ml-auto truncate text-foreground">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-secondary text-[10px] text-muted-foreground">{i + 1}</span>
+                      <span className="text-foreground">{getLabel(s.key, "zh-Hans")}</span>
+                      <span className="ml-auto truncate text-muted-foreground">
                         {s.strategyKey ? getLabel(s.strategyKey, "zh-Hans") : <span className="text-primary">待定义</span>}
                       </span>
                       <span className="text-muted-foreground">›</span>
@@ -569,6 +566,23 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
               className="mt-2 w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-[12px] outline-none focus:border-primary"
             />
             <p className="mt-1 text-[11px] text-muted-foreground">留空 = 按结构默认。点底栏「生成内容」时生效。</p>
+
+            <div className="mb-2 mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">账号记忆</div>
+            {brain && (brain.audience || brain.voice || brain.memoryCount > 0) ? (
+              <div className="space-y-1.5 rounded-[10px] border border-border bg-card px-3 py-2.5 text-[12px]">
+                {brain.audience && (
+                  <div><span className="text-muted-foreground">受众 </span><span className="text-foreground">{brain.audience}</span></div>
+                )}
+                {brain.voice && (
+                  <div><span className="text-muted-foreground">声音 </span><span className="text-foreground">{brain.voice}</span></div>
+                )}
+                <div className="text-[11px] text-muted-foreground">引用了 {brain.memoryCount} 条账号记忆</div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                生成主内容后显示本条用到的账号声音。还没接入账号？去 <Link href="/first-run" className="text-primary hover:underline">账号接入</Link>。
+              </p>
+            )}
           </aside>
         )}
       </div>
