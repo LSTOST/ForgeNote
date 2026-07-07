@@ -11,6 +11,8 @@ import Link from "next/link";
 import { Home, PanelLeft, Plus, Sparkles, LogOut, Radar, X } from "lucide-react";
 
 import { getLabel, strategiesForSlot } from "@/lib/structure/registry";
+import { buildOutline } from "@/lib/content/outline";
+import type { MainContent } from "@/lib/content/main-content";
 import type { RendererId } from "@/lib/render/contract";
 import type { PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
 
@@ -67,6 +69,12 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [renderError, setRenderError] = useState<string | null>(null);
   const [target, setTarget] = useState<RendererId>("xiaohongshu");
   const [outputLocale, setOutputLocale] = useState("");
+
+  // 主内容（平台无关可读内容，中区舞台）：mainContent = 生成结果；draft = 用户可编辑副本。
+  const [mainContent, setMainContent] = useState<MainContent | null>(null);
+  const [draftSections, setDraftSections] = useState<{ heading: string; text: string }[]>([]);
+  const [mainLoading, setMainLoading] = useState(false);
+  const [mainError, setMainError] = useState<string | null>(null);
 
   const [decidingKey, setDecidingKey] = useState<string | null>(null);
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -125,10 +133,39 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     }
   }
 
+  // 生成主内容（平台无关可读内容）：结构 → /api/content/main → 中区可编辑舞台。
+  async function genMain() {
+    if (!gen) return;
+    setMainLoading(true);
+    setMainError(null);
+    try {
+      const res = await fetch("/api/content/main", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ structureId: gen.structureId, language: outputLocale.trim() || undefined }),
+      });
+      const json = await res.json();
+      if (!json.ok || !json.data) {
+        setMainError(json.error?.message ?? "生成主内容失败");
+        return;
+      }
+      const mc: MainContent = json.data.mainContent;
+      setMainContent(mc);
+      setDraftSections(mc.sections.map((s) => ({ heading: s.heading, text: s.text })));
+    } catch {
+      setMainError("网络错误，请稍后重试");
+    } finally {
+      setMainLoading(false);
+    }
+  }
+
   async function generate() {
     setGenLoading(true);
     setGenError(null);
     setRenderOut(null);
+    setMainContent(null);
+    setDraftSections([]);
+    setMainError(null);
     try {
       const res = await fetch("/api/structure/generate", {
         method: "POST",
@@ -180,9 +217,13 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setGenError(null);
     setRenderError(null);
     setEditingSlot(null);
+    setMainContent(null);
+    setDraftSections([]);
+    setMainError(null);
   }
 
   const structure = gen?.structure;
+  const outline = structure ? buildOutline(structure) : null;
   const stable = gen?.stability.stable ?? false;
   const hasVisual = structure?.modalityStack.includes("visual") ?? false;
   const title = idea.trim() ? idea.trim().slice(0, 40) : "新内容";
@@ -300,44 +341,83 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 </div>
               </div>
             ) : (
-              /* 有结构：内容方向 + 可读结构卡 */
+              /* 有结构：中区=可读内容（提纲 → 可编辑主内容）。结构在幕后（右栏）。 */
               <div className="mx-auto max-w-2xl">
-                <div className="mb-4 flex items-center gap-3">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
                   <span className="text-[13px] font-medium">内容方向</span>
-                  <span className="rounded-md bg-accent px-2.5 py-1 text-xs text-foreground">{getLabel(structure!.prototypeKey, "zh-Hans")}</span>
-                  <span className="rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground" title="表达模态由系统按原型推荐">
-                    {structure!.modalityStack.map((m) => getLabel(m, "zh-Hans")).join(" + ")} · 系统推荐
-                  </span>
+                  <span className="rounded-md bg-accent px-2.5 py-1 text-xs text-foreground">{outline!.direction}</span>
                 </div>
 
-                <div className="mb-2 text-[13px] font-medium">内容编辑区</div>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  中区展示结构（可读卡片）。成稿散文在底栏渲染成具体平台后产出。
-                </p>
-
-                <div className="space-y-3">
-                  {structure!.slots.map((s: StructureSlot, i) => {
-                    const hl = hoverSlot === s.key;
-                    return (
-                      <div
-                        key={i}
-                        onMouseEnter={() => setHoverSlot(s.key)}
-                        onMouseLeave={() => setHoverSlot(null)}
-                        className={`flex gap-4 rounded-xl border p-4 transition-colors ${hl ? "border-primary/50 bg-accent" : "border-border bg-card"}`}
+                {!mainContent ? (
+                  /* Stage A：人类可读的内容方向 + 提纲（确定性、免模型） */
+                  <>
+                    <div className="mb-1 text-[13px] font-medium">内容提纲</div>
+                    <p className="mb-4 text-xs text-muted-foreground">这是这条内容的可读提纲。方向 OK 就生成主内容，之后直接在这里编辑。</p>
+                    <ol className="space-y-2">
+                      {outline!.points.map((p, i) => (
+                        <li
+                          key={p.slotKey}
+                          onMouseEnter={() => setHoverSlot(p.slotKey)}
+                          onMouseLeave={() => setHoverSlot(null)}
+                          className={`flex gap-3 rounded-xl border p-3.5 transition-colors ${hoverSlot === p.slotKey ? "border-primary/50 bg-accent" : "border-border bg-card"}`}
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[12px] font-semibold text-primary">{i + 1}</span>
+                          <div className="min-w-0">
+                            <div className="font-heading text-[14px]">{p.label}</div>
+                            {p.strategyLabel && <div className="mt-0.5 text-xs text-muted-foreground">{p.strategyLabel}</div>}
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="mt-5 flex items-center gap-3">
+                      <button
+                        onClick={genMain}
+                        disabled={mainLoading}
+                        className="rounded-[10px] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
                       >
-                        <span className="flex h-6 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[12px] font-semibold text-primary">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <div className="min-w-0">
-                          <h3 className="font-heading text-[15px]">{getLabel(s.key, "zh-Hans")}</h3>
-                          <p className="mt-0.5 text-sm text-muted-foreground">
-                            {s.strategyKey ? getLabel(s.strategyKey, "zh-Hans") : <em className="not-italic text-primary">待定义 · 在右栏结构骨架里选择策略</em>}
-                          </p>
+                        {mainLoading ? "生成主内容中…" : "✦ 生成主内容"}
+                      </button>
+                      {mainError && <span className="text-sm text-destructive">{mainError}</span>}
+                    </div>
+                  </>
+                ) : (
+                  /* Stage B：可编辑的主内容（正文 / 卡片 / 脚本）。 */
+                  <>
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="text-[13px] font-medium">
+                        {mainContent.form === "cards" ? "内容卡片" : mainContent.form === "script" ? "脚本" : "正文"}
+                        <span className="ml-2 font-normal text-xs text-muted-foreground">可直接编辑</span>
+                      </span>
+                      <button onClick={genMain} disabled={mainLoading} className="ml-auto text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+                        {mainLoading ? "重生成中…" : "↻ 重新生成"}
+                      </button>
+                    </div>
+                    {mainError && <p className="mb-2 text-sm text-destructive">{mainError}</p>}
+                    <div className="space-y-4">
+                      {mainContent.sections.map((s, i) => (
+                        <div
+                          key={i}
+                          onMouseEnter={() => setHoverSlot(s.role)}
+                          onMouseLeave={() => setHoverSlot(null)}
+                          className={`rounded-xl border p-4 transition-colors ${hoverSlot === s.role ? "border-primary/50 bg-accent" : "border-border bg-card"}`}
+                        >
+                          <input
+                            value={draftSections[i]?.heading ?? s.heading}
+                            onChange={(e) => setDraftSections((prev) => prev.map((d, di) => (di === i ? { ...d, heading: e.target.value } : d)))}
+                            className="w-full bg-transparent font-heading text-[15px] font-medium outline-none"
+                          />
+                          <textarea
+                            value={draftSections[i]?.text ?? s.text}
+                            onChange={(e) => setDraftSections((prev) => prev.map((d, di) => (di === i ? { ...d, text: e.target.value } : d)))}
+                            rows={Math.max(2, Math.ceil((draftSections[i]?.text ?? s.text).length / 34))}
+                            placeholder="（这一段还没有内容，可自己写）"
+                            className="mt-1.5 w-full resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none"
+                          />
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -5,8 +5,8 @@
 // 本层介于 structure 与平台 renderer 之间：把结构渲成一份人类可读、可编辑的主内容
 // （按模态：叙事→正文 / 视觉→卡片 / 时间→脚本），供中区展示与编辑；不是 token 槽位。
 //
-// 复用 renderer 机制（账号大脑注入 / OpenRouter fill / slot 溯源），但产出平台无关，
-// 不是 RendererId（RendererId 是严格的平台枚举）。铁律同 renderer：只读 structure，不改结构/选题。
+// 确定性提纲 + 形态判定拆到 ./outline（纯函数、可客户端引入）；本文件含 LLM 生成（仅服务端）。
+// 铁律同 renderer：只读 structure，不改结构/选题。
 
 import { z } from "zod";
 
@@ -21,9 +21,12 @@ import {
 import type { ChatMessage } from "@/lib/ai/openrouter-client";
 import { getLabel } from "@/lib/structure/registry";
 import type { StructureDocument } from "@/lib/structure/types";
+import { mainContentForm } from "./outline";
+import type { MainContentForm } from "./outline";
 
-/** 主内容形态（由模态决定，用户不直接选）：叙事→连贯正文 / 视觉→卡片流 / 时间→脚本节拍。 */
-export type MainContentForm = "prose" | "cards" | "script";
+// 兼容旧引入路径：提纲/形态从本模块也可取（实现在 ./outline）。
+export { buildOutline, mainContentForm } from "./outline";
+export type { ContentOutline, OutlinePoint, MainContentForm } from "./outline";
 
 const MAIN_CONTENT_VERSION = "0.1.0";
 
@@ -47,46 +50,6 @@ export interface MainContent {
   sourceStructureHash: string;
   sections: MainContentSection[];
   warnings: string[];
-}
-
-/** 提纲的一条（人类可读，确定性从结构派生，无需模型）。 */
-export interface OutlinePoint {
-  slotKey: string;
-  label: string;
-  strategyLabel: string | null;
-}
-
-/** 内容方向 + 提纲（Stage A：生成主内容前，中区先展示的人类可读计划；确定性、零模型成本）。 */
-export interface ContentOutline {
-  /** 人类可读的内容方向（原型 + 模态，自然语言）。 */
-  direction: string;
-  points: OutlinePoint[];
-}
-
-/** 由模态推断主内容形态（视觉优先卡片，时间优先脚本，否则正文）。 */
-export function mainContentForm(structure: Readonly<StructureDocument>): MainContentForm {
-  if (structure.modalityStack.includes("visual")) return "cards";
-  if (structure.modalityStack.includes("temporal")) return "script";
-  return "prose";
-}
-
-/**
- * 确定性提纲（Stage A）：从结构 machine_key 映射为人类可读的方向 + 提纲点。
- * 不调模型——即时、免费、稳定；供「刚开始」的中区展示可读计划。
- */
-export function buildOutline(structure: Readonly<StructureDocument>): ContentOutline {
-  const direction = `${getLabel(structure.prototypeKey, "zh-Hans")} · ${structure.modalityStack
-    .map((m) => getLabel(m, "zh-Hans"))
-    .join(" + ")}`;
-  const points = presentSlotsInOrder(structure, NARRATIVE_ORDER).map((key) => {
-    const slot = structure.slots.find((s) => s.key === key);
-    return {
-      slotKey: key,
-      label: getLabel(key, "zh-Hans"),
-      strategyLabel: slot?.strategyKey ? getLabel(slot.strategyKey, "zh-Hans") : null,
-    };
-  });
-  return { direction, points };
 }
 
 const FORM_GUIDANCE: Record<MainContentForm, string> = {
