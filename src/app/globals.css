@@ -152,3 +152,64 @@
 @media (prefers-reduced-motion: reduce) {
   .fn-hop, .fn-shake { animation: none !important; }
 }
+
+/* M2-16 — 官网（marketing）专用：质感/动效层。
+   命名前缀 .mkt-*，只在 (marketing) 路由树内使用；产品内界面不引用。
+   动效原则同 DSN-02：reduced-motion 下全部退化为直接显示。 */
+
+/* 官网标题衬线：吃 (marketing)/layout 注入的 --font-mkt-serif（思源宋体），
+   加载失败/未注入时退回系统衬线栈。 */
+.mkt-serif {
+  font-family: var(--font-mkt-serif, Georgia), Georgia, "Songti SC", "Noto Serif SC", serif;
+}
+
+/* Hero 入场：淡入 + 上移（CSS-only，不依赖水合，配 inline animation-delay 做 stagger）。 */
+@keyframes mktRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mkt-rise {
+  opacity: 0;
+  animation: mktRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 滚动入场（Reveal 组件挂 .is-in）。 */
+.mkt-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mkt-reveal.is-in { opacity: 1; transform: none; }
+
+/* Hero 关键词手绘下划线：SVG 路径按 dashoffset 画出。 */
+@keyframes mktDraw { to { stroke-dashoffset: 0; } }
+.mkt-draw {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: mktDraw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.85s forwards;
+}
+
+/* 主 CTA 光泽扫过（hover 时一道柔光从左到右）。 */
+.mkt-shine { position: relative; overflow: hidden; }
+.mkt-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+.mkt-shine:hover::after { transform: translateX(120%); }
+
+/* 卡片 hover 抬升（transform + shadow 过渡在 utility 里给，这里只统一时长曲线）。 */
+.mkt-lift { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease; }
+.mkt-lift:hover { transform: translateY(-4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-rise { animation: none !important; opacity: 1; }
+  .mkt-reveal { transition: none !important; opacity: 1; transform: none; }
+  .mkt-draw { animation: none !important; stroke-dashoffset: 0; }
+  .mkt-shine::after { display: none; }
+  .mkt-lift, .mkt-lift:hover { transform: none; transition: none; }
+}
