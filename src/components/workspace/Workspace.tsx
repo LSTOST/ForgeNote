@@ -33,14 +33,13 @@ interface GenResponse {
   data?: GenData;
   error?: { code: string; message: string };
 }
-interface RenderUnitOut {
+interface DeriveUnit {
   role: string;
-  slotKeys: string[];
   text: string;
 }
-interface RenderResponse {
+interface DeriveResponse {
   ok: boolean;
-  data?: { artifactId: string; artifact: { format: string; output: { units: RenderUnitOut[] }; warnings: string[] } };
+  data?: { artifact: { rendererId: string; format: string; units: DeriveUnit[]; warnings: string[] } };
   error?: { code: string; message: string };
 }
 
@@ -64,7 +63,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
 
-  const [renderOut, setRenderOut] = useState<{ platform: string; units: RenderUnitOut[] } | null>(null);
+  const [renderOut, setRenderOut] = useState<{ platform: string; units: DeriveUnit[] } | null>(null);
   const [renderLoading, setRenderLoading] = useState<RendererId | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [target, setTarget] = useState<RendererId>("xiaohongshu");
@@ -189,23 +188,29 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     }
   }
 
-  async function render(rendererId: RendererId, label: string) {
-    if (!gen) return;
+  // Step 4：从（用户编辑过的）主内容派生平台版——不是从结构重渲染，忠于用户的主内容。
+  async function deriveMain(rendererId: RendererId, label: string) {
+    if (!gen || !mainContent) return;
     setRenderLoading(rendererId);
     setRenderError(null);
     try {
-      const res = await fetch("/api/render", {
+      const sections = mainContent.sections.map((s, i) => ({
+        role: s.role,
+        heading: draftSections[i]?.heading ?? s.heading,
+        text: draftSections[i]?.text ?? s.text,
+      }));
+      const res = await fetch("/api/content/derive", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ structureId: gen.structureId, rendererId, language: outputLocale.trim() || undefined }),
+        body: JSON.stringify({ structureId: gen.structureId, rendererId, sections, language: outputLocale.trim() || undefined }),
       });
-      const json: RenderResponse = await res.json();
+      const json: DeriveResponse = await res.json();
       if (!json.ok || !json.data) {
-        setRenderError(json.error?.message ?? "渲染失败");
+        setRenderError(json.error?.message ?? "派生失败");
         setRenderOut(null);
         return;
       }
-      setRenderOut({ platform: label, units: json.data.artifact.output.units });
+      setRenderOut({ platform: label, units: json.data.artifact.units });
     } catch {
       setRenderError("网络错误，请稍后重试");
     } finally {
@@ -593,7 +598,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
           <button disabled title="M2 结构 → 配方接线待收口" className="rounded-[10px] border border-border bg-card px-3.5 py-1.5 text-[13px] text-muted-foreground opacity-50">
             ☆ 保存为配方
           </button>
-          <span className="text-xs text-muted-foreground">生成到（选中=主输出）</span>
+          <span className="text-xs text-muted-foreground">主输出（从主内容派生）</span>
           <div className="flex items-center gap-2">
             {RENDERERS.map((r) => {
               const off = r.needsVisual && !hasVisual;
@@ -614,13 +619,13 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
           </div>
           <div className="ml-auto flex items-center gap-3">
             {renderError && <span className="text-sm text-destructive">{renderError}</span>}
-            {!stable && <span className="text-xs text-muted-foreground">结构稳定后可渲染</span>}
+            {!mainContent && <span className="text-xs text-muted-foreground">先生成主内容，再派生</span>}
             <button
-              onClick={() => render(target, RENDERERS.find((r) => r.id === target)!.label)}
-              disabled={!stable || renderLoading !== null}
+              onClick={() => deriveMain(target, RENDERERS.find((r) => r.id === target)!.label)}
+              disabled={!mainContent || renderLoading !== null}
               className="rounded-[10px] bg-primary px-5 py-2 text-[13.5px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              {renderLoading ? "生成中…" : "✦ 生成内容"}
+              {renderLoading ? "派生中…" : `✦ 派生到 ${RENDERERS.find((r) => r.id === target)!.label}`}
             </button>
           </div>
         </div>

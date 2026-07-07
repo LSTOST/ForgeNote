@@ -169,7 +169,7 @@
       "status": "in_progress",
       "deps": ["M2-07", "M2-08"],
       "done": "四区工作台（v3.16 布局 + v3.17 暖纸白）：左=创作流+工作记忆；中=当前内容的可读对象（起始 内容方向+提纲，生成后 可编辑正文/卡片/脚本，非 token 槽位）；右=轻控制（受众/原型/表达角度/主输出/结构顺序/账号记忆引用）+常驻助手；底=版本/保存配方/主输出+派生；输出语言选择",
-      "note": "⚠ **Owner 2026-07-06 定稿推翻早前「中区=结构槽位」——需重做中区**。已建：四区外壳 + 真实链路（想法→/api/structure/generate→槽位/裁决→/api/render）+ 输出语言（fd72d3c）+ v3.17 令牌。**但中区做错了**：现为 token 槽位卡（钩子/情境…），Owner 定稿=中区必须是**可读可编辑内容**（起始 内容方向+提纲，生成后 正文/卡片/脚本）；结构=幕后引擎不是 UI 展示。撤回「slot 不可读/不能看成品」。→ 重做按 Owner 批准的 A 方案、1→4 顺序：**①✅ 引擎主内容层**（src/lib/content/main-content.ts + outline.ts + POST /api/content/main，平台无关可读内容，commit d87ca5e，check:main-content 19 项绿）；**②✅ 中区改可读内容**（提纲→可编辑正文/卡片/脚本，弃 token，commit 228b00a，mock 预览验证 0 token/4 可编辑段）；③⏳ 右栏 token 骨架→轻控制（受众/原型/表达角度/主输出/结构顺序/账号记忆）+常驻助手（助手需后端）；④⏳ 主内容稳定后派生多平台（触及 render 管线：从主内容派生而非从结构）。见 [[direction-v3-pivot]] 记忆定稿。"
+      "note": "⚠ **Owner 2026-07-06 定稿推翻早前「中区=结构槽位」——需重做中区**。已建：四区外壳 + 真实链路（想法→/api/structure/generate→槽位/裁决→/api/render）+ 输出语言（fd72d3c）+ v3.17 令牌。**但中区做错了**：现为 token 槽位卡（钩子/情境…），Owner 定稿=中区必须是**可读可编辑内容**（起始 内容方向+提纲，生成后 正文/卡片/脚本）；结构=幕后引擎不是 UI 展示。撤回「slot 不可读/不能看成品」。→ 重做按 Owner 批准的 A 方案、1→4 顺序：**①✅ 引擎主内容层**（src/lib/content/main-content.ts + outline.ts + POST /api/content/main，平台无关可读内容，commit d87ca5e，check:main-content 19 项绿）；**②✅ 中区改可读内容**（提纲→可编辑正文/卡片/脚本，弃 token，commit 228b00a，mock 预览验证 0 token/4 可编辑段）；**③✅ 右栏轻控制**（内容原型 + 结构顺序 可读 + 待裁决 + 输出语言 + 账号记忆，去 token 页签/tooltip，commit 3decc6b；常驻对话助手仍诚实占位=待后端）；**④✅ 从主内容派生**（src/lib/content/derive.ts + POST /api/content/derive，底栏门控「先有主内容再派生」、从编辑过的草稿派生而非从结构，check:derive 绿）。Steps 1–4 代码完成；待 Codex review + Owner 真实路径（登录→生成→编辑→派生，需模型 env）验收。旧 /api/render（structure→platform）保留未删。见 [[direction-v3-pivot]] 记忆定稿。"
     },
     {
       "id": "M2-10",

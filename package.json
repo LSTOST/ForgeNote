@@ -17,6 +17,7 @@
     "check:recipe": "tsx scripts/check-recipe.mts",
     "check:radar": "tsx scripts/check-radar.mts",
     "check:main-content": "tsx scripts/check-main-content.mts",
+    "check:derive": "tsx scripts/check-derive.mts",
     "metrics": "node scripts/metrics.mjs"
   },
   "dependencies": {
