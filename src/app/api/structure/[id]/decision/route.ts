@@ -1,10 +1,11 @@
 // ForgeNote M2-07 — PATCH /api/structure/[id]/decision（裁决一个待决策 → 重评稳定性 → 回写）。
 // 让右栏"待裁决"可裁：选一个 option → 该决策 user_resolved → 重新评估稳定性 → 更新 structure_documents。
 // 边界：必须登录；按 RLS 只能改自己的结构；不信任客户端传结构（只按 id 加载再改）。
-// 依据：/api/render 约定、M2-07 stability、migration 0003、Next.js 16 Route Handlers（context.params 为 Promise）。
+// 依据：M2-07 stability、Next.js 16 Route Handlers（context.params 为 Promise）。
 
 import { z } from "zod";
 
+import { logGate0Event } from "@/lib/gate0/events";
 import { evaluateStability } from "@/lib/structure/stability";
 import type { ModalityKey, PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
@@ -118,6 +119,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     .eq("id", id)
     .eq("user_id", user.id);
   if (updErr) return errorResponse("DATABASE_ERROR", "裁决保存失败，请稍后重试");
+  await logGate0Event({
+    supabase,
+    userId: user.id,
+    eventName: "decision_resolved",
+    taskId: structure.taskId,
+    payload: { structure_id: id, decision_key: parsed.data.key, resolved_value: parsed.data.resolvedValue },
+  });
 
   return Response.json({
     ok: true,

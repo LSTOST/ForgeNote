@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "runId": "YYYY-MM-DD-owner-gate0-week",
+  "caseId": "owner-gate0-week",
+  "promptVersion": "chatgpt-baseline-v1",
+  "randomizationSeed": "replace-with-logged-seed",
+  "items": [
+    {
+      "pairId": "pair-01",
+      "options": [
+        {
+          "label": "A",
+          "sourceKey": "hidden_source_1",
+          "topic": "",
+          "whyNow": "",
+          "whyThisAccount": "",
+          "evidence": [],
+          "suggestedStructure": {
+            "hook": "",
+            "context": "",
+            "turn": "",
+            "takeaway": ""
+          },
+          "firstPlatform": "",
+          "risk": ""
+        },
+        {
+          "label": "B",
+          "sourceKey": "hidden_source_2",
+          "topic": "",
+          "whyNow": "",
+          "whyThisAccount": "",
+          "evidence": [],
+          "suggestedStructure": {
+            "hook": "",
+            "context": "",
+            "turn": "",
+            "takeaway": ""
+          },
+          "firstPlatform": "",
+          "risk": ""
+        }
+      ]
+    }
+  ]
+}

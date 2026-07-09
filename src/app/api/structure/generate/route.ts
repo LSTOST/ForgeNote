@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { logGate0Event } from "@/lib/gate0/events";
 import { MAX_INPUT_CHARS } from "@/lib/constants";
 import { generateStructure } from "@/lib/structure/generate";
 import { evaluateStability } from "@/lib/structure/stability";
@@ -87,6 +88,13 @@ export async function POST(request: Request): Promise<Response> {
     .select("id")
     .single();
   if (taskErr || !task) return errorResponse("DATABASE_ERROR", "任务创建失败，请稍后重试", true);
+  await logGate0Event({
+    supabase,
+    userId: user.id,
+    eventName: "task_created",
+    taskId: task.id,
+    payload: { source: parsed.data.sourceType ?? "own_idea", prototype_key: parsed.data.prototypeKey ?? "" },
+  });
 
   // 5) 生成结构（registry 校验在域核心内；缺 env / 上游错误内部降级）
   const result = await generateStructure({ rawIntent, prototypeKey: parsed.data.prototypeKey, taskId: task.id });
@@ -132,6 +140,17 @@ export async function POST(request: Request): Promise<Response> {
 
   // 成功：task 推进为 ready（有稳定/可编辑的结构）
   await supabase.from("content_tasks").update({ status: "ready" }).eq("id", task.id).eq("user_id", user.id);
+  await logGate0Event({
+    supabase,
+    userId: user.id,
+    eventName: "structure_generated",
+    taskId: task.id,
+    payload: {
+      prototype_key: stableDoc.prototypeKey,
+      counts: { slots: stableDoc.slots.length, decisions: stableDoc.pendingDecisions.length },
+      stable: stability.stable,
+    },
+  });
 
   // 8) 成功：返回结构 + 稳定性报告（含 blockers，供右栏"拿不准/待就绪"展示）
   return Response.json({

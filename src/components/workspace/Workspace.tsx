@@ -2,13 +2,13 @@
 
 // ForgeNote M2-09 — 四区工作台（concept.html 落地，v3.17 暖纸白令牌）。
 // 顶栏 / 左栏(导航+账号) / 中栏(内容方向+编辑区可读卡+助手胶囊) / 右栏(结构控制骨架+待裁决) / 底栏(渲染层)。
-// 真实流程沿用 M2-07/08：想法 → /api/structure/generate → 编辑槽位/裁决 → /api/render。
+// 真实流程：想法 → /api/structure/generate → 编辑槽位/裁决 → /api/content/main → 编辑 → /api/content/derive。
 // 诚实边界：中区展示「结构为可读卡片」（后端暂不产平台无关成稿散文）；未接线区块（雷达/助手/配方）
 // 给最小占位或诚实禁用，不伪造数据。段落卡 ↔ 右栏骨架按 slotKey 双向高亮联动。
 
 import { useState } from "react";
 import Link from "next/link";
-import { Home, PanelLeft, Plus, Sparkles, LogOut, Radar, X } from "lucide-react";
+import { Clipboard, Home, PanelLeft, Plus, Sparkles, LogOut, Radar, X } from "lucide-react";
 
 import { getLabel, strategiesForSlot } from "@/lib/structure/registry";
 import { buildOutline } from "@/lib/content/outline";
@@ -49,7 +49,7 @@ const RENDERERS: { id: RendererId; label: string; glyph: string; needsVisual?: b
   { id: "image_prompt", label: "图片 Prompt", glyph: "▦", needsVisual: true },
 ];
 
-// I-16 输出语言 / 表达偏好预设（value 即传给 /api/render 的 language；自由文本，非枚举）。
+// I-16 输出语言 / 表达偏好预设（value 即传给 /api/content/main 的 language；自由文本，非枚举）。
 const OUTPUT_LOCALES: { value: string; label: string }[] = [
   { value: "zh-Hans", label: "中文" },
   { value: "English", label: "English" },
@@ -63,7 +63,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
 
-  const [renderOut, setRenderOut] = useState<{ platform: string; units: DeriveUnit[] } | null>(null);
+  const [renderOut, setRenderOut] = useState<{ platform: string; rendererId: RendererId; taskId: string; units: DeriveUnit[] } | null>(null);
   const [renderLoading, setRenderLoading] = useState<RendererId | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [target, setTarget] = useState<RendererId>("xiaohongshu");
@@ -210,7 +210,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
         setRenderOut(null);
         return;
       }
-      setRenderOut({ platform: label, units: json.data.artifact.units });
+      setRenderOut({ platform: label, rendererId, taskId: gen.taskId, units: json.data.artifact.units });
     } catch {
       setRenderError("网络错误，请稍后重试");
     } finally {
@@ -229,6 +229,25 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setDraftSections([]);
     setMainError(null);
     setBrain(null);
+  }
+
+  async function copyRenderOut() {
+    if (!renderOut) return;
+    const text = renderOut.units.map((u) => `${u.role}\n${u.text}`).join("\n\n");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      return;
+    }
+    void fetch("/api/gate0/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventName: "render_artifact_copied",
+        taskId: renderOut.taskId,
+        payload: { renderer_id: renderOut.rendererId, counts: { units: renderOut.units.length } },
+      }),
+    });
   }
 
   const structure = gen?.structure;
@@ -302,6 +321,9 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">选题雷达</div>
                 <Link href="/radar" className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
                   <Radar className="size-4" aria-hidden /> 去选题雷达找灵感 →
+                </Link>
+                <Link href="/gate0" className="mt-1 flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <Clipboard className="size-4" aria-hidden /> Gate 0 周看板 →
                 </Link>
               </div>
             </div>
@@ -637,6 +659,9 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
           <div className="max-h-[70vh] w-full max-w-2xl overflow-auto rounded-2xl border border-border bg-card p-5 shadow-md" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center gap-2">
               <span className="font-heading text-sm font-medium">渲染 · {renderOut.platform}</span>
+              <button onClick={copyRenderOut} className="ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="复制本次派生结果">
+                <Clipboard className="size-4" aria-hidden />
+              </button>
               <button onClick={() => setRenderOut(null)} className="ml-auto text-muted-foreground hover:text-foreground">
                 <X className="size-4" aria-hidden />
               </button>

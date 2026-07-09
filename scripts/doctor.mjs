@@ -59,13 +59,14 @@ checkFile("package-lock.json");
 checkFile("node_modules/next/package.json", "依赖已安装 (next)");
 checkFile(".env.example");
 
-// ── 文档（当前 HEAD 实际存在的文档集合）──
+// ── 文档（当前 M2 事实源文档集合）──
 for (const doc of [
   "docs/DECISIONS.md",
-  "docs/PRD-M1.md",
-  "docs/UIUX-M1.md",
-  "docs/API-CONTRACT.md",
-  "docs/DATA-SCHEMA.md",
+  "docs/PRD-M2.md",
+  "docs/UIUX-M2.md",
+  "docs/API-CONTRACT-M2.md",
+  "docs/DATA-SCHEMA-M2.md",
+  "docs/README.md",
   "docs/MODEL-INTEGRATION.md",
   "docs/roadmap/roadmap.json",
   "docs/RUNBOOK.md",
@@ -83,6 +84,8 @@ for (const script of [
   "build",
   "doctor",
   "db:test-rls",
+  "check:gate0",
+  "check:baseline-eval",
   "metrics",
 ]) {
   checkScript(pkg, script);
@@ -102,18 +105,18 @@ for (const file of [
 }
 
 // ── env 存在性（不输出值；缺失为 warn 不阻断）──
-// 模型网关（仅服务端）：缺失 → /api/forge 返回 MODEL_NOT_CONFIGURED。
+// 模型网关（仅服务端）：缺失 → 内容生成 API 返回 MODEL_NOT_CONFIGURED。
 for (const name of [envName("OPENROUTER_API_KEY"), envName("OPENROUTER_MODEL")]) {
   if (hasEnv(name)) mark("pass", `${name} 已配置`);
-  else mark("warn", name, "未配置；/api/forge 将返回 MODEL_NOT_CONFIGURED");
+  else mark("warn", name, "未配置；内容生成 API 将返回 MODEL_NOT_CONFIGURED");
 }
-// Supabase 公开配置（登录与受保护页所需）：缺失 → 登录不可用、/forge 跳 /login。
+// Supabase 公开配置（登录与受保护页所需）：缺失 → 登录不可用、工作台跳 /login。
 for (const name of [
   envName("NEXT_PUBLIC_SUPABASE_URL"),
   envName("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 ]) {
   if (hasEnv(name)) mark("pass", `${name} 已配置`);
-  else mark("warn", name, "未配置；登录闭环不可用、/api/forge 将 AUTH_REQUIRED");
+  else mark("warn", name, "未配置；登录闭环不可用、API 将 AUTH_REQUIRED");
 }
 // 可选观测 env（I-14）：纯 optional，未配置时观测 scaffold 为 no-op；info 不计 fail/warn、不阻断。
 for (const name of [

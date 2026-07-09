@@ -1,13 +1,14 @@
 // ForgeNote M2-09 Step 4 — POST /api/content/derive（主内容 → 平台版）。
 // Owner 定稿：主内容稳定后才派生。输入 = 用户编辑过的主内容 sections + 目标平台。
 // 流程：校验 → 鉴权 → 用 structureId 按 RLS 验归属 + 载账号大脑 → deriveToPlatform → 返回。
-// 与 /api/render（structure→platform）不同：这里从主内容文本派生，带上用户编辑。
+// 与结构直渲不同：这里从主内容文本派生，带上用户编辑。
 
 import { z } from "zod";
 
 import { buildAccountBrainSnapshot } from "@/lib/account/brain-snapshot";
 import type { AccountMemoryItem, MemoryKind, MemorySource, MemoryStatus } from "@/lib/account/types";
 import { deriveToPlatform } from "@/lib/content/derive";
+import { logGate0Event } from "@/lib/gate0/events";
 import type { RendererId } from "@/lib/render/contract";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
@@ -88,12 +89,12 @@ export async function POST(request: Request): Promise<Response> {
 
   const auth = await getAuthenticatedContext();
   if (!auth) return errorResponse("AUTH_REQUIRED", "需要登录后才能派生");
-  const { supabase } = auth;
+  const { supabase, user } = auth;
 
   // 用 structureId 按 RLS 验归属（读不到 = 非本人/不存在）
   const { data: row, error: loadErr } = await supabase
     .from("structure_documents")
-    .select("id")
+    .select("id, task_id")
     .eq("id", parsed.data.structureId)
     .single();
   if (loadErr || !row) return errorResponse("STRUCTURE_NOT_FOUND", "结构不存在或无权访问");
@@ -123,6 +124,13 @@ export async function POST(request: Request): Promise<Response> {
     }
     return errorResponse("GENERATION_FAILED", "派生失败，请稍后重试", true);
   }
+  await logGate0Event({
+    supabase,
+    userId: user.id,
+    eventName: "renderer_generated",
+    taskId: row.task_id,
+    payload: { structure_id: parsed.data.structureId, renderer_id: parsed.data.rendererId, format: artifact.format },
+  });
 
   return Response.json({ ok: true, data: { artifact } });
 }

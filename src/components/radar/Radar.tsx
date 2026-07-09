@@ -57,6 +57,17 @@ export function Radar() {
     }
   }
 
+  function trackRadarSelected(card: RadarCard) {
+    void fetch("/api/gate0/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventName: "radar_card_selected",
+        payload: { prototype_key: card.prototypeKey ?? "", source: "radar" },
+      }),
+    });
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
       <h1 className="text-2xl font-semibold tracking-tight">选题雷达</h1>
@@ -88,6 +99,7 @@ export function Radar() {
                 <div className="mt-3">
                   <Link
                     href={`/workspace?idea=${encodeURIComponent(c.topic)}`}
+                    onClick={() => trackRadarSelected(c)}
                     className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
                   >
                     展开做这条 →
