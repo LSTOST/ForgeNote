@@ -21,6 +21,8 @@
 | INPUT_TOO_LONG | 400 | 输入超限 |
 | VALIDATION_FAILED | 400 | 参数不合法 |
 | STRUCTURE_NOT_FOUND | 404 | 结构文档不存在 |
+| TASK_NOT_FOUND | 404 | 内容任务不存在 |
+| ARTIFACT_NOT_FOUND | 404 | 渲染产物不存在 |
 | SLOT_NOT_FOUND | 404 | slotKey 不合法 |
 | DECISION_NOT_FOUND | 404 | decision key 不存在 |
 | INVALID_STRATEGY | 400 | strategyKey 不合法 |
@@ -283,7 +285,56 @@ sections: 1-40 条，每条 text max 8000。
 
 ---
 
-### 3.10 M1 遗留端点（可能仍有效）
+### 3.10 POST /api/performance/fill
+
+发布后手动回填表现，并把“本周验证/推翻了什么”写回账号记忆。
+
+**Request:**
+```json
+{
+  "taskId": "uuid | null",
+  "renderArtifactId": "uuid | null",
+  "platform": "xiaohongshu",
+  "publishedAt": "2026-07-09T00:00:00.000Z",
+  "metrics": {
+    "likeRange": "0 | 1-10 | 11-50 | 51-100 | 101-500 | 500+ | unknown",
+    "favoriteRange": "0 | 1-10 | 11-50 | 51-100 | 101-500 | 500+ | unknown",
+    "commentRange": "0 | 1-10 | 11-50 | 51-100 | 101-500 | 500+ | unknown",
+    "followerGainRange": "0 | 1-10 | 11-50 | 51-100 | 101-500 | 500+ | unknown"
+  },
+  "vsMedian": "string (optional, max 32)",
+  "note": "string (optional, max 500)",
+  "learningSignal": "validated | invalidated | new_signal"
+}
+```
+
+必须提供 `taskId` 或 `renderArtifactId` 至少一个。服务端用 RLS + `user_id` 校验归属。
+
+**Response (200):**
+```json
+{
+  "ok": true,
+  "data": {
+    "performanceRecordId": "uuid",
+    "memoryItemId": "uuid",
+    "taskId": "uuid",
+    "published": true
+  }
+}
+```
+
+**副作用:**
+
+- 写 `performance_records`。
+- 写 `account_memory_items(kind=proven_pattern, source=user_observation, evidence_refs=[performance:<id>])`。
+- 若有 `publishedAt`，将 `content_tasks.status` 标为 `published`。
+- 记录 `published_marked` / `performance_filled` usage event。
+
+**错误:** VALIDATION_FAILED, AUTH_REQUIRED, TASK_NOT_FOUND, ARTIFACT_NOT_FOUND, DATABASE_ERROR
+
+---
+
+### 3.11 M1 遗留端点（可能仍有效）
 
 | 端点 | 说明 |
 |------|------|

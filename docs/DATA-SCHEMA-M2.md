@@ -321,7 +321,20 @@ Gate 0 看板只读 `usage_events` + M2 事实表，不存正文。事件 payloa
 - `needed_free_chat`
 - `other`
 
-## 11. M1 遗留表（Supabase）
+## 11. 发布后学习信号
+
+M2-12 使用现有 `performance_records` 保存原始回填，再把学习结论写回 `account_memory_items`：
+
+- `performance_records.task_id` / `render_artifact_id`：回填归因对象。
+- `performance_records.metrics`：range 化指标，不存平台精确抓取数据。
+- `performance_records.vs_median`：相对本账号中位表现的文本判断，如 `above` / `below` / `4.2x`。
+- `performance_records.note`：Owner 手动复盘，max 500。
+- `account_memory_items.kind = proven_pattern`。
+- `account_memory_items.source = user_observation`。
+- `account_memory_items.evidence_refs = ["performance:<performance_record_id>"]`。
+- `account_memory_items.body.signal = validated | invalidated | new_signal`。
+
+## 12. M1 遗留表（Supabase）
 
 以下 M1 表可能仍存在于数据库但 M2 核心流程不使用：
 - `sessions` — M1 forge 会话

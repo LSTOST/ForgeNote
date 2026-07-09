@@ -202,9 +202,11 @@
       "id": "M2-12",
       "title": "发布后回填 → 写回 account memory",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-05", "M2-11"],
-      "done": "手动回填 → 本周验证/推翻了什么 → 写回 signal"
+      "done": "手动回填 → 本周验证/推翻了什么 → 写回 signal",
+      "acceptance": "docs/acceptance/M2-12-performance-learning.md",
+      "note": "✅ 代码完成：POST /api/performance/fill 写 performance_records，并把 validated/invalidated/new_signal 写回 account_memory_items(proven_pattern, source=user_observation, evidence_refs=performance:<id>)；记录 performance_filled/published_marked 事件。验证：npm run check:performance-learning 通过。未标 accepted：待 Owner 用真实发布内容回填并确认下周雷达/账号大脑可见学习。"
     },
     {
       "id": "M2-13",

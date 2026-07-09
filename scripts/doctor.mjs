@@ -86,6 +86,7 @@ for (const script of [
   "db:test-rls",
   "check:gate0",
   "check:baseline-eval",
+  "check:performance-learning",
   "metrics",
 ]) {
   checkScript(pkg, script);
