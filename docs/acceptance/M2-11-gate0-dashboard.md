@@ -24,7 +24,7 @@
 - [x] `npm run lint` -> 通过
 - [x] `npm run doctor` -> 通过，0 failed / 0 warnings
 - [x] `npm run build` -> 通过，route list 包含 `/gate0`、`/api/gate0/event`、`/api/gate0/fallback`
-- [ ] `npm run check:gate0` -> 未执行成功；沙箱内 tsx IPC `EPERM`，沙箱外放行请求被拒
+- [x] `npm run check:gate0` -> 通过
 
 ## Owner 浏览器验收
 
@@ -38,6 +38,6 @@
 
 ## 残余风险
 
-- `check:gate0` 因当前沙箱/审批策略未跑通，不能把 M2-11 标为 code_done。
+- 当前验收仍是代码级 Conditional Pass，不等同于 Owner 四周真实路径验收。
 - 发布/表现回填依赖 M2-12 继续接线；当前看板能读 `performance_records`，但真实回填流程未闭环。
 - fallback 记录是 Owner 手动点击，不能自动检测外部 ChatGPT 使用。

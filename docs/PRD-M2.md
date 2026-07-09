@@ -102,7 +102,7 @@ Main Content (editable) → Platform Derive → Publish → Feedback/Re-run
 | F-M2-08 | Right Panel Controls（人类可读控制，非 token slider） | M2-09 Step3 | code_done |
 | F-M2-09 | Recipe Schema（保存结构配方，不含 prose） | M2-10 | code_done |
 | F-M2-10 | Account Memory（编辑后写回记忆） | M2-09 Step3 | code_done |
-| F-M2-11 | Gate 0 Dashboard + Owner 周记 | M2-11 | in_progress |
+| F-M2-11 | Gate 0 Dashboard + Owner 周记 | M2-11 | code_done |
 | F-M2-12 | 发布后回填 → 写回 account memory | M2-12 | todo |
 | F-M2-13 | ChatGPT baseline eval harness | M2-13 | code_done |
 | F-M2-14 | Gate 0 验收包 | M2-14 | todo |

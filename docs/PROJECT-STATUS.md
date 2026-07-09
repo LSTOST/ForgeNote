@@ -60,7 +60,7 @@
 | M2-08 | code_done | AI核心 | 三 renderer |
 | **M2-09** | **in_progress** | 壳与UI | **四区工作台（Step 1–4 代码完成，未通过 Codex review）** |
 | M2-10 | code_done | 学习验证 | RecipeSchema 保存/换输入复用 |
-| M2-11 | in_progress | 学习验证 | Gate 0 看板 + Owner 周记模板（代码落地，专用 check 被 tsx IPC 权限阻塞） |
+| M2-11 | code_done | 学习验证 | Gate 0 看板 + Owner 周记模板 |
 | M2-12 | todo | 学习验证 | 发布后回填 → 写回 account memory |
 | M2-13 | code_done | 学习验证 | ChatGPT baseline eval harness |
 | M2-14 | todo | 学习验证 | Gate 0 验收包 |

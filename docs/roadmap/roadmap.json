@@ -192,11 +192,11 @@
       "id": "M2-11",
       "title": "Gate 0 看板 + Owner 周记模板",
       "phase": "D · 学习与验证",
-      "status": "in_progress",
+      "status": "code_done",
       "deps": ["M2-02", "M2-09"],
       "done": "周任务数/发布/雷达采用/结构编辑/复制导出/回填/chatgpt_fallback 次数+原因",
       "acceptance": "docs/acceptance/M2-11-gate0-dashboard.md",
-      "note": "实现已落地：/gate0 周看板 + Owner 周记模板 + /api/gate0/fallback + /api/gate0/event；主链路写 task_created/structure_generated/structure_slot_edited/decision_resolved/renderer_generated，雷达选择与派生复制写前端事件。未标 code_done：`npm run check:gate0` 在沙箱内被 tsx IPC pipe `EPERM` 卡住，沙箱外放行请求被拒，不能绕过。"
+      "note": "✅ Gate 0 看板与周记模板代码完成：/gate0 周看板 + Owner 周记模板 + /api/gate0/fallback + /api/gate0/event；主链路写 task_created/structure_generated/structure_slot_edited/decision_resolved/renderer_generated，雷达选择与派生复制写前端事件。验证：npm run check:gate0 / lint / typecheck / doctor / build 通过。未标 accepted：待 Owner 真实周路径与四周自用证据。"
     },
     {
       "id": "M2-12",

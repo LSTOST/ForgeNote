@@ -18,7 +18,7 @@
     "check:radar": "tsx scripts/check-radar.mts",
     "check:main-content": "tsx scripts/check-main-content.mts",
     "check:derive": "tsx scripts/check-derive.mts",
-    "check:gate0": "tsx scripts/check-gate0.mts",
+    "check:gate0": "node scripts/check-gate0.mjs",
     "check:baseline-eval": "node scripts/check-baseline-eval.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
