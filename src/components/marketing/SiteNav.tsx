@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
-import { BrandMark, Container, MKT_BTN_PRIMARY } from "./shared";
+import { BrandMark, Container, MKT_BTN_PRIMARY, SURFACE_RAISED } from "./shared";
 
 const NAV_LINKS = [
   { href: "/#features", label: "功能" },
@@ -15,15 +15,15 @@ const NAV_LINKS = [
 ];
 
 const NAV_LINK_CLASS =
-  "rounded-md px-3 py-1.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
+  "rounded-md px-3 py-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
 
 export function SiteNav() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between gap-3">
         <BrandMark />
 
-        <nav aria-label="官网导航" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="官网导航" className="hidden items-center gap-0.5 md:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={NAV_LINK_CLASS}>
               {link.label}
@@ -34,25 +34,25 @@ export function SiteNav() {
         <div className="flex items-center gap-2.5">
           <Link
             href="/login"
-            className="hidden rounded-md px-3 py-1.5 text-[14px] font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 sm:inline-block"
+            className="hidden rounded-md px-3 py-1.5 text-[13.5px] font-medium text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 sm:inline-block"
           >
             登录
           </Link>
-          <Link href="/login" className={`${MKT_BTN_PRIMARY} h-9 px-4 text-[14px]`}>
+          <Link href="/login" className={`${MKT_BTN_PRIMARY} h-9 px-4 text-[13.5px]`}>
             免费开始
           </Link>
 
           {/* 移动端菜单：details/summary，无 JS */}
           <details className="relative md:hidden">
             <summary
-              className="flex size-9 cursor-pointer list-none items-center justify-center rounded-[10px] border border-border bg-card text-foreground [&::-webkit-details-marker]:hidden"
+              className={`flex size-9 cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-card text-foreground [&::-webkit-details-marker]:hidden ${SURFACE_RAISED}`}
               aria-label="打开菜单"
             >
               <Menu className="size-[18px]" aria-hidden />
             </summary>
             <nav
               aria-label="移动端导航"
-              className="absolute right-0 mt-2 flex w-44 flex-col rounded-[14px] border border-border bg-card p-1.5 shadow-[0_12px_36px_-14px_rgba(80,50,20,0.35)]"
+              className="absolute right-0 mt-2 flex w-44 flex-col rounded-2xl border border-border bg-card p-1.5 shadow-[0_1px_2px_rgba(90,60,25,0.06),0_18px_44px_-16px_rgba(90,60,25,0.35),inset_0_1px_0_rgba(255,255,255,0.65)]"
             >
               {NAV_LINKS.map((link) => (
                 <Link
