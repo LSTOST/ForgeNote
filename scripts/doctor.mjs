@@ -76,7 +76,7 @@ for (const doc of [
   checkFile(doc);
 }
 
-// ── npm 脚本（仅检查本仓库真实提供的脚本；I-13 起 eval:forge 已纳入 npm）──
+// ── npm 脚本（仅检查本仓库真实提供的脚本）──
 for (const script of [
   "dev",
   "lint",
@@ -88,6 +88,7 @@ for (const script of [
   "check:baseline-eval",
   "check:performance-learning",
   "check:gate0-pack",
+  "check:m2-cleanup",
   "metrics",
 ]) {
   checkScript(pkg, script);

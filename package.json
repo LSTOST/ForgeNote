@@ -22,6 +22,7 @@
     "check:baseline-eval": "node scripts/check-baseline-eval.mjs",
     "check:performance-learning": "node scripts/check-performance-learning.mjs",
     "check:gate0-pack": "node scripts/check-gate0-pack.mjs",
+    "check:m2-cleanup": "node scripts/check-m2-cleanup.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
   "dependencies": {

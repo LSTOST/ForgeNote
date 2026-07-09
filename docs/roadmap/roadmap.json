@@ -232,10 +232,11 @@
       "id": "M2-15",
       "title": "清理旧 /recipes、旧 eval/metrics、旧 copy",
       "phase": "D · 学习与验证",
-      "status": "in_progress",
+      "status": "code_done",
       "deps": ["M2-10", "M2-14"],
       "done": "旧路径删除，旧 DB 表停写（drop 另票）",
-      "note": "⏩ 已提前清（随 M2-04 dogfood 化）：旧 /forge（页面+API+8组件）、旧 /recipes（页面+API+2组件）、死脚本 smoke:api/eval:forge（含 doctor 白名单同步）。剩余：旧 copy（copy.nav.forge/recipes、copy.recipes.* 等未清，无害数据）+ 旧 DB 表停写/drop（另票）。lib/recipe domain core 保留（M2-10 复用用）。"
+      "acceptance": "docs/acceptance/M2-15-cleanup.md",
+      "note": "✅ 代码完成：旧 /forge、旧 /recipes、旧 /api/render 运行时路径不存在；旧 smoke:api / eval:forge npm 脚本不存在；copy.nav.forge / copy.nav.recipes / copy.forge / copy.recipes / copy.recipeDetail / copy.recipePanel 已清理；新增 npm run check:m2-cleanup 防回流。lib/recipe domain core 保留给 M2-10 复用；旧 DB 表 drop 仍按 done 标准说明另票处理。未标 accepted：需 Owner 确认旧入口不可访问和无真实数据写入需求。"
     },
     {
       "id": "M2-16",
