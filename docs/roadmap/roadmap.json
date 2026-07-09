@@ -222,9 +222,11 @@
       "id": "M2-14",
       "title": "Gate 0 验收包",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-11", "M2-12", "M2-13"],
-      "done": "每周真实路径模板 + 证据归档 docs/acceptance/*.md + 四周总结"
+      "done": "每周真实路径模板 + 证据归档 docs/acceptance/*.md + 四周总结",
+      "acceptance": "docs/acceptance/M2-14-gate0-pack.md",
+      "note": "✅ Gate 0 验收包代码/文档完成：docs/gate0/week-template.md、four-week-summary.md、evidence-index.md；验证 npm run check:gate0-pack 通过。未标 accepted：真正 Gate 0 需要 Owner 连续 4 周真实路径证据。"
     },
     {
       "id": "M2-15",

@@ -87,6 +87,7 @@ for (const script of [
   "check:gate0",
   "check:baseline-eval",
   "check:performance-learning",
+  "check:gate0-pack",
   "metrics",
 ]) {
   checkScript(pkg, script);

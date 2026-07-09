@@ -105,7 +105,7 @@ Main Content (editable) → Platform Derive → Publish → Feedback/Re-run
 | F-M2-11 | Gate 0 Dashboard + Owner 周记 | M2-11 | code_done |
 | F-M2-12 | 发布后回填 → 写回 account memory | M2-12 | code_done |
 | F-M2-13 | ChatGPT baseline eval harness | M2-13 | code_done |
-| F-M2-14 | Gate 0 验收包 | M2-14 | todo |
+| F-M2-14 | Gate 0 验收包 | M2-14 | code_done |
 
 ## 7. 验收标准（Gate 0）
 
