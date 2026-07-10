@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CircleAlert, Eye, EyeOff, LoaderCircle, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CircleAlert, Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   createSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { copy } from "@/lib/copy";
-import { SLOGAN } from "@/lib/constants";
-import { EmberMascot, type MascotHandle, type MascotPose } from "./EmberMascot";
 
 interface LoginFormProps {
   /** 回调或上一次失败带回的错误（如 Google provider 未配置）。 */
@@ -21,14 +20,15 @@ type View = "signIn" | "signUp" | "resetRequest" | "resetSent";
 type OAuthState = "idle" | "redirecting" | "error";
 type PasswordState = "idle" | "submitting" | "signupSent" | "error";
 type ResetState = "idle" | "submitting" | "error";
-type FocusField = "email" | "password" | null;
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-[13px] border border-[#E3D8C7] bg-[#FFFDF9] px-[15px] text-[16px] text-[#33291F] outline-none transition-colors placeholder:text-[#8b8378] focus-visible:border-[#B5562B] focus-visible:ring-3 focus-visible:ring-[#B5562B]/[0.28] disabled:opacity-50 sm:text-[15px]";
+  "h-12 rounded-[var(--radius-md)] border-border-strong bg-bg-card text-[16px] sm:text-[14px] focus-visible:border-brand focus-visible:ring-3 focus-visible:ring-brand-soft";
 const PRIMARY_BTN =
-  "h-11 w-full gap-2 rounded-[13px] bg-[#B5562B] px-4 text-[15px] font-semibold text-[#FDF7EF] shadow-[0_2px_10px_rgba(150,70,30,0.22)] hover:bg-[#9f4924] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28] disabled:cursor-not-allowed disabled:bg-[#B5562B] disabled:text-[#FDF7EF] disabled:opacity-60 disabled:shadow-none";
+  "h-12 w-full gap-2 rounded-[var(--radius-md)] bg-brand text-[15px] font-semibold text-text-inverse hover:bg-brand-hover";
+const THIRD_PARTY_BTN =
+  "h-12 w-full gap-2 rounded-[var(--radius-md)] border-border-subtle bg-bg-card text-[14px] font-semibold text-text-primary hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-55";
 const LINK_CLASS =
-  "font-semibold text-[#B5562B] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25 disabled:opacity-50";
+  "font-semibold text-brand underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft disabled:opacity-50";
 const RESET_EMAIL_COOLDOWN_SECONDS = 60;
 
 // 登录页表单（DSN-02）：邮箱密码为主 + Google 备选 + 忘记密码/重置；已移除 Magic Link。
@@ -42,19 +42,12 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [focusField, setFocusField] = useState<FocusField>(null);
   const [passwordState, setPasswordState] = useState<PasswordState>("idle");
   const [resetState, setResetState] = useState<ResetState>("idle");
   const [oauthState, setOauthState] = useState<OAuthState>("idle");
   const [sentTo, setSentTo] = useState("");
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [resetCooldown, setResetCooldown] = useState(0);
-
-  const deskMascot = useRef<MascotHandle>(null);
-  const mobMascot = useRef<MascotHandle>(null);
-  const deskWrap = useRef<HTMLDivElement>(null);
-  const mobWrap = useRef<HTMLDivElement>(null);
-  const charPanel = useRef<HTMLDivElement>(null);
 
   const busy =
     passwordState === "submitting" ||
@@ -66,68 +59,6 @@ export function LoginForm({ initialError }: LoginFormProps) {
   const confirmPasswordValid = !isSignUp || confirmPassword === password;
   const canSubmitPasswordAuth = emailValid && passwordValid && confirmPasswordValid;
   const resetCoolingDown = resetCooldown > 0;
-
-  // 姿态：由当前状态推导，仅在交互/状态变化时发生（无首屏自动播放）。
-  const pose: MascotPose = (() => {
-    if (busy) return "loading";
-    if (passwordState === "error" || resetState === "error" || oauthState === "error")
-      return "worried";
-    if (passwordState === "signupSent" || view === "resetSent") return "happy";
-    if (focusField === "password") return showPassword ? "avert" : "cover";
-    if (focusField === "email") return "glance";
-    return "idle";
-  })();
-
-  useEffect(() => {
-    deskMascot.current?.setPose(pose);
-    mobMascot.current?.setPose(pose);
-  }, [pose]);
-
-  // 成功/失败一次性体态（hop/shake）；用 ref 直接挂 class，reduced-motion 下跳过。
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-    const cls = pose === "happy" ? "fn-hop" : pose === "worried" ? "fn-shake" : null;
-    if (!cls) return;
-    const wraps = [deskWrap.current, mobWrap.current];
-    wraps.forEach((w) => {
-      if (!w) return;
-      w.classList.remove("fn-hop", "fn-shake");
-      void w.offsetWidth; // 重启动画
-      w.classList.add(cls);
-    });
-    const t = setTimeout(
-      () => wraps.forEach((w) => w?.classList.remove("fn-hop", "fn-shake")),
-      700,
-    );
-    return () => clearTimeout(t);
-  }, [pose]);
-
-  // 桌面：瞳孔随光标（rAF 节流；reduced-motion 由 mascot 内部忽略）。
-  useEffect(() => {
-    const panel = charPanel.current;
-    if (!panel) return;
-    let raf = 0;
-    function onMove(e: PointerEvent) {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = panel!.getBoundingClientRect();
-        const px = ((e.clientX - r.left) / r.width) * 2 - 1;
-        const py = ((e.clientY - r.top) / r.height) * 2 - 1;
-        deskMascot.current?.setGaze(px, py);
-      });
-    }
-    panel.addEventListener("pointermove", onMove);
-    return () => {
-      panel.removeEventListener("pointermove", onMove);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
 
   useEffect(() => {
     if (resetCooldown <= 0) return;
@@ -286,356 +217,292 @@ export function LoginForm({ initialError }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-[380px] lg:max-w-[860px]">
-      <div className="overflow-hidden rounded-[16px] lg:flex lg:min-h-[560px] lg:border lg:border-[#E3D8C7] lg:bg-[#FBF7F0] lg:shadow-[0_18px_50px_-24px_rgba(80,50,20,0.4)]">
-        {/* 桌面左侧角色区 */}
+    <div className="w-full max-w-[400px]">
+      {!configured ? (
         <div
-          ref={charPanel}
-          className="relative hidden shrink-0 items-end justify-center bg-[#EEE0C9] p-6 lg:flex lg:w-[372px]"
+          role="alert"
+          className="rounded-[var(--radius-lg)] border border-danger/30 bg-danger-soft p-4 text-[13.5px] leading-6 text-danger shadow-[var(--shadow-card)]"
         >
-          <div className="absolute top-7 left-8 flex items-center gap-2.5">
-            <span className="flex size-[38px] items-center justify-center rounded-[11px] bg-[#B5562B] text-[#FDF7EF] shadow-[0_2px_8px_rgba(150,70,30,0.25)]">
-              <Zap className="size-[19px]" aria-hidden strokeWidth={2.2} />
-            </span>
-            <span className="font-serif text-[20px] font-semibold text-[#33291F]">
-              ForgeNote
-            </span>
-          </div>
-          <div ref={deskWrap} className="h-[420px] w-full">
-            <EmberMascot ref={deskMascot} mode="group" className="h-full w-full" />
-          </div>
+          <p className="font-medium">{copy.login.notConfiguredTitle}</p>
+          <p className="mt-1 text-danger/80">{copy.login.notConfiguredBody}</p>
         </div>
-
-        {/* 表单区 */}
-        <div className="flex flex-1 items-center justify-center lg:p-10">
-          <div className="w-full max-w-[380px]">
-            {/* 移动端品牌头（含单个角色） */}
-            <div className="mb-7 flex flex-col items-center text-center lg:hidden">
-              <div ref={mobWrap} className="size-[120px]">
-                <EmberMascot ref={mobMascot} mode="single" className="size-full" />
-              </div>
-              <h1 className="mt-1 font-serif text-[31px] leading-none font-medium text-[#33291F]">
-                ForgeNote
+      ) : (
+        <>
+          {!(passwordState === "signupSent" || view === "resetSent") && (
+            <header className="mb-7">
+              <h1 className="text-[34px] leading-tight font-semibold tracking-normal text-text-primary">
+                {viewTitle(view, isSignUp)}
               </h1>
-              <p className="mt-2 break-keep text-[12px] leading-5 font-medium tracking-[0.06em] text-[#9c7a52]">
-                {copy.login.categoryLine}
+              <p className="mt-2 text-[15px] leading-6 text-text-secondary">
+                {viewSubtitle(view, isSignUp)}
               </p>
-              <p className="mt-1.5 text-[14px] leading-[1.5] text-[#6f6253]">
-                {SLOGAN}
-              </p>
+            </header>
+          )}
+
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 flex items-start gap-2 rounded-[var(--radius-md)] border border-danger/30 bg-danger-soft p-3 text-[13.5px] leading-5 text-danger"
+            >
+              <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <span>{error}</span>
             </div>
+          )}
 
-            {!configured ? (
-              <div
-                role="alert"
-                className="rounded-[14px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-4 text-[13.5px] leading-6 text-[#9e3322] shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
+          {view === "resetSent" ? (
+            <NoticeCard
+              title={copy.reset.sentTitle}
+              prefix={copy.reset.sentBodyPrefix}
+              email={sentTo}
+              suffix={copy.reset.sentBodySuffix}
+            >
+              <p className="mt-3 text-[13px] leading-5 text-text-secondary">
+                {resetCoolingDown
+                  ? copy.reset.cooldownHint.replace("{seconds}", String(resetCooldown))
+                  : copy.reset.canResendHint}
+              </p>
+              <button
+                type="button"
+                className={`mt-3 mr-4 text-[14px] ${LINK_CLASS}`}
+                disabled={resetCoolingDown}
+                onClick={() => {
+                  resetTransient();
+                  setView("resetRequest");
+                }}
               >
-                <p className="font-medium">{copy.login.notConfiguredTitle}</p>
-                <p className="mt-1 text-[#9e3322]/80">
-                  {copy.login.notConfiguredBody}
+                {resetCoolingDown
+                  ? copy.reset.resendIn.replace("{seconds}", String(resetCooldown))
+                  : copy.reset.resend}
+              </button>
+              <button
+                type="button"
+                className="mt-3 text-[13px] font-medium text-text-secondary underline-offset-4 hover:underline"
+                onClick={() => {
+                  resetTransient();
+                  setView("signIn");
+                }}
+              >
+                {copy.reset.backToSignIn}
+              </button>
+            </NoticeCard>
+          ) : passwordState === "signupSent" ? (
+            <NoticeCard
+              title={copy.login.signupSentTitle}
+              prefix={copy.login.signupSentBodyPrefix}
+              email={sentTo}
+              suffix={copy.login.signupSentBodySuffix}
+            >
+              <button
+                type="button"
+                className={`mt-3 text-[14px] ${LINK_CLASS}`}
+                onClick={() => setPasswordState("idle")}
+              >
+                {copy.login.changeEmail}
+              </button>
+            </NoticeCard>
+          ) : view === "resetRequest" ? (
+            <form onSubmit={handleResetRequest} className="space-y-3">
+              <EmailField
+                value={email}
+                onChange={setEmail}
+                disabled={busy}
+              />
+              <Button
+                type="submit"
+                className={PRIMARY_BTN}
+                disabled={!emailValid || busy || resetCoolingDown}
+              >
+                {resetState === "submitting" ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                ) : null}
+                {resetState === "submitting"
+                  ? copy.reset.submitting
+                  : resetCoolingDown
+                    ? copy.reset.resendIn.replace("{seconds}", String(resetCooldown))
+                    : copy.reset.submit}
+              </Button>
+              {resetCoolingDown ? (
+                <p className="text-center text-[13px] leading-5 text-text-secondary">
+                  {copy.reset.cooldownHint.replace("{seconds}", String(resetCooldown))}
                 </p>
+              ) : null}
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="text-[13px] font-medium text-text-secondary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft"
+                  onClick={() => {
+                    resetTransient();
+                    setView("signIn");
+                  }}
+                >
+                  {copy.reset.backToSignIn}
+                </button>
               </div>
-            ) : (
-              <>
-                {!(passwordState === "signupSent" || view === "resetSent") && (
-                  <header className="mb-6 text-center lg:text-left">
-                    <h2 className="font-serif text-[28px] leading-tight font-medium text-[#33291F]">
-                      {viewTitle(view, isSignUp)}
-                    </h2>
-                    <p className="mt-2 text-[14px] leading-[1.5] text-[#8a7d6c]">
-                      {viewSubtitle(view, isSignUp)}
-                    </p>
-                  </header>
-                )}
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={THIRD_PARTY_BTN}
+                  disabled={busy}
+                  onClick={handleGoogle}
+                >
+                  {oauthState === "redirecting" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <GoogleIcon />
+                  )}
+                  {oauthState === "redirecting" ? copy.login.googleRedirecting : "使用 Google 登录"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`${THIRD_PARTY_BTN} bg-bg-panel text-text-muted hover:bg-bg-panel disabled:opacity-100`}
+                  disabled
+                >
+                  <WeChatIcon />
+                  使用 微信 登录
+                </Button>
+              </div>
 
-                {error && (
-                  <div
-                    role="alert"
-                    className="mb-4 flex items-start gap-2 rounded-[13px] border border-[#b53c28]/30 bg-[#b53c28]/[0.06] p-3 text-[13.5px] leading-5 text-[#9e3322]"
-                  >
-                    <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    <span>{error}</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-3 text-xs text-text-muted">
+                <span className="h-px flex-1 bg-border-subtle" />
+                或
+                <span className="h-px flex-1 bg-border-subtle" />
+              </div>
 
-                {view === "resetSent" ? (
-                  <NoticeCard
-                    title={copy.reset.sentTitle}
-                    prefix={copy.reset.sentBodyPrefix}
-                    email={sentTo}
-                    suffix={copy.reset.sentBodySuffix}
+              <form onSubmit={handlePasswordAuth} className="space-y-3">
+                <EmailField
+                  value={email}
+                  onChange={setEmail}
+                  disabled={busy}
+                />
+                <div className="relative">
+                  <label htmlFor="password" className="sr-only">
+                    {copy.login.passwordLabel}
+                  </label>
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                    placeholder={
+                      isSignUp
+                        ? copy.login.passwordPlaceholderSignup
+                        : copy.login.passwordPlaceholder
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={busy}
+                    className={`${FIELD_CLASS} pr-[46px]`}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? copy.login.hidePassword : copy.login.showPassword}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-[9px] text-text-secondary hover:text-text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft"
                   >
-                    <p className="mt-3 text-[13px] leading-5 text-[#8a7d6c]">
-                      {resetCoolingDown
-                        ? copy.reset.cooldownHint.replace(
-                            "{seconds}",
-                            String(resetCooldown),
-                          )
-                        : copy.reset.canResendHint}
-                    </p>
+                    {showPassword ? (
+                      <EyeOff className="size-[18px]" aria-hidden />
+                    ) : (
+                      <Eye className="size-[18px]" aria-hidden />
+                    )}
+                  </button>
+                </div>
+
+                {isSignUp ? (
+                  <div className="relative">
+                    <label htmlFor="confirm-password" className="sr-only">
+                      {copy.login.confirmPasswordLabel}
+                    </label>
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder={copy.login.confirmPasswordPlaceholder}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={busy}
+                      className={`${FIELD_CLASS} pr-[46px]`}
+                    />
                     <button
                       type="button"
-                      className={`mt-3 mr-4 text-[14px] ${LINK_CLASS}`}
-                      disabled={resetCoolingDown}
+                      aria-label={
+                        showConfirmPassword ? copy.login.hidePassword : copy.login.showPassword
+                      }
+                      aria-pressed={showConfirmPassword}
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-[9px] text-text-secondary hover:text-text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="size-[18px]" aria-hidden />
+                      ) : (
+                        <Eye className="size-[18px]" aria-hidden />
+                      )}
+                    </button>
+                  </div>
+                ) : null}
+
+                {!isSignUp && (
+                  <div className="flex items-center justify-between pt-0.5">
+                    <label className="flex cursor-pointer items-center gap-2 text-[13px] text-text-secondary select-none">
+                      <input
+                        type="checkbox"
+                        checked={remember}
+                        onChange={(e) => setRemember(e.target.checked)}
+                        className="size-4 accent-brand"
+                      />
+                      {copy.login.rememberFor30Days}
+                    </label>
+                    <button
+                      type="button"
+                      className="text-[13px] font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft"
                       onClick={() => {
                         resetTransient();
                         setView("resetRequest");
                       }}
                     >
-                      {resetCoolingDown
-                        ? copy.reset.resendIn.replace(
-                            "{seconds}",
-                            String(resetCooldown),
-                          )
-                        : copy.reset.resend}
+                      {copy.login.forgotPassword}
                     </button>
-                    <button
-                      type="button"
-                      className="mt-3 text-[13px] font-medium text-[#9c7a52] underline-offset-4 hover:underline"
-                      onClick={() => {
-                        resetTransient();
-                        setView("signIn");
-                      }}
-                    >
-                      {copy.reset.backToSignIn}
-                    </button>
-                  </NoticeCard>
-                ) : passwordState === "signupSent" ? (
-                  <NoticeCard
-                    title={copy.login.signupSentTitle}
-                    prefix={copy.login.signupSentBodyPrefix}
-                    email={sentTo}
-                    suffix={copy.login.signupSentBodySuffix}
-                  >
-                    <button
-                      type="button"
-                      className={`mt-3 text-[14px] ${LINK_CLASS}`}
-                      onClick={() => setPasswordState("idle")}
-                    >
-                      {copy.login.changeEmail}
-                    </button>
-                  </NoticeCard>
-                ) : view === "resetRequest" ? (
-                  <form onSubmit={handleResetRequest} className="space-y-3">
-                    <EmailField
-                      value={email}
-                      onChange={setEmail}
-                      onFocus={() => setFocusField("email")}
-                      onBlur={() => setFocusField(null)}
-                      disabled={busy}
-                    />
-                    <Button
-                      type="submit"
-                      className={PRIMARY_BTN}
-                      disabled={!emailValid || busy || resetCoolingDown}
-                    >
-                      {resetState === "submitting" ? (
-                        <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                      ) : null}
-                      {resetState === "submitting"
-                        ? copy.reset.submitting
-                        : resetCoolingDown
-                          ? copy.reset.resendIn.replace(
-                              "{seconds}",
-                              String(resetCooldown),
-                            )
-                          : copy.reset.submit}
-                    </Button>
-                    {resetCoolingDown ? (
-                      <p className="text-center text-[13px] leading-5 text-[#8a7d6c]">
-                        {copy.reset.cooldownHint.replace(
-                          "{seconds}",
-                          String(resetCooldown),
-                        )}
-                      </p>
-                    ) : null}
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        className="text-[13px] font-medium text-[#9c7a52] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
-                        onClick={() => {
-                          resetTransient();
-                          setView("signIn");
-                        }}
-                      >
-                        {copy.reset.backToSignIn}
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="space-y-[18px]">
-                    <form onSubmit={handlePasswordAuth} className="space-y-3">
-                      <EmailField
-                        value={email}
-                        onChange={setEmail}
-                        onFocus={() => setFocusField("email")}
-                        onBlur={() => setFocusField(null)}
-                        disabled={busy}
-                      />
-                      <div className="relative">
-                        <label htmlFor="password" className="sr-only">
-                          {copy.login.passwordLabel}
-                        </label>
-                        <input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete={isSignUp ? "new-password" : "current-password"}
-                          placeholder={
-                            isSignUp
-                              ? copy.login.passwordPlaceholderSignup
-                              : copy.login.passwordPlaceholder
-                          }
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          onFocus={() => setFocusField("password")}
-                          onBlur={() => setFocusField(null)}
-                          disabled={busy}
-                          className={`${FIELD_CLASS} pr-[46px]`}
-                        />
-                        <button
-                          type="button"
-                          aria-label={
-                            showPassword
-                              ? copy.login.hidePassword
-                              : copy.login.showPassword
-                          }
-                          aria-pressed={showPassword}
-                          onClick={() => setShowPassword((v) => !v)}
-                          className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-[9px] text-[#9c7a52] hover:text-[#33291F] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="size-[18px]" aria-hidden />
-                          ) : (
-                            <Eye className="size-[18px]" aria-hidden />
-                          )}
-                        </button>
-                      </div>
-
-                      {isSignUp ? (
-                        <div className="relative">
-                          <label htmlFor="confirm-password" className="sr-only">
-                            {copy.login.confirmPasswordLabel}
-                          </label>
-                          <input
-                            id="confirm-password"
-                            type={showConfirmPassword ? "text" : "password"}
-                            autoComplete="new-password"
-                            placeholder={copy.login.confirmPasswordPlaceholder}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            onFocus={() => setFocusField("password")}
-                            onBlur={() => setFocusField(null)}
-                            disabled={busy}
-                            className={`${FIELD_CLASS} pr-[46px]`}
-                          />
-                          <button
-                            type="button"
-                            aria-label={
-                              showConfirmPassword
-                                ? copy.login.hidePassword
-                                : copy.login.showPassword
-                            }
-                            aria-pressed={showConfirmPassword}
-                            onClick={() => setShowConfirmPassword((v) => !v)}
-                            className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-[9px] text-[#9c7a52] hover:text-[#33291F] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="size-[18px]" aria-hidden />
-                            ) : (
-                              <Eye className="size-[18px]" aria-hidden />
-                            )}
-                          </button>
-                        </div>
-                      ) : null}
-
-                      {!isSignUp && (
-                        <div className="flex items-center justify-between pt-0.5">
-                          <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[#6f6253] select-none">
-                            <input
-                              type="checkbox"
-                              checked={remember}
-                              onChange={(e) => setRemember(e.target.checked)}
-                              className="size-4 accent-[#B5562B]"
-                            />
-                            {copy.login.rememberFor30Days}
-                          </label>
-                          <button
-                            type="button"
-                            className="text-[13px] font-medium text-[#B5562B] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#B5562B]/25"
-                            onClick={() => {
-                              resetTransient();
-                              setView("resetRequest");
-                            }}
-                          >
-                            {copy.login.forgotPassword}
-                          </button>
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        className={PRIMARY_BTN}
-                        disabled={!canSubmitPasswordAuth || busy}
-                      >
-                        {passwordState === "submitting" ? (
-                          <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                        ) : null}
-                        {passwordState === "submitting"
-                          ? copy.login.submitting
-                          : isSignUp
-                            ? copy.login.signupSubmit
-                            : copy.login.submit}
-                      </Button>
-                    </form>
-
-                    <div className="flex items-center gap-3 text-xs text-[#a99578]">
-                      <span className="h-px flex-1 bg-[#E3D8C7]" />
-                      {copy.login.orDivider}
-                      <span className="h-px flex-1 bg-[#E3D8C7]" />
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-11 w-full gap-2 rounded-[13px] border-[#E3D8C7] bg-transparent text-[14px] font-medium text-[#6f6253] hover:bg-[#FFFDF9]/65 hover:text-[#33291F] focus-visible:border-[#B5562B] focus-visible:ring-[#B5562B]/[0.28]"
-                      disabled={busy}
-                      onClick={handleGoogle}
-                    >
-                      {oauthState === "redirecting" ? (
-                        <LoaderCircle className="size-4 animate-spin" aria-hidden />
-                      ) : (
-                        <GoogleIcon />
-                      )}
-                      {oauthState === "redirecting"
-                        ? copy.login.googleRedirecting
-                        : copy.login.google}
-                    </Button>
-
-                    <p className="text-center text-[13px] leading-6 text-[#9c7a52]">
-                      {isSignUp
-                        ? copy.login.hasAccountPrompt
-                        : copy.login.noAccountPrompt}
-                      <button
-                        type="button"
-                        className={`ml-1 ${LINK_CLASS}`}
-                        disabled={busy}
-                        onClick={() => {
-                          resetTransient();
-                          setView(isSignUp ? "signIn" : "signUp");
-                        }}
-                      >
-                        {isSignUp
-                          ? copy.login.toSignInLink
-                          : copy.login.toSignUpLink}
-                      </button>
-                    </p>
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+
+                <Button
+                  type="submit"
+                  className={PRIMARY_BTN}
+                  disabled={!canSubmitPasswordAuth || busy}
+                >
+                  {passwordState === "submitting" ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                  ) : null}
+                  {passwordState === "submitting"
+                    ? copy.login.submitting
+                    : isSignUp
+                      ? copy.login.signupSubmit
+                      : "登录"}
+                  </Button>
+                </form>
+
+              <p className="text-center text-[13px] leading-6 text-text-secondary">
+                {isSignUp ? "已经有账号？" : "还没有账号？"}
+                <button
+                  type="button"
+                  className={`ml-1 ${LINK_CLASS}`}
+                  disabled={busy}
+                  onClick={() => {
+                    resetTransient();
+                    setView(isSignUp ? "signIn" : "signUp");
+                  }}
+                >
+                  {isSignUp ? "登录" : "创建账号"}
+                </button>
+              </p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -643,25 +510,21 @@ export function LoginForm({ initialError }: LoginFormProps) {
 function viewTitle(view: View, isSignUp: boolean): string {
   if (view === "resetRequest") return copy.reset.requestTitle;
   if (view === "resetSent") return copy.reset.sentTitle;
-  return isSignUp ? copy.login.signupTitle : copy.login.signinTitle;
+  return isSignUp ? "创建 ForgeNote 账号" : "欢迎回来";
 }
 function viewSubtitle(view: View, isSignUp: boolean): string {
   if (view === "resetRequest") return copy.reset.requestSubtitle;
   if (view === "resetSent") return copy.reset.requestSubtitle;
-  return isSignUp ? copy.login.signupSubtitle : copy.login.signinSubtitle;
+  return isSignUp ? "从账号分析开始，写下一条内容。" : "继续锻造你的内容";
 }
 
 function EmailField({
   value,
   onChange,
-  onFocus,
-  onBlur,
   disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
-  onFocus: () => void;
-  onBlur: () => void;
   disabled: boolean;
 }) {
   return (
@@ -669,7 +532,7 @@ function EmailField({
       <label htmlFor="email" className="sr-only">
         {copy.login.emailLabel}
       </label>
-      <input
+      <Input
         id="email"
         type="email"
         inputMode="email"
@@ -677,8 +540,6 @@ function EmailField({
         placeholder={copy.login.emailPlaceholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
         disabled={disabled}
         className={FIELD_CLASS}
       />
@@ -703,12 +564,12 @@ function NoticeCard({
     <div
       role="status"
       aria-live="polite"
-      className="rounded-[14px] border border-[#E3D8C7] bg-[#FBF6EE] p-4 text-[14px] leading-6 shadow-[0_1px_10px_rgba(120,90,50,0.06)]"
+      className="rounded-[var(--radius-lg)] border border-border-subtle bg-bg-card p-4 text-[14px] leading-6 shadow-[var(--shadow-card)]"
     >
-      <p className="font-medium text-[#33291F]">{title}</p>
-      <p className="mt-1 text-[#6f6253]">
+      <p className="font-medium text-text-primary">{title}</p>
+      <p className="mt-1 text-text-secondary">
         {prefix}
-        <span className="font-medium text-[#33291F]">{email}</span>
+        <span className="font-medium text-text-primary">{email}</span>
         {suffix}
       </p>
       <div>{children}</div>
@@ -720,6 +581,17 @@ function getAuthError(error: { message?: string; code?: string }): string {
   if (error.code === "email_not_confirmed") return copy.login.authNeedsCheck;
   if (error.code === "invalid_credentials") return copy.login.invalidCredentials;
   return copy.login.authFailed;
+}
+
+function WeChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 text-[#07C160]" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M8.69 2.19C3.89 2.19 0 5.48 0 9.53c0 2.21 1.17 4.2 3 5.55.23.17.32.46.22.67l-.39 1.48a.7.7 0 0 0-.05.21c0 .16.13.3.29.3.06 0 .12-.02.17-.06l1.9-1.11c.21-.12.47-.16.72-.1.88.26 1.83.4 2.83.4.28 0 .54-.03.81-.05-.86-2.58.16-4.97 1.93-6.45 1.7-1.41 3.88-1.98 5.85-1.84-.57-3.58-4.19-6.34-8.59-6.34ZM5.79 5.99c.64 0 1.16.53 1.16 1.18a1.17 1.17 0 0 1-1.16 1.18 1.17 1.17 0 0 1-1.17-1.18c0-.65.52-1.18 1.17-1.18Zm5.81 0c.64 0 1.16.53 1.16 1.18a1.17 1.17 0 0 1-1.16 1.18 1.17 1.17 0 0 1-1.16-1.18c0-.65.52-1.18 1.16-1.18Zm5.34 2.87c-1.8-.05-3.75.51-5.28 1.78-1.72 1.43-2.69 3.72-1.78 6.22.94 2.6 3.75 4.43 7.06 4.43.88 0 1.71-.13 2.49-.36.2-.06.42-.03.6.08l1.59.93c.04.03.09.04.14.04.13 0 .24-.11.24-.25 0-.06-.02-.12-.04-.17l-.33-1.23a.58.58 0 0 1 .18-.56A6.25 6.25 0 0 0 24 14.98c0-3.43-3.18-6.18-7.06-6.18v.06Zm-2.97 3.11c.53 0 .97.44.97.98a.98.98 0 0 1-.97.98.98.98 0 0 1-.97-.98c0-.54.43-.98.97-.98Zm5.34 0c.53 0 .97.44.97.98a.98.98 0 0 1-.97.98.98.98 0 0 1-.97-.98c0-.54.43-.98.97-.98Z"
+      />
+    </svg>
+  );
 }
 
 function GoogleIcon() {

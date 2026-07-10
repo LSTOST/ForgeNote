@@ -1,5 +1,13 @@
-# ForgeNote DATA-SCHEMA
+# ⚠ ARCHIVED — DO NOT USE FOR CURRENT IMPLEMENTATION
 
+> **This M1 schema is OBSOLETE.** Current M2 data types: `docs/DATA-SCHEMA-M2.md`.
+> M2 introduced structure tokens, content pipeline types, stability engine, account memory items.
+> M1 content_package model no longer matches the codebase.
+> Retained ONLY for historical DB context.
+
+---
+
+# ForgeNote DATA-SCHEMA
 > 范围：M1 数据表、字段、枚举、关系。推荐使用 Supabase Postgres。
 
 ## 1. 数据设计原则

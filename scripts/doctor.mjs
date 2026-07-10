@@ -89,6 +89,8 @@ for (const script of [
   "check:performance-learning",
   "check:gate0-pack",
   "check:m2-cleanup",
+  "check:geb",
+  "check:auth-redirects",
   "metrics",
 ]) {
   checkScript(pkg, script);

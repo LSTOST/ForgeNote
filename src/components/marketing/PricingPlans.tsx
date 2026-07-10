@@ -11,17 +11,17 @@ import { ArrowRight, Check } from "lucide-react";
 import { MKT_BTN_OUTLINE, MKT_BTN_PRIMARY } from "./shared";
 
 const BETA_FEATURES = [
-  "账号大脑：接入 + 判断 + 纠偏",
+  "账号分析：接入 + 判断 + 纠偏",
   "每周选题卡，每张带依据",
-  "结构生成 + 稳定性判定",
-  "渲染：小红书 / X thread / 图片 prompt",
+  "内容框架 + 是否可继续生成",
+  "生成小红书 / X thread / 图片 prompt 版本",
 ];
 
 const CREATOR_FEATURES = [
   "公测期全部功能",
-  "表现回填 → 账号大脑持续学习",
-  "结构配方保存与复用",
-  "多平台账号记忆在同一个大脑",
+  "发布表现回填 → 账号分析持续学习",
+  "常用写法保存与复用",
+  "多平台账号资料统一沉淀",
 ];
 
 export function PricingPlans() {

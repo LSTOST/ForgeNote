@@ -127,7 +127,7 @@ export const zhHans = {
   profile: {
     title: "偏好",
     description:
-      "记住你常用的内容假设（受众、语气、视觉风格等）。下次在工作台生成时会自动作为假设带出，可随时编辑或删除。",
+      "记住你常用的账号资料和表达偏好（受众、语气、视觉风格等）。下次在工作台生成时会自动带入，可随时编辑或删除。",
     addTitle: "新增偏好",
     intentTypeAria: "内容类型",
     dimensionLabelPlaceholder: "维度名，如：语气",
@@ -135,7 +135,7 @@ export const zhHans = {
     add: "添加",
     valuePlaceholder: "偏好值，如：成熟、克制、不焦虑",
     addHint:
-      "同一「内容类型 + 维度 key」重复添加会覆盖旧值。下次工作台生成时作为「来自偏好」假设带出。",
+      "同一「内容类型 + 维度 key」重复添加会覆盖旧值。下次工作台生成时会作为表达偏好带入。",
     count: "共 {n} 条偏好",
     refreshing: "正在刷新…",
     savedPref: "已保存偏好",
@@ -148,7 +148,7 @@ export const zhHans = {
     updatedAt: "更新于 {date}",
     emptyTitle: "还没有偏好",
     emptyBody:
-      "在上方添加常用的内容假设，或在工作台编辑假设后点「记住为偏好」。下次生成会自动带出。",
+      "在上方添加常用的账号资料和表达偏好。下次生成会自动带入。",
   },
 };
 

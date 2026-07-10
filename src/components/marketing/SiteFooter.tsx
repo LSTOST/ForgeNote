@@ -55,7 +55,7 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="mt-10 border-t border-border pt-6 text-[12.5px] text-muted-foreground">
-          © 2026 ForgeNote · 把账号大脑，变成可复用的结构资产
+          © 2026 ForgeNote · 把账号分析，变成下一条内容的判断依据
         </p>
       </Container>
     </footer>

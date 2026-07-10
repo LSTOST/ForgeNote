@@ -10,7 +10,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { copy } from "@/lib/copy";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
-// 受保护页面：未登录（或未配置 Supabase）→ `/login`（与 /forge、/recipes 一致的 DAL 鉴权）。
+// 受保护页面：未登录（或未配置 Supabase）→ `/login`（与 /workspace 一致的 DAL 鉴权）。
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {

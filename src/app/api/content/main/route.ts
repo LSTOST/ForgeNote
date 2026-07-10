@@ -1,7 +1,7 @@
 // ForgeNote M2-09 重做 Step 1 — POST /api/content/main（结构 → 平台无关主内容）。
 // 流程：校验 → 鉴权 → 按 RLS 加载 structure_documents → 加载主题 + 账号大脑 → 生成主内容。
-// 与 /api/render 的区别：产出平台无关的可读主内容（中区展示/编辑），**不做稳定性门控**
-// （主内容是用户 refine 的工作稿；稳定后才由平台 renderer 派生，那步才 gate 稳定性）。
+// 产出平台无关的可读主内容（中区展示/编辑），**不做稳定性门控**
+// （主内容是用户 refine 的工作稿；派生到平台时带上用户编辑）。
 // 铁律同 renderer：只读 structure，不改结构/选题；必须登录；不绕过 RLS。
 
 import { z } from "zod";

@@ -9,8 +9,8 @@
 --  外加：关键 enum 的 CHECK 约束（Codex 数据模型 P2：直接 REST 写入时不再全靠应用自觉）。
 --
 -- 范围说明：本迁移对 cascade 链（structure_documents / render_artifacts）加复合 FK。
---  performance_records / usage_events 用 on delete set null，与"复合 FK + user_id 非空"冲突
---  （set null 会把 user_id 也置空），其 owner 一致性留待后续用 trigger 处理（见文末 TODO）。
+-- performance_records / usage_events 用 on delete set null，不能用复合 FK，
+-- 因此用 SECURITY DEFINER trigger 保留 set null 语义，同时强制 referenced parent owner 一致。
 
 -- ============================================================
 -- ① 父子归属一致：复合外键 (child.parent_id, child.user_id) → (parent.id, parent.user_id)
@@ -67,7 +67,65 @@ alter table public.render_artifacts
   add constraint render_artifacts_renderer_chk check (renderer_id in ('xiaohongshu', 'x_thread', 'image_prompt'));
 
 -- ============================================================
--- TODO（后续票）：performance_records / usage_events 的 owner 一致性
---   用 BEFORE INSERT/UPDATE trigger 校验 referenced content_tasks.user_id = user_id，
---   保留其 on delete set null 语义（不能用复合 FK，会把非空 user_id 置空）。
+-- ⑤ set-null 链 owner 一致性：performance_records / usage_events
 -- ============================================================
+
+create or replace function public.enforce_performance_record_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  task_owner uuid;
+  artifact_owner uuid;
+begin
+  if new.task_id is not null then
+    select user_id into task_owner from public.content_tasks where id = new.task_id;
+    if task_owner is distinct from new.user_id then
+      raise exception 'performance_records.task_id owner mismatch';
+    end if;
+  end if;
+
+  if new.render_artifact_id is not null then
+    select user_id into artifact_owner from public.render_artifacts where id = new.render_artifact_id;
+    if artifact_owner is distinct from new.user_id then
+      raise exception 'performance_records.render_artifact_id owner mismatch';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists performance_records_owner_consistency on public.performance_records;
+create trigger performance_records_owner_consistency
+  before insert or update of user_id, task_id, render_artifact_id
+  on public.performance_records
+  for each row execute function public.enforce_performance_record_owner();
+
+create or replace function public.enforce_usage_event_task_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  task_owner uuid;
+begin
+  if new.task_id is not null then
+    select user_id into task_owner from public.content_tasks where id = new.task_id;
+    if task_owner is distinct from new.user_id then
+      raise exception 'usage_events.task_id owner mismatch';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists usage_events_task_owner_consistency on public.usage_events;
+create trigger usage_events_task_owner_consistency
+  before insert or update of user_id, task_id
+  on public.usage_events
+  for each row execute function public.enforce_usage_event_task_owner();

@@ -50,7 +50,7 @@ export default async function Gate0Page({
         <section className="mt-6 grid gap-3 md:grid-cols-4">
           <MetricCard label="真实内容任务" value={metrics.taskCount} />
           <MetricCard label="发布/完成" value={`${metrics.publishedTasks}/${metrics.completedTasks}`} />
-          <MetricCard label="雷达采用率" value={formatRate(metrics.radarAdoptionRate)} detail={`${metrics.radarSelected}/${metrics.radarCards}`} />
+          <MetricCard label="选题采用率" value={formatRate(metrics.radarAdoptionRate)} detail={`${metrics.radarSelected}/${metrics.radarCards}`} />
           <MetricCard label="ChatGPT fallback" value={metrics.chatgptFallbacks} />
           <MetricCard label="结构编辑率" value={formatRate(metrics.structureEditRate)} detail={`${metrics.structureEditedTasks}/${metrics.structureGenerated}`} />
           <MetricCard label="renderer 生成" value={metrics.rendererGenerated} />
@@ -63,7 +63,7 @@ export default async function Gate0Page({
             <h2 className="text-sm font-semibold">Owner 周记模板</h2>
             <div className="mt-4 space-y-3 text-sm text-muted-foreground">
               <TemplateLine label="本周真实发布了什么" />
-              <TemplateLine label="哪张雷达卡/哪个想法被采用，为什么" />
+              <TemplateLine label="哪张选题卡/哪个想法被采用，为什么" />
               <TemplateLine label="结构哪里改得最多，说明 ForgeNote 哪里判断弱" />
               <TemplateLine label="是否逃回 ChatGPT 裸聊；如果是，原因是什么" />
               <TemplateLine label="发布后数据验证/推翻了哪条账号记忆" />

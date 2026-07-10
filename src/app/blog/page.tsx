@@ -10,7 +10,7 @@ import { Container, MKT_BTN_PRIMARY } from "@/components/marketing/shared";
 
 export const metadata: Metadata = {
   title: "Blog — ForgeNote",
-  description: "ForgeNote 创作手记：结构生成系统怎么想、账号大脑如何学习。",
+  description: "ForgeNote 创作手记：内容框架怎么形成、账号分析如何学习。",
 };
 
 export default function BlogPage() {
@@ -29,7 +29,7 @@ export default function BlogPage() {
               </span>
               <p className="mt-4 font-serif text-[19px] font-semibold">创作手记正在路上</p>
               <p className="mx-auto mt-2 max-w-md text-[14px] leading-7 text-muted-foreground">
-                我们会在这里写：结构生成系统是怎么想的、账号大脑如何学习、以及真实创作者的选题复盘。
+                我们会在这里写：内容框架怎么形成、账号分析如何学习、以及真实创作者的选题复盘。
               </p>
               <Link href="/login" className={`${MKT_BTN_PRIMARY} mt-6`}>
                 先去用产品

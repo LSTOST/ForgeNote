@@ -23,6 +23,8 @@
     "check:performance-learning": "node scripts/check-performance-learning.mjs",
     "check:gate0-pack": "node scripts/check-gate0-pack.mjs",
     "check:m2-cleanup": "node scripts/check-m2-cleanup.mjs",
+    "check:geb": "node scripts/check-geb.mjs",
+    "check:auth-redirects": "node --no-warnings --experimental-strip-types scripts/check-auth-redirects.mjs",
     "metrics": "node scripts/metrics.mjs"
   },
   "dependencies": {

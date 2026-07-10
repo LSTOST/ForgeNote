@@ -7,7 +7,7 @@ import { Zap } from "lucide-react";
 
 /** 官网主 CTA（大号，语义令牌 primary = v3.17 动作橙）。 */
 export const MKT_BTN_PRIMARY =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-primary px-6 text-[15px] font-semibold text-primary-foreground shadow-[0_2px_10px_rgba(150,70,30,0.22)] transition-colors hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-primary px-6 text-[15px] font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition-colors hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
 
 /** 官网次 CTA（描边）。 */
 export const MKT_BTN_OUTLINE =
@@ -39,7 +39,7 @@ export function BrandMark({ size = "md" }: { size?: "md" | "sm" }) {
       className="flex items-center gap-2.5 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
     >
       <span
-        className={`flex items-center justify-center bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(150,70,30,0.25)] ${box}`}
+        className={`flex items-center justify-center bg-primary text-primary-foreground shadow-[var(--shadow-card)] ${box}`}
       >
         <Zap className={icon} aria-hidden strokeWidth={2.2} />
       </span>

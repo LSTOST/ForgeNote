@@ -17,7 +17,7 @@ export default async function WorkspacePage({
   if (!auth) {
     redirect("/login");
   }
-  // 选题雷达「展开做这条」→ /workspace?idea=<主题>，预填想法输入。
+  // 从选题卡进入工作台时，通过 /workspace?idea=<主题> 预填想法输入。
   const ideaParam = (await searchParams).idea;
   const initialIdea = (Array.isArray(ideaParam) ? ideaParam[0] : ideaParam)?.slice(0, 2000) ?? "";
   return <Workspace initialIdea={initialIdea} userEmail={auth.user.email ?? ""} />;

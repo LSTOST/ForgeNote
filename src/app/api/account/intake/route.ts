@@ -1,7 +1,7 @@
 // ForgeNote M2-05 — POST /api/account/intake（账号接入：生成账号记忆 + 持久化）。
 // 流程：校验输入 → 鉴权 → 反编造生成（M2-05 域核心）→ 写 account_memory_items（RLS）→ 通用响应。
 // 边界：必须登录（无用户 → AUTH_REQUIRED，不调 OpenRouter、不落库）；不绕过 RLS。
-// 依据：src/app/api/forge/route.ts 约定、CODEX-REVIEW §M2-05、migration 0003、Next.js 16 Route Handlers。
+// 依据：Next.js 16 Route Handlers。
 
 import { z } from "zod";
 

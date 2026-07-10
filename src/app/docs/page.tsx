@@ -8,13 +8,13 @@ import { Container } from "@/components/marketing/shared";
 
 export const metadata: Metadata = {
   title: "Docs — ForgeNote",
-  description: "ForgeNote 使用文档：快速上手、账号接入、选题雷达、结构生成。",
+  description: "ForgeNote 使用文档：快速上手、账号分析、本周可写选题、内容框架。",
 };
 
 const UPCOMING_TOPICS = [
   { title: "快速上手", body: "从注册到拿到第一批选题卡，60 秒路径。" },
-  { title: "账号接入", body: "该粘贴什么、账号大脑怎么纠偏。" },
-  { title: "选题雷达与结构生成", body: "依据从哪来、槽位与稳定性判定怎么用。" },
+  { title: "账号分析", body: "该粘贴什么、账号判断怎么纠偏。" },
+  { title: "本周可写选题与内容框架", body: "依据从哪来、写作顺序怎么调整。" },
 ];
 
 export default function DocsPage() {

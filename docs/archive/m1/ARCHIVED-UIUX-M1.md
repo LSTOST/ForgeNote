@@ -1,5 +1,12 @@
-# ForgeNote UIUX-M1
+# ⚠ ARCHIVED — DO NOT USE FOR CURRENT IMPLEMENTATION
 
+> **This M1 spec is OBSOLETE.** Pages described here (`/forge`, `/recipes`) have been deleted.
+> Current M2 workspace: `docs/UIUX-M2.md`.
+> Retained ONLY for historical UX context.
+
+---
+
+# ForgeNote UIUX-M1
 > 范围：M1 页面、组件、状态、按钮与交互规则。
 
 ## 1. 设计原则

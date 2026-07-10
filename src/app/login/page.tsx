@@ -4,6 +4,7 @@
 
 import { redirect } from "next/navigation";
 
+import { LoginBrandVisual } from "@/components/auth/LoginBrandVisual";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -23,8 +24,11 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F4F1E9] px-5 py-8 text-[#33291F] sm:px-6 sm:py-12">
-      <LoginForm initialError={error} />
+    <main className="grid min-h-screen bg-bg-app text-text-primary md:grid-cols-2">
+      <LoginBrandVisual />
+      <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 md:px-10 lg:px-12">
+        <LoginForm initialError={error} />
+      </section>
     </main>
   );
 }

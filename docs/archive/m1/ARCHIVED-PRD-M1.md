@@ -1,5 +1,13 @@
-# ForgeNote 内容锻造台 — 产品需求文档（PRD · M1）
+# ⚠ ARCHIVED — DO NOT USE FOR CURRENT IMPLEMENTATION
 
+> **This M1 spec is OBSOLETE.** ForgeNote is now M2: `/workspace` + structure engine + derive pipeline.
+> Current implementation specs: `docs/PRD-M2.md`, `docs/UIUX-M2.md`, `docs/DATA-SCHEMA-M2.md`, `docs/API-CONTRACT-M2.md`.
+> M1 described `/forge` + `/recipes` + content_package. These pages have been deleted (M2-04, M2-15).
+> This file retained ONLY for historical background on the original concept.
+
+---
+
+# ForgeNote 内容锻造台 — 产品需求文档（PRD · M1）
 > 产品名：ForgeNote 内容锻造台 ｜ Slogan：把模糊想法，锻造成可发布内容
 > 唯一权威文档，可进入 M1 设计 / 开发 / 拆票。涵盖：为什么做、给谁用、解决什么问题、做成什么样、每个功能怎么运行、怎么验收算做完。
 > 版本：M1 / v4.0（合并版：ForgeNote 施工骨架 + 战略护城河 + P5 真实表现闭环 + 假设三级判定 + eval 门禁）

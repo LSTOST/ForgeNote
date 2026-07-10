@@ -52,7 +52,7 @@ export function SiteNav() {
             </summary>
             <nav
               aria-label="移动端导航"
-              className="absolute right-0 mt-2 flex w-44 flex-col rounded-[14px] border border-border bg-card p-1.5 shadow-[0_12px_36px_-14px_rgba(80,50,20,0.35)]"
+              className="absolute right-0 mt-2 flex w-44 flex-col rounded-[14px] border border-border bg-card p-1.5 shadow-[var(--shadow-popover)]"
             >
               {NAV_LINKS.map((link) => (
                 <Link

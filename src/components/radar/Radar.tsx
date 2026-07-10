@@ -1,6 +1,6 @@
 "use client";
 
-// ForgeNote M2-06 — 选题雷达（客户端）。读账号大脑生成本周选题卡，无伪热度、只用来源标签。
+// ForgeNote M2-06 — 本周可写选题（客户端）。读账号分析生成选题卡，无伪热度、只用来源标签。
 // 「展开做这条」→ 跳 /workspace 预填主题（选题闭环起点）。
 
 import Link from "next/link";
@@ -70,9 +70,9 @@ export function Radar() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">选题雷达</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">本周可写选题</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        基于你的账号大脑，给你本周该做什么——每张卡都标了<b>为什么</b>（来源），没有虚的热度分。
+        基于你的账号分析，给你本周该做什么——每张卡都标了<b>为什么</b>（来源），没有虚的热度分。
       </p>
 
       <div className="mt-6 flex items-center gap-3">
@@ -85,7 +85,7 @@ export function Radar() {
       {cards && (
         <div className="mt-8 space-y-3">
           {cards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">这次没出选题——先去 /first-run 接入账号，让我更懂你的账号。</p>
+            <p className="text-sm text-muted-foreground">这次没出选题——先去 /first-run 分析账号，让我更懂你的账号。</p>
           ) : (
             cards.map((c, i) => (
               <div key={i} className="rounded-xl border border-border bg-card p-4">

@@ -1,11 +1,12 @@
-// ForgeNote M1 — GET /auth/callback（Batch B）。
-// Supabase Auth 回调：用 PKCE code 换取 session 并写入 Auth cookie，成功跳 /forge。
+// ForgeNote M2 — GET /auth/callback。
+// Supabase Auth 回调：用 PKCE code 换取 session 并写入 Auth cookie，成功跳 /workspace（M2-04）。
 // 失败（缺配置 / 缺 code / 交换失败）跳 /login?error=...，不白屏。
 // 依据：@supabase/ssr exchangeCodeForSession（code verifier 存于 cookie）、
-//       docs/UIUX-M1.md（§4.2 登录成功跳 /forge）、Next.js 16 Route Handlers。
+//       Next.js 16 Route Handlers。
 
 import { NextResponse } from "next/server";
 
+import { normalizeAuthRedirectPath } from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -32,12 +33,9 @@ export async function GET(request: Request): Promise<Response> {
   const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
 
   // 成功后的落点：默认 /workspace（M2-04：登录进 v3 工作台）；next 只保留给明确的同源回跳。
-  // 只接受同源相对路径，防开放重定向。
+  // 只接受同源相对路径，防开放重定向；旧 /forge 一律归一到 /workspace。
   const nextParam = url.searchParams.get("next");
-  const nextPath =
-    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-      ? nextParam
-      : "/workspace";
+  const nextPath = normalizeAuthRedirectPath(nextParam, url.origin);
 
   const loginUrl = new URL("/login", url.origin);
 

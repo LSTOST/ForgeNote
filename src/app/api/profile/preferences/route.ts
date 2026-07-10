@@ -1,8 +1,8 @@
-// ForgeNote M1 — GET / POST /api/profile/preferences（I-11：偏好假设最小闭环）。
+// ForgeNote M2 — GET / POST /api/profile/preferences。
 // 当前登录用户的偏好（profile_preferences）：列出 + 创建/更新（upsert by 唯一键）。
-// 偏好 = 一条「假设维度」（intent_type + dimension_key + value），下次 /forge 作为 source="profile" 假设带出。
-// 边界（I-11）：必须登录；只读写自己的偏好（依赖 0001 RLS：auth.uid() = user_id）；不做自动学习、不做 F-16。
-// 依据：docs/API-CONTRACT.md（§2 / §3 / §4 / §5.9 / §5.10）、docs/DATA-SCHEMA.md（§3.4 profile_preferences / §6 RLS）。
+// 偏好 = 一条「假设维度」（intent_type + dimension_key + value），下次 /workspace 作为 source="profile" 假设带出。
+// 边界：必须登录；只读写自己的偏好（依赖 RLS）；不做自动学习。
+// 依据：docs/API-CONTRACT-M2.md、docs/DATA-SCHEMA-M2.md。
 
 import { z } from "zod";
 

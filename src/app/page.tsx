@@ -1,11 +1,11 @@
 // ForgeNote M2-16 — 官网首页（根路由）。骨架借 laper.ai：
 // 导航 → Hero（宣言 + 双 CTA）→ 三功能卡 → 产品展示 → 学习闭环 → 收口 CTA → 页脚。
 // 皮走 v3.17 暖纸白语义令牌；文案取 v3 定位（roadmap.json direction/finalForm），不写未实现能力。
-// 旧行为 redirect("/forge") 由本页替换；登录入口统一 /login。
+// 旧行为 redirect("/forge") 已由本页替换（/forge 在 M2-04 删除）；登录入口统一 /login。
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Brain, Layers, Radar } from "lucide-react";
+import { ArrowRight, FileText, Layers, Sparkles } from "lucide-react";
 
 import { SiteNav } from "@/components/marketing/SiteNav";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
@@ -24,29 +24,29 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    icon: Brain,
-    title: "账号大脑",
+    icon: Sparkles,
+    title: "账号分析",
     body: "粘贴你的主页和近期帖子，得到 AI 对你账号的判断——可查看、可纠偏，不编造它不知道的事。",
   },
   {
-    icon: Radar,
-    title: "选题雷达",
+    icon: FileText,
+    title: "本周可写选题",
     body: "每周一批选题卡，每张都写明依据：为什么是你做、为什么是现在。没有伪热度，没有通用建议。",
   },
   {
     icon: Layers,
-    title: "结构生成",
-    body: "选题展开成结构而不是一坨字：槽位可改、策略可换，稳定性判定过关，再渲染成小红书、X thread、图片 prompt。",
+    title: "内容框架生成",
+    body: "选题会展开成清楚的内容框架：段落能调整，表达方式能替换，确认后再生成小红书、X thread、图片 prompt。",
   },
 ];
 
 const LOOP_STEPS = [
   { step: "①", title: "账号接入", body: "粘贴 profile 和近期帖子表现，一次就好。" },
-  { step: "②", title: "账号大脑", body: "AI 对你账号的判断，可看、可纠偏。" },
+  { step: "②", title: "账号分析", body: "AI 对你账号的判断，可看、可纠偏。" },
   { step: "③", title: "选题推荐", body: "每周一批选题卡，每张带依据。" },
-  { step: "④", title: "展开成稿", body: "结构生成 → 多平台渲染 → 复制导出。" },
+  { step: "④", title: "展开成稿", body: "内容框架 → 平台版本 → 复制导出。" },
   { step: "⑤", title: "表现回填", body: "发完把数据带回来，按平台归因。" },
-  { step: "⑥", title: "学习可见", body: "账号大脑更新，下周的推荐更懂你。" },
+  { step: "⑥", title: "学习可见", body: "账号分析更新，下周的推荐更懂你。" },
 ];
 
 export default function HomePage() {
@@ -91,7 +91,7 @@ export default function HomePage() {
               {FEATURES.map((feature) => (
                 <article
                   key={feature.title}
-                  className="rounded-[18px] border border-border bg-card p-6 shadow-[0_10px_30px_-22px_rgba(80,50,20,0.4)]"
+                  className="rounded-[18px] border border-border bg-card p-6 shadow-[var(--shadow-card)]"
                 >
                   <span className="flex size-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
                     <feature.icon className="size-5" aria-hidden />
@@ -116,7 +116,7 @@ export default function HomePage() {
                 从「该发什么」到「可以发布」，一条流水线
               </h2>
               <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
-                选题卡自带依据，展开成可编辑的结构，稳定了才渲染。差异化不在「写得快」，在每张牌背后那行「为什么」。
+                选题卡自带依据，展开成可编辑的内容框架，确认后再生成平台版本。差异化不在「写得快」，在每张牌背后那行「为什么」。
               </p>
             </div>
             <WorkspacePreview />
@@ -131,7 +131,7 @@ export default function HomePage() {
                 用得越久，判断越准
               </h2>
               <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
-                发完带数据回来，账号大脑持续更新。多平台的表现沉在同一个大脑里——这是模板和裸聊给不了的。
+                发完带数据回来，账号分析持续更新。多平台的表现沉在同一套判断里——这是模板和裸聊给不了的。
               </p>
             </div>
             <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,7 +167,7 @@ export default function HomePage() {
               </p>
               <Link
                 href="/login"
-                className={`${MKT_BTN_PRIMARY} mt-7 shadow-[0_4px_20px_rgba(232,99,31,0.4)]`}
+                className={`${MKT_BTN_PRIMARY} mt-7 shadow-[var(--shadow-card)]`}
               >
                 免费开始
                 <ArrowRight className="size-4" aria-hidden />

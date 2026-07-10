@@ -1,5 +1,13 @@
-# ForgeNote API-CONTRACT
+# ⚠ ARCHIVED — DO NOT USE FOR CURRENT IMPLEMENTATION
 
+> **This M1 API contract is OBSOLETE.** Most endpoints (`/api/forge`, `/api/recipes/*`) have been deleted.
+> Current M2 API contracts: `docs/API-CONTRACT-M2.md`.
+> M2 introduced `/api/structure/*`, `/api/content/*`, `/api/radar/*`, `/api/account/*`.
+> Retained ONLY for historical endpoint reference.
+
+---
+
+# ForgeNote API-CONTRACT
 > 范围：M1 API 输入输出、错误码、权限。Next.js App Router route handlers。
 
 ## 1. API 设计原则
