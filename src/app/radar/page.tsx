@@ -1,4 +1,4 @@
-// ForgeNote M2-06 — /radar 选题雷达页（Server Component）。未登录 → 跳 /login。
+// ForgeNote M2-06 — /radar 本周可写选题页（Server Component）。未登录 → 跳 /login。
 
 import { redirect } from "next/navigation";
 

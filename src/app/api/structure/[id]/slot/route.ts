@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { logGate0Event } from "@/lib/gate0/events";
 import { resolveToken } from "@/lib/structure/registry";
 import { evaluateStability } from "@/lib/structure/stability";
 import type { ModalityKey, PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
@@ -112,6 +113,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     .eq("id", id)
     .eq("user_id", user.id);
   if (updErr) return errorResponse("DATABASE_ERROR", "结构保存失败，请稍后重试");
+  await logGate0Event({
+    supabase,
+    userId: user.id,
+    eventName: "structure_slot_edited",
+    taskId: structure.taskId,
+    payload: { structure_id: id, slot_key: parsed.data.slotKey, strategy_key: strategyKey },
+  });
 
   return Response.json({
     ok: true,

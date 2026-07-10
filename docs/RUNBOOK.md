@@ -1,7 +1,7 @@
 # ForgeNote Runbook
 
 > 日常开发、排障、验收的执行手册。别把命令记在脑子里。
-> 基线：当前 HEAD（Batch A/B/C 后）。`/api/forge` 已必须登录；Supabase 登录闭环已上线。
+> 基线：M2 工作台。登录后默认进入 `/workspace`；旧 `/forge` / `/api/forge` 已停写并从运行时代码删除。
 
 ## 常用命令
 
@@ -45,18 +45,20 @@ npm run dev
 5. 打开（建议用 `localhost` 而非 `127.0.0.1`，避免 Next 16 `allowedDevOrigins` 警告）：
 
 ```text
-http://localhost:3000/forge
+http://localhost:3000/workspace
 ```
 
-> 未登录访问 `/forge` 会重定向到 `/login`；缺 Supabase env 时 `/login` 显示「未配置」提示，不白屏。
+> 未登录访问 `/workspace` 会重定向到 `/login`；缺 Supabase env 时 `/login` 显示「未配置」提示，不白屏。
 
 ## 每票开发前
 
-1. 看 `docs/DECISIONS.md`（冲突时它是权威）。
-2. 看 `docs/OPERATING-MODEL.md`，明确本票经过哪条真实用户路径验收。
-3. 看当前票对应的 `docs/acceptance/*.md`。
-4. 涉及 Next.js API、路由、缓存或运行时，先读 `node_modules/next/dist/docs/` 对应文档（本仓库 Next 与训练数据有出入）。
-5. 确认 `docs/roadmap/roadmap.json` 中当前票状态（可视化：`npm run progress`）。
+1. 看 `AGENTS.md`、`docs/geb/CONTEXT.md`、`docs/geb/MAP.md`。
+2. 按 `docs/geb/MAP.md` 只读当前代码区域对应的语义文档。
+3. 确认 `docs/roadmap/roadmap.json` 中当前票状态（可视化：`npm run progress`）。
+4. 涉及产品行为、Gate 或验收规则时，再读 `docs/OPERATING-MODEL.md`。
+5. 涉及已拍板决策冲突时，再读 `docs/DECISIONS.md`。
+6. 涉及 Next.js API、路由、缓存或运行时，先读 `node_modules/next/dist/docs/` 对应文档（本仓库 Next 与训练数据有出入）。
+7. 只有在验证真实路径或处理验收回归时，才读当前票对应的 `docs/acceptance/*.md`。
 
 ## 每票提交前
 
@@ -67,10 +69,13 @@ npm run typecheck
 npm run build
 ```
 
-涉及 `/api/forge` 时（先 `npm run dev` 起本地 server）：
+涉及 M2 结构 / 主内容 / 派生管线时：
 
 ```bash
-npm run smoke:api      # 匿名冒烟：合法 body → AUTH_REQUIRED；非法 JSON → VALIDATION_FAILED
+npm run check:structure
+npm run check:main-content
+npm run check:derive
+npm run check:renderers
 ```
 
 涉及数据库 / RLS 时（需 `DATABASE_URL` 为 Postgres 连接串 + 本机 psql）：
@@ -79,14 +84,12 @@ npm run smoke:api      # 匿名冒烟：合法 body → AUTH_REQUIRED；非法 J
 DATABASE_URL='postgres://...' npm run db:test-rls
 ```
 
-涉及模型 prompt、输出结构、验收逻辑时（eval gate，I-13 已纳入 npm，**手动 / 本地命令，不进 PR CI**）：
+涉及账号接入 / 选题雷达 / recipe schema 时：
 
 ```bash
-npm run eval:forge        # 安全默认：未设 FORGENOTE_AUTH_COOKIE → 明确 SKIP（exit 0），不计失败、不打印 secret
-
-# 真实跑分（需登录态 + 模型 env）：先 `npm run dev`，再从已登录浏览器复制整段 Cookie 头
-FORGENOTE_AUTH_COOKIE='sb-...=...; ...' npm run eval:forge
-# 可选参数：--base-url http://localhost:3000 --cases eval/cases/content-package.json
+npm run check:intake
+npm run check:radar
+npm run check:recipe
 ```
 
 ## 每票验收前
@@ -102,28 +105,28 @@ Codex 必须切换为 QA Agent。不要只做代码 review。
 - 证据：命令摘要、Preview URL、session id、截图或录屏说明。
 - 残余风险：没验到的路径必须明说。
 
-M1 主路径基线：
+M2 主路径基线：
 
 ```text
-新用户进入 Forge Workspace
+新用户登录
+→ /first-run 粘贴账号 profile + 近期内容
+→ 生成账号大脑
+→ 进入 /workspace
 → 输入模糊想法
-→ 看懂假设条
-→ 修改一项默认假设
-→ 成功生成内容包
-→ 保存配方
-→ 刷新页面后仍能找到结果
-→ 从配方详情换输入重跑
-→ 记录发布表现
-→ 回看时表现数据仍在
+→ 生成结构并看到可读提纲
+→ 生成主内容
+→ 编辑 heading + text
+→ 右栏调整 strategy / pending decision
+→ 底栏派生到目标平台
 ```
 
 判定语义：
 
-- **SKIP（exit 0）**：未提供 `FORGENOTE_AUTH_COOKIE`，或模型未配置（`MODEL_NOT_CONFIGURED`）——视为跳过，不当失败。
+- **SKIP（exit 0）**：缺数据库连接串、缺登录态，或模型未配置（`MODEL_NOT_CONFIGURED`）——视为跳过，不当失败。
 - **FAIL（exit 1）**：cookie 无效/过期（`AUTH_REQUIRED`），或某用例的检查项未通过（逐项打印检查名）。
 - **PASS（exit 0）**：全部用例检查通过。
 
-> 为什么不进每次 PR CI：eval 需真实模型调用（成本 + 需登录态），强行进 CI 会因缺 key / 缺登录态无意义失败。eval 作为**手动 / 本地门禁**运行；CI 仍只跑 doctor / lint / typecheck / build（`.github/workflows/ci.yml`）。`npm run eval:forge` 的 SKIP 语义保证它即使被无 key 环境调用也安全退 0、不打印 secret。
+> 为什么真实路径不进每次 PR CI：完整 M2 路径需真实登录、模型调用、Supabase 数据。CI 仍只跑 doctor / lint / typecheck / build；模型和 DB 路径作为本地或 Preview 验收证据写入 `docs/acceptance/*.md`。
 
 ## 验证指标读出（I-19）
 
@@ -153,10 +156,10 @@ npm run metrics        # SKIP exit 0
 
 | 问题 | 先查 |
 |---|---|
-| `/forge` 一直跳 `/login` | 是否登录、Supabase env 是否配置、Auth cookie 是否有效 |
-| `/api/forge` 401 `AUTH_REQUIRED` | 当前请求是否带登录 cookie（匿名调用本就返回 401，符合预期） |
-| `/api/forge` 503 `MODEL_NOT_CONFIGURED` | `.env.local` 是否有 `OPENROUTER_API_KEY` 和 `OPENROUTER_MODEL` |
-| `/api/forge` 500 `GENERATION_FAILED` | OpenRouter 状态、模型是否支持 JSON 输出、响应是否可解析（失败仍落 D-04 草稿） |
+| `/workspace` 一直跳 `/login` | 是否登录、Supabase env 是否配置、Auth cookie 是否有效 |
+| M2 API 401 `AUTH_REQUIRED` | 当前请求是否带登录 cookie（匿名调用本就返回 401，符合预期） |
+| M2 API 503 `MODEL_NOT_CONFIGURED` | `.env.local` 是否有 `OPENROUTER_API_KEY` 和 `OPENROUTER_MODEL` |
+| M2 API 500 `GENERATION_FAILED` | OpenRouter 状态、模型是否支持 JSON 输出、响应是否可解析 |
 | `npm run db:test-rls` 报缺连接串 | `NEXT_PUBLIC_SUPABASE_URL` 是 REST 端点，不是 psql 连接串；需用 Postgres 连接串 |
 | build 失败 | Next 16 文档、server/client 边界、类型契约 |
 | 数据看不到 | RLS policy、当前 user_id、表是否启用 RLS（`npm run db:test-rls`） |

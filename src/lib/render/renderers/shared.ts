@@ -16,17 +16,8 @@ import type {
 import type { ChatMessage } from "@/lib/ai/openrouter-client";
 import type { StructureDocument } from "@/lib/structure/types";
 
-/** 叙事 slot 的规范顺序（决定 thread / 卡片的排列）。 */
-export const NARRATIVE_ORDER = ["hook", "context", "evidence", "insight", "resolution"] as const;
-
-/** 结构中实际存在的、按规范顺序排列的 slot key。 */
-export function presentSlotsInOrder(
-  structure: Readonly<StructureDocument>,
-  order: readonly string[],
-): string[] {
-  const have = new Set(structure.slots.map((s) => s.key));
-  return order.filter((k) => have.has(k));
-}
+// 叙事顺序逻辑抽到纯模块 slot-order.ts（避免 server-only 传染客户端）；此处 re-export 保持兼容。
+export { NARRATIVE_ORDER, presentSlotsInOrder } from "@/lib/render/slot-order";
 
 /** 默认文本填充：走 OpenRouter（仅服务端）。测试注入 mock 覆盖之。 */
 export const defaultFill: RendererFill = async (messages: ChatMessage[]) => {

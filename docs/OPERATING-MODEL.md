@@ -40,7 +40,7 @@
 
 Claude Code 完成后，Codex 按工程标准检查：
 
-- API / 数据模型 / RLS 是否符合 `docs/API-CONTRACT.md` 与 `docs/DATA-SCHEMA.md`。
+- API / 数据模型 / RLS 是否符合 `docs/API-CONTRACT-M2.md` 与 `docs/DATA-SCHEMA-M2.md`。
 - UI 状态是否覆盖空态、加载态、成功态、错误态、禁用态。
 - Server / Client 边界是否符合当前 Next.js 文档。
 - 是否回归 login / forge / recipes / profile 主链路。

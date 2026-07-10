@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "runId": "YYYY-MM-DD-owner-gate0-week",
+  "caseId": "owner-gate0-week",
+  "judgeId": "owner-or-external-judge-id",
+  "judgeLocale": "zh-Hans",
+  "items": [
+    {
+      "pairId": "pair-01",
+      "scores": {
+        "A": {
+          "wouldActuallyDoThisWeek": 1,
+          "understandsAccount": 1,
+          "evidenceCredible": 1,
+          "structureActionable": 1
+        },
+        "B": {
+          "wouldActuallyDoThisWeek": 1,
+          "understandsAccount": 1,
+          "evidenceCredible": 1,
+          "structureActionable": 1
+        }
+      },
+      "forcedChoice": "A",
+      "reason": "",
+      "publishedLater": false,
+      "performanceFilledLater": false
+    }
+  ],
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "meaning": "1 = weak, 3 = usable but not compelling, 5 = would use directly"
+  }
+}

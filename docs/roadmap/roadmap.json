@@ -6,7 +6,7 @@
     "commits 证据由生成脚本从 git log 按票号自动采集，不在本文件手工维护。"
   ],
   "version": 1,
-  "updated": "2026-07-05",
+  "updated": "2026-07-09",
   "direction": {
     "title": "ForgeNote = 结构生成系统",
     "summary": "不是「AI 帮你写内容」，而是把创作者的账号大脑变成可复用的结构资产：账号接入 → 选题雷达 → 结构生成（稳定性判定）→ 多 renderer 渲染 → 发布回填学习。",
@@ -100,9 +100,10 @@
       "id": "M2-01",
       "title": "Structure Token Registry v0",
       "phase": "A · 脊椎",
-      "status": "code_done",
+      "status": "accepted",
       "deps": ["M2-00"],
-      "done": "StructureToken 类型 + 5 原型/2 模态 + slot/strategy 词表 + zh/en label + validateToken 降级"
+      "done": "StructureToken 类型 + 5 原型/2 模态 + slot/strategy 词表 + zh/en label + validateToken 降级",
+      "acceptance": "docs/acceptance/M2-01-structure-token-registry.md"
     },
     {
       "id": "M2-02",
@@ -110,24 +111,27 @@
       "phase": "A · 脊椎",
       "status": "code_done",
       "deps": ["M2-01"],
-      "done": "迁移 0003：content_tasks / structure_documents / render_artifacts / recipe_schemas / radar_cards / performance_records + RLS，db:test-rls 通过"
+      "done": "迁移 0003：content_tasks / structure_documents / render_artifacts / recipe_schemas / radar_cards / performance_records + RLS，db:test-rls 通过",
+      "note": "未标 accepted：当前环境缺 `DATABASE_URL` / `SUPABASE_DB_URL`，`npm run db:test-rls` 无法连接真实数据库；需补 DB env 后验证 RLS 与 owner consistency。"
     },
     {
       "id": "M2-03",
       "title": "Renderer 契约 + golden-test 骨架",
       "phase": "A · 脊椎",
-      "status": "code_done",
+      "status": "accepted",
       "deps": ["M2-01"],
-      "done": "Renderer 接口 + structureHash() + structure 对 renderer 只读（Readonly 类型层）"
+      "done": "Renderer 接口 + structureHash() + structure 对 renderer 只读（Readonly 类型层）",
+      "acceptance": "docs/acceptance/M2-03-renderer-contract.md"
     },
     {
       "id": "M2-04",
       "title": "登录落点切到 /workspace（旧 /forge 停写）",
       "phase": "C · 壳与 UI",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-02", "M2-03", "M2-09"],
-      "done": "src/app/page.tsx 与 src/app/login/page.tsx 的 redirect(\"/forge\") 改为 /workspace；TopNav 及各处 nav 链接（recipes 等）由 /forge 改指 /workspace；旧 /forge 停止写入（route 返回迁移提示）、移除旧内容包 UI 入口；旧数据保留",
-      "note": "⚠ 收尾的落点翻转：登录默认落点当前硬编码 /forge（src/app/page.tsx + src/app/login/page.tsx 均 redirect(\"/forge\")，见 docs/acceptance/v3.17-visual.md）。**依赖 M2-09**——待 /workspace 建到与 /forge 功能对齐后，再一次翻 redirect + 停写 /forge，让 v3.17 无回退窗口地到达日常界面。不可提前单独做（否则落在薄壳=功能回退）。"
+      "done": "登录成功落点由 /forge 改为 /workspace（login bounce / LoginForm / auth callback）；旧 /forge 停止写入 + 移除入口 + nav 改指；旧数据保留",
+      "acceptance": "docs/acceptance/M2-04-workspace-cutover.md",
+      "note": "✅ Codex code_done：落点已切（login bounce / LoginForm 密码登录、注册 session、reset-sent session 检测 / auth callback 默认落点均为 /workspace）。旧 /forge 运行时入口已删除：无 src/app/forge、无 /api/forge、无 src/components/forge；TopNav 指 /workspace；当前 RUNBOOK 已同步 M2 /workspace 与 check 脚本。验收证据：docs/acceptance/M2-04-workspace-cutover.md。未标 accepted：待 Owner 真实邮箱密码 + Google OAuth 路径确认。"
     },
     {
       "id": "M2-05",
@@ -144,32 +148,36 @@
       "phase": "B · AI 核心",
       "status": "code_done",
       "deps": ["M2-05"],
-      "done": "5 张雷达卡，来源标签（账号匹配强/近期信号/历史有效/低证据），每卡带依据"
+      "done": "5 张雷达卡，来源标签（账号匹配强/近期信号/历史有效/低证据），每卡带依据",
+      "note": "未标 accepted：`npm run check:radar` 在沙箱内被 tsx IPC pipe `EPERM` 卡住；沙箱外放行请求被拒，不能用间接执行绕过。需 Owner 明确允许该验证命令或提供可运行环境。"
     },
     {
       "id": "M2-07",
       "title": "结构生成 + 稳定性判定",
       "phase": "B · AI 核心",
-      "status": "code_done",
+      "status": "accepted",
       "deps": ["M2-01", "M2-02"],
-      "done": "idea/雷达卡 → Narrative(+Visual) structure，registry 合法 token + pending decisions + 稳定性六条件；主稿不被稳定性阻塞"
+      "done": "idea/雷达卡 → Narrative(+Visual) structure，registry 合法 token + pending decisions + 稳定性六条件；主稿不被稳定性阻塞",
+      "acceptance": "docs/acceptance/M2-07-structure-generation.md"
     },
     {
       "id": "M2-08",
       "title": "三 renderer（小红书 / X thread / 图片 prompt）",
       "phase": "B · AI 核心",
-      "status": "code_done",
+      "status": "accepted",
       "deps": ["M2-03", "M2-07"],
-      "done": "artifact 带 sourceStructureHash，不改 structure，各配 golden test（slot 覆盖率不丢），renderer 只读贴账号声音"
+      "done": "artifact 带 sourceStructureHash，不改 structure，各配 golden test（slot 覆盖率不丢），renderer 只读贴账号声音",
+      "acceptance": "docs/acceptance/M2-08-renderers.md"
     },
     {
       "id": "M2-09",
       "title": "first-run + 四区工作台（v3.16 概念稿）",
       "phase": "C · 壳与 UI",
-      "status": "in_progress",
+      "status": "code_done",
       "deps": ["M2-07", "M2-08"],
-      "done": "按 concept.html/first-run.html：中区可读主稿、右栏结构控制、底部 renderer、助手胶囊、v3.17 暖纸白 tokens；功能与旧 /forge 对齐（方向判断/输出语言/配方库入口）",
-      "note": "first-run 接入页已落地；四区工作台未按概念稿实现。⚠ 必须用 v3.17 令牌实现、禁硬编码颜色（旧 /forge 硬编码 #18322f 等绕令牌致 v3.17 落空，见 docs/acceptance/v3.17-visual.md）。本阶段最大一块、v3.17 到达用户主界面的关键；**排在 M2-04 之前**——建成并与 /forge 功能对齐后，再由 M2-04 一次翻登录落点，避免用户落在空壳/回退窗口。"
+      "done": "四区工作台（v3.16 布局 + v3.17 暖纸白）：左=创作流+工作记忆；中=当前内容的可读对象（起始 内容方向+提纲，生成后 可编辑正文/卡片/脚本，非 token 槽位）；右=轻控制（受众/原型/表达角度/主输出/结构顺序/账号记忆引用）+常驻助手；底=版本/保存配方/主输出+派生；输出语言选择",
+      "acceptance": "docs/acceptance/M2-09-workspace.md",
+      "note": "✅ Steps 1–4 代码完成并通过 Codex blocker 复查：① 引擎主内容层（src/lib/content/main-content.ts + outline.ts + POST /api/content/main）；② 中区改为可读提纲→可编辑正文/卡片/脚本；③ 右栏轻控制（内容原型、结构顺序、待裁决、输出语言、账号记忆）；④ 从用户编辑后的主内容派生（src/lib/content/derive.ts + POST /api/content/derive）。已补上轮 P1：owner 一致性（含 performance_records / usage_events trigger）、evidenceRefs 持久化、slot/modality + decision option 合法性、generation failure 标 failed。验证：lint/typecheck/build/doctor/check:intake/check:structure/check:main-content/check:derive 通过。Codex 代码验收证据：docs/acceptance/M2-09-workspace.md。未标 accepted：仍待 Owner 真实路径（登录→first-run→workspace→生成→编辑→派生）验收。"
     },
     {
       "id": "M2-10",
@@ -177,47 +185,68 @@
       "phase": "D · 学习与验证",
       "status": "code_done",
       "deps": ["M2-07", "M2-08"],
-      "done": "只存 slot_schema + 生产方法 + signal_refs（禁存正文），换输入可复用"
+      "done": "只存 slot_schema + 生产方法 + signal_refs（禁存正文），换输入可复用",
+      "note": "未标 accepted：`npm run check:recipe` 在沙箱内被 tsx IPC pipe `EPERM` 卡住；沙箱外放行请求被拒，不能用间接执行绕过。需 Owner 明确允许该验证命令或提供可运行环境。"
     },
     {
       "id": "M2-11",
       "title": "Gate 0 看板 + Owner 周记模板",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-02", "M2-09"],
-      "done": "周任务数/发布/雷达采用/结构编辑/复制导出/回填/chatgpt_fallback 次数+原因"
+      "done": "周任务数/发布/雷达采用/结构编辑/复制导出/回填/chatgpt_fallback 次数+原因",
+      "acceptance": "docs/acceptance/M2-11-gate0-dashboard.md",
+      "note": "✅ Gate 0 看板与周记模板代码完成：/gate0 周看板 + Owner 周记模板 + /api/gate0/fallback + /api/gate0/event；主链路写 task_created/structure_generated/structure_slot_edited/decision_resolved/renderer_generated，雷达选择与派生复制写前端事件。验证：npm run check:gate0 / lint / typecheck / doctor / build 通过。未标 accepted：待 Owner 真实周路径与四周自用证据。"
     },
     {
       "id": "M2-12",
       "title": "发布后回填 → 写回 account memory",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-05", "M2-11"],
-      "done": "手动回填 → 本周验证/推翻了什么 → 写回 signal"
+      "done": "手动回填 → 本周验证/推翻了什么 → 写回 signal",
+      "acceptance": "docs/acceptance/M2-12-performance-learning.md",
+      "note": "✅ 代码完成：POST /api/performance/fill 写 performance_records，并把 validated/invalidated/new_signal 写回 account_memory_items(proven_pattern, source=user_observation, evidence_refs=performance:<id>)；记录 performance_filled/published_marked 事件。验证：npm run check:performance-learning 通过。未标 accepted：待 Owner 用真实发布内容回填并确认下周雷达/账号大脑可见学习。"
     },
     {
       "id": "M2-13",
       "title": "ChatGPT baseline eval harness",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-06", "M2-08"],
-      "done": "固定材料包 + 强 baseline prompt + A/B 匿名 + judgment 记录（Gate 1 用）"
+      "done": "固定材料包 + 强 baseline prompt + A/B 匿名 + judgment 记录（Gate 1 用）",
+      "acceptance": "docs/acceptance/M2-13-baseline-eval.md",
+      "note": "✅ Harness 已落地：固定材料包 eval/baseline/cases/owner-gate0-week.json、强 baseline prompt v1、匿名 A/B pair 模板、judgment record 模板、README 边界。验证：npm run check:baseline-eval 通过。未标 accepted：尚未跑真实 ForgeNote vs ChatGPT 输出与评委盲测。"
     },
     {
       "id": "M2-14",
       "title": "Gate 0 验收包",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-11", "M2-12", "M2-13"],
-      "done": "每周真实路径模板 + 证据归档 docs/acceptance/*.md + 四周总结"
+      "done": "每周真实路径模板 + 证据归档 docs/acceptance/*.md + 四周总结",
+      "acceptance": "docs/acceptance/M2-14-gate0-pack.md",
+      "note": "✅ Gate 0 验收包代码/文档完成：docs/gate0/week-template.md、four-week-summary.md、evidence-index.md；验证 npm run check:gate0-pack 通过。未标 accepted：真正 Gate 0 需要 Owner 连续 4 周真实路径证据。"
     },
     {
       "id": "M2-15",
       "title": "清理旧 /recipes、旧 eval/metrics、旧 copy",
       "phase": "D · 学习与验证",
-      "status": "todo",
+      "status": "code_done",
       "deps": ["M2-10", "M2-14"],
-      "done": "旧路径删除，旧 DB 表停写（drop 另票）"
+      "done": "旧路径删除，旧 DB 表停写（drop 另票）",
+      "acceptance": "docs/acceptance/M2-15-cleanup.md",
+      "note": "✅ 代码完成：旧 /forge、旧 /recipes、旧 /api/render 运行时路径不存在；旧 smoke:api / eval:forge npm 脚本不存在；copy.nav.forge / copy.nav.recipes / copy.forge / copy.recipes / copy.recipeDetail / copy.recipePanel 已清理；新增 npm run check:m2-cleanup 防回流。lib/recipe domain core 保留给 M2-10 复用；旧 DB 表 drop 仍按 done 标准说明另票处理。未标 accepted：需 Owner 确认旧入口不可访问和无真实数据写入需求。"
+    },
+    {
+      "id": "M2-16",
+      "title": "官网落地页（借 laper.ai 骨架 · 暖纸白 · 获客转化）",
+      "phase": "C · 壳与 UI",
+      "status": "code_done",
+      "deps": [],
+      "done": "根路由 / 变官网首页（替换 redirect /forge）+ /pricing + /blog /docs 骨架；v3.17 令牌；CTA 全指 /login；文案用 v3 定位（结构生成系统），不写未实现能力",
+      "acceptance": "docs/acceptance/M2-16-landing.md",
+      "note": "✅ Codex code_done：/、/pricing、/blog、/docs 已实现；SiteNav/SiteFooter/营销 CTA 均指 /login；Pricing 明确公测免费且无计费系统；Blog/Docs 为诚实占位。验证：lint/typecheck/build/doctor 通过，rg 未发现 /forge CTA 或 billing/auto-publish/team 等越界承诺。验收证据：docs/acceptance/M2-16-landing.md。未标 accepted：待 Owner Preview/Production 视觉与 CTA 点击验收。"
     }
   ]
 }

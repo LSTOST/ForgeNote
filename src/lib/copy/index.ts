@@ -1,8 +1,8 @@
-// ForgeNote M1 — I-17 UI copy 入口（typed scaffold）。
+// ForgeNote M2 — UI copy 入口（typed scaffold）。
 //
 // 用法（默认 zh-Hans，行为不变）：
 //   import { copy } from "@/lib/copy";
-//   copy.nav.recipes // "配方库"
+//   copy.nav.profile // "偏好"
 //
 // 说明：本票只做资源结构 + en/zh-Hans 脚手架与 typed helper。
 //   不做运行时语言切换、不存用户语言偏好、不接路由 locale、不与 output_locale 联动。

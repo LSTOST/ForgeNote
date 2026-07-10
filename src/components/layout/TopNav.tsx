@@ -8,8 +8,6 @@ import { getCurrentUser } from "@/lib/supabase/server";
 
 // 顶部导航（UIUX §3.1）。文案经 I-17 copy 资源（默认 zh-Hans，行为不变）。
 const NAV_ITEMS = [
-  { label: copy.nav.forge, href: "/forge" },
-  { label: copy.nav.recipes, href: "/recipes" },
   { label: copy.nav.profile, href: "/profile" },
 ] as const;
 
@@ -21,7 +19,7 @@ export async function TopNav() {
   return (
     <header className="border-b bg-background">
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/forge" className="flex items-center gap-2 font-semibold">
+        <Link href="/workspace" className="flex items-center gap-2 font-semibold">
           <Flame className="size-5 text-primary" aria-hidden />
           <span>{PRODUCT_NAME}</span>
         </Link>

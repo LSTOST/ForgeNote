@@ -10,7 +10,7 @@
 //   - 不打印连接串、不打印任何 secret；脚本本身不内嵌任何 key。
 //   - 只读：不 INSERT / UPDATE / DELETE，不改 schema、不绕过 RLS（连接账号权限由部署侧约束）。
 //
-// safe-mode：未提供 DATABASE_URL → 明确 SKIP exit 0（对齐 eval:forge / 不在缺库环境制造无意义失败）。
+// safe-mode：未提供 DATABASE_URL → 明确 SKIP exit 0，不在缺库环境制造无意义失败。
 //
 // 用法：
 //   DATABASE_URL='postgres://...' npm run metrics
