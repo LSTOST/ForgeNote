@@ -1,5 +1,5 @@
 // ForgeNote M2 — GET /auth/callback。
-// Supabase Auth 回调：用 PKCE code 换取 session 并写入 Auth cookie，成功跳 /workspace（M2-04）。
+// Supabase Auth 回调：用 PKCE code 换取 session 并写入 Auth cookie，成功跳 /first-run。
 // 失败（缺配置 / 缺 code / 交换失败）跳 /login?error=...，不白屏。
 // 依据：@supabase/ssr exchangeCodeForSession（code verifier 存于 cookie）、
 //       Next.js 16 Route Handlers。
@@ -32,8 +32,8 @@ export async function GET(request: Request): Promise<Response> {
   // Supabase 在用户拒绝授权或 provider 未配置时会带 error 回跳。
   const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
 
-  // 成功后的落点：默认 /workspace（M2-04：登录进 v3 工作台）；next 只保留给明确的同源回跳。
-  // 只接受同源相对路径，防开放重定向；旧 /forge 一律归一到 /workspace。
+  // 成功后的落点：默认 /first-run；next 只保留给明确的同源回跳。
+  // 只接受同源相对路径，防开放重定向；旧 /forge 一律归一到 /first-run。
   const nextParam = url.searchParams.get("next");
   const nextPath = normalizeAuthRedirectPath(nextParam, url.origin);
 

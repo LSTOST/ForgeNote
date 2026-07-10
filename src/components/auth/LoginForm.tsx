@@ -10,6 +10,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { copy } from "@/lib/copy";
+import { DEFAULT_AUTH_REDIRECT_PATH } from "@/lib/auth/redirect";
 
 interface LoginFormProps {
   /** 回调或上一次失败带回的错误（如 Google provider 未配置）。 */
@@ -22,13 +23,13 @@ type PasswordState = "idle" | "submitting" | "signupSent" | "error";
 type ResetState = "idle" | "submitting" | "error";
 
 const FIELD_CLASS =
-  "h-12 rounded-[var(--radius-md)] border-border-strong bg-bg-card text-[16px] sm:text-[14px] focus-visible:border-brand focus-visible:ring-3 focus-visible:ring-brand-soft";
+  "h-12 rounded-xl border-border bg-card text-[15px] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25";
 const PRIMARY_BTN =
-  "h-12 w-full gap-2 rounded-[var(--radius-md)] bg-brand text-[15px] font-semibold text-text-inverse hover:bg-brand-hover";
+  "mt-1 h-12 w-full gap-2 rounded-xl bg-accent text-[15px] font-semibold text-accent-foreground hover:opacity-90";
 const THIRD_PARTY_BTN =
-  "h-12 w-full gap-2 rounded-[var(--radius-md)] border-border-subtle bg-bg-card text-[14px] font-semibold text-text-primary hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-55";
+  "h-12 w-full gap-3 rounded-xl border-border bg-card text-[15px] font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-55";
 const LINK_CLASS =
-  "font-semibold text-brand underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft disabled:opacity-50";
+  "font-medium text-accent underline-offset-4 transition-opacity hover:opacity-80 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25 disabled:opacity-50";
 const RESET_EMAIL_COOLDOWN_SECONDS = 60;
 
 // 登录页表单（DSN-02）：邮箱密码为主 + Google 备选 + 忘记密码/重置；已移除 Magic Link。
@@ -77,7 +78,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
       try {
         const { data } = await supabase.auth.getSession();
         if (active && data.session) {
-          window.location.assign("/workspace");
+          window.location.assign(DEFAULT_AUTH_REDIRECT_PATH);
         }
       } catch {
         // 留在当前等待态；用户仍可返回登录或稍后重发。
@@ -100,7 +101,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
           event === "TOKEN_REFRESHED" ||
           event === "USER_UPDATED")
       ) {
-        window.location.assign("/workspace");
+        window.location.assign(DEFAULT_AUTH_REDIRECT_PATH);
       }
     });
 
@@ -161,7 +162,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
           setPasswordState("error");
           return;
         }
-        window.location.assign("/workspace");
+        window.location.assign(DEFAULT_AUTH_REDIRECT_PATH);
         return;
       }
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -175,7 +176,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
         return;
       }
       if (data.session) {
-        window.location.assign("/workspace");
+        window.location.assign(DEFAULT_AUTH_REDIRECT_PATH);
         return;
       }
       setSentTo(email.trim());
@@ -217,7 +218,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-[400px]">
+    <div className="w-full">
       {!configured ? (
         <div
           role="alert"
@@ -229,11 +230,11 @@ export function LoginForm({ initialError }: LoginFormProps) {
       ) : (
         <>
           {!(passwordState === "signupSent" || view === "resetSent") && (
-            <header className="mb-7">
-              <h1 className="text-[34px] leading-tight font-semibold tracking-normal text-text-primary">
+            <header className="mb-9">
+              <h1 className="text-4xl font-semibold tracking-tight text-balance text-foreground">
                 {viewTitle(view, isSignUp)}
               </h1>
-              <p className="mt-2 text-[15px] leading-6 text-text-secondary">
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
                 {viewSubtitle(view, isSignUp)}
               </p>
             </header>
@@ -367,10 +368,10 @@ export function LoginForm({ initialError }: LoginFormProps) {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-text-muted">
-                <span className="h-px flex-1 bg-border-subtle" />
-                或
-                <span className="h-px flex-1 bg-border-subtle" />
+              <div className="my-7 flex items-center gap-4">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">或使用邮箱</span>
+                <span className="h-px flex-1 bg-border" />
               </div>
 
               <form onSubmit={handlePasswordAuth} className="space-y-3">
@@ -447,18 +448,18 @@ export function LoginForm({ initialError }: LoginFormProps) {
 
                 {!isSignUp && (
                   <div className="flex items-center justify-between pt-0.5">
-                    <label className="flex cursor-pointer items-center gap-2 text-[13px] text-text-secondary select-none">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground select-none">
                       <input
                         type="checkbox"
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
-                        className="size-4 accent-brand"
+                        className="size-4 rounded-[5px] border-border accent-primary"
                       />
                       {copy.login.rememberFor30Days}
                     </label>
                     <button
                       type="button"
-                      className="text-[13px] font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-soft"
+                      className="text-sm font-medium text-accent transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
                       onClick={() => {
                         resetTransient();
                         setView("resetRequest");
@@ -485,7 +486,7 @@ export function LoginForm({ initialError }: LoginFormProps) {
                   </Button>
                 </form>
 
-              <p className="text-center text-[13px] leading-6 text-text-secondary">
+              <p className="text-center text-sm text-muted-foreground">
                 {isSignUp ? "已经有账号？" : "还没有账号？"}
                 <button
                   type="button"
@@ -515,7 +516,7 @@ function viewTitle(view: View, isSignUp: boolean): string {
 function viewSubtitle(view: View, isSignUp: boolean): string {
   if (view === "resetRequest") return copy.reset.requestSubtitle;
   if (view === "resetSent") return copy.reset.requestSubtitle;
-  return isSignUp ? "从账号分析开始，写下一条内容。" : "继续锻造你的内容";
+  return isSignUp ? "从账号分析开始，写下一条内容。" : "继续锻造你的下一条内容";
 }
 
 function EmailField({

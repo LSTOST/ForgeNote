@@ -131,6 +131,13 @@
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);
   --sidebar-ring: var(--brand);
+
+  /* Login — v0 暖色 terracotta（仅 .login-shell 内生效） */
+  --login-bg: #FCFAF7;
+  --login-accent: #E89B7D;
+  --login-accent-hover: #DE8F71;
+  --login-accent-foreground: #FFFCFA;
+  --login-primary: #3D3530;
 }
 
 .dark {
@@ -198,4 +205,23 @@
 .fn-shake { animation: fnShake 0.42s ease; }
 @media (prefers-reduced-motion: reduce) {
   .fn-hop, .fn-shake { animation: none !important; }
+}
+
+/* Login page — v0 暖色主题（左图右框） */
+.login-shell {
+  --background: var(--login-bg);
+  --foreground: var(--text-primary);
+  --card: #FFFFFF;
+  --card-foreground: var(--text-primary);
+  --primary: var(--login-primary);
+  --primary-foreground: var(--login-accent-foreground);
+  --secondary: #F4EFE7;
+  --secondary-foreground: var(--text-primary);
+  --muted: #F0EBE3;
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--login-accent);
+  --accent-foreground: var(--login-accent-foreground);
+  --border: var(--border-subtle);
+  --input: var(--border-strong);
+  --ring: var(--login-accent);
 }

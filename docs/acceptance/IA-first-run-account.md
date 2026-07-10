@@ -36,6 +36,7 @@ Environment: local dev server on `http://localhost:3000`.
 Logged-in click-through visual QA was not completed because no authenticated browser session or test account was available in this run. The logged-in flow is covered by code path review plus successful build:
 
 - `/first-run` submits to `/workspace?idea=${encodeURIComponent(input)}`.
-- `/first-run` account-analysis links target `/account`.
+- `/first-run` keeps account analysis only in the left nav; the top-right duplicate and quick-action duplicate were removed.
 - `/account` renders the existing `AccountIntake` component.
 - `/workspace` Home link targets `/first-run`.
+- `/workspace` cold start keeps the right panel and bottom bar visible; the center area only captures the Stage 0 idea and the bottom bar advances to content-frame generation.

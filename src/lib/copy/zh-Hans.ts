@@ -42,7 +42,7 @@ export const zhHans = {
     signupTitle: "创建账号",
     signupSubtitle: "填邮箱和密码，开始使用 ForgeNote",
     emailLabel: "邮箱地址",
-    emailPlaceholder: "you@example.com",
+    emailPlaceholder: "输入邮箱",
     passwordLabel: "密码",
     passwordPlaceholder: "输入密码",
     passwordPlaceholderSignup: "设置密码（至少 8 位）",

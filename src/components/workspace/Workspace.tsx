@@ -425,34 +425,23 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
             {!gen ? (
               /* Stage 0：工作台冷启动，保持完整工作形态。 */
               <div className="mx-auto max-w-[760px] pt-6">
-                <div className="mb-5 flex flex-wrap items-center gap-3">
-                  <span className="text-[13px] font-medium text-text-primary">内容方向</span>
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className="text-[13px] font-medium text-text-primary">Stage 0</span>
                   <Badge>等待输入</Badge>
+                  <span className="text-[12px] text-text-muted">底栏生成内容框架</span>
                 </div>
                 <div className="mb-1 text-[18px] font-semibold text-text-primary">内容想法</div>
                 <p className="mb-4 text-sm leading-6 text-text-secondary">
-                  先写下这条内容的想法、选题，或卡住的地方。
+                  写下这条内容的原始材料，右侧会跟随生成后的写作顺序。
                 </p>
                 <Textarea
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
-                  rows={4}
-                  placeholder="例如：上线前一晚，我把做了三周的功能砍掉了……"
-                  className="mt-6 min-h-[140px] resize-none text-[15px] leading-7"
+                  rows={10}
+                  placeholder="写一个内容想法、选题，或你卡住的地方。比如：上线前一晚，我把做了三周的功能砍掉了……"
+                  className="mt-6 min-h-[320px] resize-none text-[15px] leading-7"
                 />
-                <p className="mt-3 rounded-[var(--radius-md)] border border-border-subtle bg-bg-panel px-3 py-2 text-[12.5px] leading-5 text-text-secondary">
-                  还没有账号分析也可以先生成内容框架；补充账号资料后，结果会更准。
-                  <Link href="/account" className="ml-1 font-medium text-brand hover:underline">去分析账号</Link>
-                </p>
-                <div className="mt-4 flex items-center gap-3">
-                  <Button
-                    onClick={generate}
-                    disabled={idea.trim().length === 0 || genLoading}
-                  >
-                    {genLoading ? "生成内容框架中…" : "生成内容框架"}
-                  </Button>
-                  {genError && <span className="text-sm text-danger">{genError}</span>}
-                </div>
+                {genError && <p className="mt-3 text-sm text-danger">{genError}</p>}
               </div>
             ) : (
               /* 有内容框架：中区=可读内容（框架 → 可编辑正文）。 */

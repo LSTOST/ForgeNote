@@ -1,4 +1,4 @@
-export const DEFAULT_AUTH_REDIRECT_PATH = "/workspace";
+export const DEFAULT_AUTH_REDIRECT_PATH = "/first-run";
 
 const LEGACY_AUTH_REDIRECT_PATHS = new Set(["/forge"]);
 
