@@ -221,6 +221,23 @@ interface DerivedArtifact {
 }
 ```
 
+### 5.4 主内容持久化（G0S-08，migration 0005）
+
+`main_content_documents` 表：每个 content_task 保留**最新一份**主内容（`unique(task_id)`，upsert）。
+
+| 列 | 类型 | 说明 |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid | RLS 隔离；复合 FK 沿用 0004 owner 一致性模式 |
+| task_id | uuid | `(task_id, user_id)` → `content_tasks(id, user_id)` cascade；unique |
+| structure_id | uuid | `(structure_id, user_id)` → `structure_documents(id, user_id)` cascade |
+| content | jsonb | 生成的 MainContent（历史工作稿，非 Recipe） |
+| draft_sections | jsonb | 用户编辑后的 sections；null = 未编辑；**重生成会重置为 null** |
+| output_locale | text | 生成时的输出语言（自由文本，同 0002 语义） |
+
+写入方：`POST /api/content/main`（upsert）、`PUT /api/content/tasks/:id/draft`（只更新 draft_sections/output_locale）。
+同票起 `POST /api/content/derive` 开始真正写入 `render_artifacts`（0003 建表后此前从未写入），`output = { units }`。
+
 ## 6. Recipe 类型
 
 > 完整定义见 `src/lib/recipe/types.ts`。
@@ -347,3 +364,5 @@ M2 流程使用的表（Supabase migration 中定义）：
 - `structure_documents` — 结构文档 JSON
 - `account_memory` — 账号记忆
 - `radar_cards` — 选题卡片
+- `render_artifacts` — 平台版本归档（0003 建表；G0S-08 起由 /api/content/derive 实际写入）
+- `main_content_documents` — 主内容 + 用户草稿（0005，G0S-08 新增，见 §5.4）

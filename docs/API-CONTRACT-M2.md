@@ -193,12 +193,15 @@ Structure → 平台无关可读主内容（无 stability 门禁，draftReadable
   "data": {
     "outline": { "direction": "经验复盘 · 叙事", "points": [{ "slotKey": "hook", "label": "钩子", "strategyLabel": "问题钩子" }] },
     "mainContent": { "form": "prose", "version": "1.0", "sourceStructureId": "uuid", "sourceStructureHash": "abc123", "sections": [{ "role": "hook", "slotKeys": ["hook"], "heading": "引子", "text": "..." }], "warnings": [] },
-    "accountBrain": { "audience": "...", "voice": "...", "memoryCount": 12 }
+    "accountBrain": { "audience": "...", "voice": "...", "memoryCount": 12 },
+    "persisted": true
   }
 }
 ```
 
 **错误:** VALIDATION_FAILED, AUTH_REQUIRED, STRUCTURE_NOT_FOUND, MODEL_NOT_CONFIGURED, GENERATION_FAILED
+
+**持久化（G0S-08）：** 生成成功后 upsert 到 `main_content_documents`（每 task 最新一份，`onConflict: task_id`），同时把 `draft_sections` 重置为 null（重生成覆盖用户草稿）。落库失败不阻塞返回，`persisted=false` 供 UI 提示（如迁移 0005 未应用）。
 
 ---
 
@@ -228,9 +231,12 @@ sections: 1-40 条，每条 text max 8000。
       "rendererId": "xiaohongshu",
       "version": "1.0",
       "format": "carousel_copy",
-      "units": [{ "role": "cover", "text": "..." }, { "role": "card_1", "text": "..." }],
+      "units": [{ "role": "title", "text": "发布标题（≤20 字）" }, { "role": "body", "text": "完整正文 + 结尾话题标签" }],
       "warnings": []
-    }
+    },
+    "artifactId": "uuid | null",
+    "artifactCreatedAt": "ISO timestamp | null",
+    "persisted": true
   }
 }
 ```
@@ -238,6 +244,77 @@ sections: 1-40 条，每条 text max 8000。
 **错误:** VALIDATION_FAILED, AUTH_REQUIRED, STRUCTURE_NOT_FOUND, MODEL_NOT_CONFIGURED, GENERATION_FAILED
 
 **派生原则（iron rule）：** 只调整格式/长度/平台惯例，**绝不改变主题或关键信息点**。
+
+**归档（G0S-08）：** 派生成功后 insert 到 `render_artifacts`（`output = { units }`；`source_structure_hash` 结构 stable 时用落库 hash，否则现算 `structureHash()`）。落库失败不阻塞返回，`persisted=false`。
+
+**单元结构约定（G0S-09）：** `xiaohongshu` 输出恰好两个 unit——`title`（发布标题 ≤20 字）+ `body`（完整正文，结尾 3-6 个 # 话题标签）；`x_thread` 每条推文 role=`tweet`；`image_prompt` 每条 role=`image`（第 1 条封面图提示词，之后逐要点一条卡片图提示词）。卡片提示词从主内容文本派生，**不要求结构含 visual 模态**。工作台在选小红书时一键双出（前端顺序调用两次本端点：xiaohongshu → image_prompt）。
+
+---
+
+### 3.7.1 GET /api/content/tasks
+
+最近内容任务列表（工作台左栏「最近内容」；G0S-08）。
+
+**Response (200):**
+```json
+{
+  "ok": true,
+  "data": {
+    "tasks": [
+      { "id": "uuid", "title": "string | null", "intentPreview": "raw_intent 前 80 字", "status": "ready", "prototypeKey": "string | null", "sourceType": "own_idea", "createdAt": "ISO", "updatedAt": "ISO" }
+    ]
+  }
+}
+```
+updated_at 倒序，limit 20。不返回全文。
+
+**错误:** AUTH_REQUIRED, DATABASE_ERROR
+
+---
+
+### 3.7.2 GET /api/content/tasks/[id]
+
+单任务完整状态（工作台重开恢复；G0S-08）。
+
+**Response (200):**
+```json
+{
+  "ok": true,
+  "data": {
+    "task": { "id": "uuid", "title": null, "rawIntent": "...", "status": "ready", "prototypeKey": "...", "sourceType": "own_idea", "errorCode": null, "errorMessage": null, "createdAt": "ISO", "updatedAt": "ISO" },
+    "structure": "StructureDocument | null（最新一份）",
+    "stability": "{ stable, blockers, conditions } | null（恢复时重算，不落库）",
+    "mainContent": "MainContent | null",
+    "draftSections": "[{ role, heading, text }] | null（null = 用户未编辑过）",
+    "outputLocale": "string | null",
+    "artifacts": [{ "id": "uuid", "rendererId": "xiaohongshu", "format": "carousel_copy", "units": [], "warnings": [], "createdAt": "ISO" }]
+  }
+}
+```
+`main_content_documents` 表不存在（0005 未迁移）时 mainContent/draftSections 降级为 null，不报错。
+
+**错误:** AUTH_REQUIRED, TASK_NOT_FOUND
+
+---
+
+### 3.7.3 PUT /api/content/tasks/[id]/draft
+
+保存用户编辑的主内容草稿（工作台 1.2s 防抖自动保存；G0S-08）。
+
+**Request:**
+```json
+{
+  "draftSections": [{ "role": "hook", "heading": "引子", "text": "..." }],
+  "outputLocale": "string | null (optional, max 32)"
+}
+```
+draftSections: 1-40 条，限制同 /api/content/derive（role 64 / heading 200 / text 8000）。
+
+**Response (200):** `{ "ok": true, "data": { "savedAt": "ISO" } }`
+
+前提：主内容已生成（`main_content_documents` 行存在）。保存成功后触碰 `content_tasks.updated_at`（列表排序反映编辑）。
+
+**错误:** VALIDATION_FAILED, AUTH_REQUIRED, TASK_NOT_FOUND, MAIN_CONTENT_NOT_FOUND, DATABASE_ERROR
 
 ---
 

@@ -35,12 +35,12 @@ export default async function Gate0Page({
   });
 
   return (
-    <main className="min-h-dvh bg-background px-6 py-8 text-foreground">
+    <main className="bg-background px-8 py-10 text-foreground">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Gate 0</p>
-            <h1 className="mt-1 font-heading text-3xl font-medium">Owner 周看板</h1>
+            <h1 className="font-heading text-[22px] font-semibold">本周记录</h1>
+            <p className="mt-2 text-sm text-muted-foreground">用真实发布和 fallback 记录判断本周是否走完生产闭环。</p>
           </div>
           <div className="text-sm text-muted-foreground">
             {metrics.weekOf} → {metrics.nextWeekOf}

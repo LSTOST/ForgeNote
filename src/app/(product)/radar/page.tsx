@@ -12,9 +12,5 @@ export default async function RadarPage() {
   if (!auth) {
     redirect("/login");
   }
-  return (
-    <main className="min-h-dvh bg-background text-foreground">
-      <Radar />
-    </main>
-  );
+  return <Radar />;
 }

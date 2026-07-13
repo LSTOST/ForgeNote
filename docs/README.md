@@ -1,6 +1,6 @@
 # ForgeNote Docs Index
 
-> 当前开发以 M2 为准。M1 仅归档参考。Agent 不得依据 M1 文档实现当前功能。
+> 当前产品需求以 `PRD-CCOS.md` 为准。`PRD-M2.md` 是冻结的实现基线，仅用于解释现有代码、Ticket 与验收材料，不再接收新需求，也暂不归档。M1 仅归档参考。
 
 ## Agent 入口
 
@@ -14,13 +14,14 @@
 
 Agent 默认只读上面入口和当前任务对应的一个 M2 语义文档。不要全量读取 `docs/`。
 
-## 当前文档（M2）
+## 当前文档
 
 | 文件 | 用途 |
 |------|------|
 | `roadmap/roadmap.json` | **唯一进度事实源**：方向 → 里程碑 → 票状态 |
 | `DECISIONS.md` | 所有已拍板的工程与产品决策，不可重新争论 |
-| `PRD-M2.md` | M2 产品需求：为什么做、做成什么、每个功能如何运行 |
+| `PRD-CCOS.md` | **当前产品需求事实源**：新产品目标、范围与 MVP 定义 |
+| `PRD-M2.md` | **冻结的实现基线**：解释现有 M2 代码、工程概念、Ticket 与验收，不接收新需求 |
 | `UIUX-M2.md` | M2 UI/UX 规格：工作台四区布局、交互、视觉方向 |
 | `DATA-SCHEMA-M2.md` | M2 数据模型：structure/stability/content 类型定义 |
 | `API-CONTRACT-M2.md` | M2 API 契约：全部 API 端点、请求/响应、错误码 |

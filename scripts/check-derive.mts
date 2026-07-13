@@ -30,6 +30,11 @@ check("system 含小红书平台说明", sys.includes("小红书"));
 check("system 含账号声音", sys.includes("亲切复盘"));
 check("user 含主内容草稿", usr.includes("上线前一晚我砍掉了三周的功能"));
 check("忠于原内容的约束在场", sys.includes("不改变主题"));
+check("小红书强制 title/body 单元（G0S-09）", sys.includes('role="title"') && sys.includes('role="body"'));
+
+const imgMsgs = buildDeriveMessages({ sections, rendererId: "image_prompt", accountBrain: {} });
+const imgSys = imgMsgs.find((m) => m.role === "system")?.content ?? "";
+check("卡片提示词含封面 + 逐要点约定（G0S-09）", imgSys.includes("封面") && imgSys.includes("要点"));
 
 // ② 各平台 format
 console.log("② format 映射");

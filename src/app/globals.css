@@ -61,11 +61,11 @@
   --color-danger-soft: var(--danger-soft);
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 14px;
+  --radius-lg: 16px;
   --radius-xl: 20px;
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-2xl: var(--radius-xl);
+  --radius-3xl: var(--radius-xl);
+  --radius-4xl: var(--radius-xl);
 }
 
 /* v3.17 暖纸白（2026-07-05，Owner 定）：弃点阵 + 暖黄环境色，转暖象牙底 + 暖白内容卡。
@@ -96,7 +96,7 @@
   --shadow-popover: 0 12px 40px rgba(42, 36, 29, 0.12);
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 14px;
+  --radius-lg: 16px;
   --radius-xl: 20px;
 
   --background: var(--bg-app);
@@ -184,27 +184,6 @@
   html {
     @apply font-sans;
   }
-}
-/* DSN-02 — Ember 吉祥物一次性体态（成功轻跳 / 失败轻晃）。
-   仅 transform；reduced-motion 下不播放（由 LoginForm 依 matchMedia 跳过挂载 class）。 */
-@keyframes fnHop {
-  0% { transform: translateY(0); }
-  28% { transform: translateY(-13px); }
-  52% { transform: translateY(0); }
-  70% { transform: translateY(-5px); }
-  100% { transform: translateY(0); }
-}
-@keyframes fnShake {
-  0%, 100% { transform: translateX(0); }
-  18% { transform: translateX(-7px); }
-  38% { transform: translateX(6px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(3px); }
-}
-.fn-hop { animation: fnHop 0.62s ease; }
-.fn-shake { animation: fnShake 0.42s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .fn-hop, .fn-shake { animation: none !important; }
 }
 
 /* Login page — v0 暖色主题（左图右框） */

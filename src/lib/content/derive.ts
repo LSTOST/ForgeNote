@@ -13,11 +13,20 @@ import type { ChatMessage } from "@/lib/ai/openrouter-client";
 
 const DERIVE_VERSION = "0.1.0";
 
-/** 平台适配说明（长度/分段/惯例；黑白克制，不承诺未支持能力）。 */
+/** 平台适配说明（长度/分段/惯例；黑白克制，不承诺未支持能力）。
+ *  G0S-09：小红书强制两单元结构（title/body），发布时直接可贴；卡片提示词按封面+要点逐张。 */
 const PLATFORM_NOTE: Record<RendererId, string> = {
-  xiaohongshu: "小红书图文笔记：一个抓人的标题 + 分点/短段正文 + 结尾 3-6 个话题标签；口语、亲切。",
-  x_thread: "X（推特）thread：拆成多条推文，每条独立成立、承接自然；简洁有力，首条是钩子。",
-  image_prompt: "图片生成 Prompt：为每个关键画面写一条英文/中文的生成提示（主体+风格+构图+氛围），不写正文。",
+  xiaohongshu: [
+    "小红书图文笔记，输出恰好两个 unit，顺序固定：",
+    '① role="title"：发布标题，20 字以内，抓人、口语，可带 1 个 emoji；',
+    '② role="body"：完整正文——口语、短段或分点；结尾另起一行给 3-6 个话题标签，每个以 # 开头。',
+  ].join("\n"),
+  x_thread: 'X（推特）thread：拆成多条推文，每条独立成立、承接自然；简洁有力，首条是钩子。role 用 "tweet"。',
+  image_prompt: [
+    '图片生成 Prompt（role 一律用 "image"）：',
+    "第 1 条是封面图提示词；之后为每个内容要点各写一条卡片图提示词。",
+    "每条包含：画面主体 + 风格 + 构图 + 氛围 + 卡片上要突出的一句短文案；不写笔记正文。",
+  ].join("\n"),
 };
 
 const DERIVE_FORMAT: Record<RendererId, string> = {
@@ -65,7 +74,7 @@ export function buildDeriveMessages(input: DeriveInput): ChatMessage[] {
       ? ["贴合本账号声音（只影响表达风格，不改内容）：", ...brainLines]
       : []),
     language ? `输出语言：${language}。` : "",
-    '仅输出 JSON：{"units":[{"role","text"}]}。role 用平台单元名（如 card/tweet/image）。',
+    '仅输出 JSON：{"units":[{"role","text"}]}。role 用上面平台说明规定的单元名。',
   ]
     .filter(Boolean)
     .join("\n");

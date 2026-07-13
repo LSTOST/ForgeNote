@@ -69,11 +69,9 @@ export function Radar() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">本周可写选题</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        基于你的账号分析，给你本周该做什么——每张卡都标了<b>为什么</b>（来源），没有虚的热度分。
-      </p>
+    <div className="mx-auto max-w-3xl px-8 py-10">
+      <h1 className="font-heading text-[22px] font-semibold">本周可写选题</h1>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">根据已确认的账号分析提供候选；已有选题也可直接新写一条。</p>
 
       <div className="mt-6 flex items-center gap-3">
         <Button onClick={generate} disabled={loading}>
@@ -85,10 +83,10 @@ export function Radar() {
       {cards && (
         <div className="mt-8 space-y-3">
           {cards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">这次没出选题——先去 /first-run 分析账号，让我更懂你的账号。</p>
+            <p className="text-sm text-muted-foreground">暂时没有可用选题，也可以新写一条并粘贴已有选题。</p>
           ) : (
             cards.map((c, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-4">
+              <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-[var(--shadow-card)]">
                 <div className="mb-1 flex items-center gap-2">
                   <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{SOURCE_LABEL[c.evidenceSource]}</span>
                   {c.prototypeKey && <span className="text-xs text-muted-foreground">{PROTO_LABEL[c.prototypeKey] ?? c.prototypeKey}</span>}
@@ -102,7 +100,7 @@ export function Radar() {
                     onClick={() => trackRadarSelected(c)}
                     className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
                   >
-                    展开做这条 →
+                    用这条开始创作
                   </Link>
                 </div>
               </div>

@@ -9,7 +9,8 @@ import { buildAccountBrainSnapshot } from "@/lib/account/brain-snapshot";
 import type { AccountMemoryItem, MemoryKind, MemorySource, MemoryStatus } from "@/lib/account/types";
 import { deriveToPlatform } from "@/lib/content/derive";
 import { logGate0Event } from "@/lib/gate0/events";
-import type { RendererId } from "@/lib/render/contract";
+import { structureHash, type RendererId } from "@/lib/render/contract";
+import type { ModalityKey, PendingDecision, StructureDocument, StructureSlot } from "@/lib/structure/types";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -91,13 +92,24 @@ export async function POST(request: Request): Promise<Response> {
   if (!auth) return errorResponse("AUTH_REQUIRED", "需要登录后才能派生");
   const { supabase, user } = auth;
 
-  // 用 structureId 按 RLS 验归属（读不到 = 非本人/不存在）
+  // 用 structureId 按 RLS 验归属（读不到 = 非本人/不存在）；取全字段供归档时算结构指纹
   const { data: row, error: loadErr } = await supabase
     .from("structure_documents")
-    .select("id, task_id")
+    .select("id, task_id, vocab_version, prototype_key, modality_stack, slots, pending_decisions, stability_status, structure_hash")
     .eq("id", parsed.data.structureId)
     .single();
   if (loadErr || !row) return errorResponse("STRUCTURE_NOT_FOUND", "结构不存在或无权访问");
+  const structureDoc: StructureDocument = {
+    id: row.id,
+    taskId: row.task_id,
+    vocabVersion: row.vocab_version,
+    prototypeKey: row.prototype_key,
+    modalityStack: (row.modality_stack as ModalityKey[]) ?? ["narrative"],
+    slots: (row.slots as StructureSlot[]) ?? [],
+    pendingDecisions: (row.pending_decisions as PendingDecision[]) ?? [],
+    stabilityStatus: row.stability_status === "stable" ? "stable" : "unstable",
+    structureHash: row.structure_hash ?? undefined,
+  };
 
   // 账号大脑（只读，贴声音）
   const { data: memoryRows } = await supabase
@@ -124,13 +136,40 @@ export async function POST(request: Request): Promise<Response> {
     }
     return errorResponse("GENERATION_FAILED", "派生失败，请稍后重试", true);
   }
+  // 归档产物（G0S-08：render_artifacts 自 0003 建表后首次真正写入）。
+  // 失败不阻塞返回——产物仍可复制，但带 persisted=false 供 UI 提示。
+  // source_structure_hash：结构 stable 时用落库 hash，否则现算指纹（列 not null，且保留派生溯源）。
+  const { data: savedArtifact, error: persistErr } = await supabase
+    .from("render_artifacts")
+    .insert({
+      user_id: user.id,
+      task_id: structureDoc.taskId,
+      structure_id: structureDoc.id,
+      renderer_id: artifact.rendererId,
+      renderer_version: artifact.version,
+      source_structure_hash: structureDoc.structureHash ?? structureHash(structureDoc),
+      format: artifact.format,
+      output: { units: artifact.units },
+      warnings: artifact.warnings,
+    })
+    .select("id, created_at")
+    .single();
+
   await logGate0Event({
     supabase,
     userId: user.id,
     eventName: "renderer_generated",
-    taskId: row.task_id,
+    taskId: structureDoc.taskId,
     payload: { structure_id: parsed.data.structureId, renderer_id: parsed.data.rendererId, format: artifact.format },
   });
 
-  return Response.json({ ok: true, data: { artifact } });
+  return Response.json({
+    ok: true,
+    data: {
+      artifact,
+      artifactId: savedArtifact?.id ?? null,
+      artifactCreatedAt: savedArtifact?.created_at ?? null,
+      persisted: !persistErr,
+    },
+  });
 }

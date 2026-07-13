@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { BrandMark } from "@/components/marketing/shared";
 import {
   Card,
   CardContent,
@@ -68,19 +67,13 @@ export function AccountIntake() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 py-8 sm:px-8 lg:py-12">
-      <div className="mb-10 flex items-center">
-        <BrandMark size="sm" />
-      </div>
-      <div className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+    <div className="mx-auto flex max-w-5xl flex-col px-8 py-10">
+      <h1 className="font-heading text-[22px] font-semibold text-text-primary">账号分析</h1>
+      <p className="mt-2 max-w-2xl text-[15px] leading-7 text-text-secondary">这些判断会直接影响内容框架、正文和小红书版本。</p>
+      <div className="mt-6 grid flex-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <section className="mx-auto w-full max-w-[760px]">
-          <p className="text-sm font-medium text-brand">账号分析</p>
-          <h1 className="mt-3 text-[34px] leading-tight font-semibold text-text-primary sm:text-[40px]">
-            先分析你的账号
-          </h1>
-          <p className="mt-4 max-w-2xl text-[15px] leading-7 text-text-secondary">
-            粘贴账号简介和近期内容，ForgeNote 会判断你适合写什么、哪些表达有效、下一条内容该怎么做。
-          </p>
+          <h2 className="font-heading text-[18px] font-semibold text-text-primary">资料输入</h2>
+          <p className="mt-2 max-w-2xl text-[14px] leading-6 text-text-secondary">补充账号简介和近期内容，更新 ForgeNote 对账号的判断。</p>
 
           <div className="mt-8">
             <Field label="账号资料">
@@ -96,7 +89,7 @@ export function AccountIntake() {
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Button onClick={submit} disabled={!canSubmit || loading} size="lg">
-              {loading ? "分析中…" : "分析我的账号"}
+              {loading ? "正在更新账号分析…" : "更新账号分析"}
               {!loading && <ArrowRight className="size-4" aria-hidden />}
             </Button>
             <Button

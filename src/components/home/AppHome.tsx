@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { BrandMark } from "@/components/marketing/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,40 @@ function NavLink({
   );
 }
 
-export function AppHome({ userEmail = "" }: { userEmail?: string }) {
+export interface RecentTask {
+  id: string;
+  title: string | null;
+  intentPreview: string;
+  status: string;
+  updatedAt: string;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "草稿",
+  structuring: "生成中",
+  ready: "进行中",
+  published: "已发布",
+  archived: "已归档",
+  failed: "失败",
+};
+
+function formatRecentTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+export function AppHome({
+  userEmail = "",
+  recentTasks = [],
+}: {
+  userEmail?: string;
+  recentTasks?: RecentTask[];
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [idea, setIdea] = useState("");
@@ -85,8 +119,6 @@ export function AppHome({ userEmail = "" }: { userEmail?: string }) {
     setIdea("");
     requestAnimationFrame(() => inputRef.current?.focus());
   }
-
-  const initial = (userEmail[0] ?? "F").toUpperCase();
 
   return (
     <div className="flex min-h-svh w-full bg-sidebar text-text-primary">
@@ -130,19 +162,31 @@ export function AppHome({ userEmail = "" }: { userEmail?: string }) {
           <p className="px-3 pb-2 text-xs font-medium tracking-wide text-text-muted">
             最近内容
           </p>
-          <p className="px-3 text-sm leading-5 text-text-muted">后续接最近编辑记录。</p>
+          {recentTasks.length === 0 ? (
+            <p className="px-3 text-sm leading-5 text-text-muted">还没有内容，写第一条后会出现在这里。</p>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+              {recentTasks.map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/workspace?taskId=${task.id}`}
+                  className="rounded-lg px-3 py-2 transition-colors hover:bg-sidebar-accent/60"
+                >
+                  <span className="block truncate text-sm text-text-primary">
+                    {task.title?.trim() || task.intentPreview || "未命名内容"}
+                  </span>
+                  <span className="mt-0.5 flex justify-between text-xs text-text-muted">
+                    <span>{STATUS_LABEL[task.status] ?? task.status}</span>
+                    <span>{formatRecentTime(task.updatedAt)}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 flex items-center gap-3 border-t border-sidebar-border px-2 pt-4">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-semibold text-text-inverse">
-            {initial}
-          </span>
-          <span
-            className="min-w-0 truncate text-sm text-text-secondary"
-            title={userEmail}
-          >
-            {userEmail || "已登录"}
-          </span>
+        <div className="mt-4 border-t border-sidebar-border pt-2">
+          <AccountMenu userEmail={userEmail} />
         </div>
       </aside>
 

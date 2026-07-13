@@ -108,7 +108,7 @@ export async function POST(request: Request): Promise<Response> {
   // 2) 鉴权
   const auth = await getAuthenticatedContext();
   if (!auth) return errorResponse("AUTH_REQUIRED", "需要登录后才能生成内容");
-  const { supabase } = auth;
+  const { supabase, user } = auth;
 
   // 3) 按 RLS 加载结构（只能读自己的）
   const { data: row, error: loadErr } = await supabase
@@ -146,6 +146,20 @@ export async function POST(request: Request): Promise<Response> {
     return errorResponse("GENERATION_FAILED", "主内容生成失败，请稍后重试", true);
   }
 
+  // 7) 持久化主内容（G0S-08：每 task 最新一份；重生成会重置用户草稿）。
+  //    失败不阻塞返回——0005 未迁移时生成仍可用，但带 persisted=false 供 UI 提示。
+  const { error: persistErr } = await supabase.from("main_content_documents").upsert(
+    {
+      user_id: user.id,
+      task_id: structure.taskId,
+      structure_id: structure.id,
+      content: mainContent,
+      draft_sections: null,
+      output_locale: parsed.data.language ?? null,
+    },
+    { onConflict: "task_id" },
+  );
+
   // 账号记忆轻摘要（右栏"账号记忆"展示：用谁的声音写；只读、不含全文）。
   const brainSummary = {
     audience: accountBrain.audience ?? null,
@@ -153,5 +167,5 @@ export async function POST(request: Request): Promise<Response> {
     memoryCount: (memoryRows ?? []).length,
   };
 
-  return Response.json({ ok: true, data: { outline, mainContent, accountBrain: brainSummary } });
+  return Response.json({ ok: true, data: { outline, mainContent, accountBrain: brainSummary, persisted: !persistErr } });
 }

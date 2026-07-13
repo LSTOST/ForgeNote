@@ -13,9 +13,5 @@ export default async function AccountPage() {
   if (!auth) {
     redirect("/login");
   }
-  return (
-    <main className="min-h-dvh bg-bg-app text-text-primary">
-      <AccountIntake />
-    </main>
-  );
+  return <AccountIntake />;
 }

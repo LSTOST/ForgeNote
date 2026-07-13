@@ -4,7 +4,7 @@
 // 流程：邮件链接 → /reset-password 建立恢复会话 → 本页设新密码。
 // 仅前端行为，沿用 Supabase updateUser；不改 RLS / 业务 API。
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CircleAlert, Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { copy } from "@/lib/copy";
-import { EmberMascot, type MascotHandle, type MascotPose } from "@/components/auth/EmberMascot";
 
 type Phase = "checking" | "form" | "done" | "invalid";
 
@@ -30,11 +29,8 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const mascot = useRef<MascotHandle>(null);
 
   // 本页是密码重置邮件的真实落点：兼容 Supabase PKCE ?code= 与邮件 hash token。
   useEffect(() => {
@@ -102,22 +98,6 @@ export default function ResetPasswordPage() {
     };
   }, [configured]);
 
-  const pose: MascotPose = submitting
-    ? "loading"
-    : phase === "done"
-      ? "happy"
-      : error
-        ? "worried"
-        : focused && !showPassword
-          ? "cover"
-          : focused && showPassword
-            ? "avert"
-            : "idle";
-
-  useEffect(() => {
-    mascot.current?.setPose(pose);
-  }, [pose]);
-
   const passwordValid = password.length >= 8;
   const canSubmit = passwordValid && confirm.length >= 8 && !submitting;
 
@@ -150,8 +130,7 @@ export default function ResetPasswordPage() {
     <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F4F1E9] px-5 py-8 text-[#33291F] sm:px-6 sm:py-12">
       <div className="w-full max-w-[380px]">
         <div className="mb-6 flex flex-col items-center text-center">
-          <EmberMascot ref={mascot} mode="single" className="size-[110px]" />
-          <h1 className="mt-1 font-serif text-[28px] leading-tight font-medium text-[#33291F]">
+          <h1 className="font-heading text-[28px] leading-tight font-medium text-[#33291F]">
             {phase === "done" ? copy.reset.doneTitle : copy.reset.newTitle}
           </h1>
           <p className="mt-2 text-[14px] leading-[1.5] text-[#8a7d6c]">
@@ -205,8 +184,6 @@ export default function ResetPasswordPage() {
                 placeholder={copy.reset.newPasswordPlaceholder}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
                 disabled={submitting}
                 className={`${FIELD_CLASS} pr-[46px]`}
               />
@@ -237,8 +214,6 @@ export default function ResetPasswordPage() {
                 placeholder={copy.reset.confirmPasswordPlaceholder}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
                 disabled={submitting}
                 className={FIELD_CLASS}
               />

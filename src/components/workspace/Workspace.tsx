@@ -1,14 +1,14 @@
 "use client";
 
-// ForgeNote M2-09 — 四区工作台。只调整 UI 表达，保留原有生成流程和状态流。
+// ForgeNote M2-09 — 四区工作台。G0S-08 加入持久化：最近内容可重开、草稿自动保存、平台版本可归档回看。
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Clipboard, Clock, Home, LogOut, PanelLeft, Plus, Search, X } from "lucide-react";
+import { Clipboard, Home, PanelLeft, Plus, Search, X } from "lucide-react";
 
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/panel";
 import { Textarea } from "@/components/ui/textarea";
 import { getLabel, strategiesForSlot } from "@/lib/structure/registry";
 import { buildOutline } from "@/lib/content/outline";
@@ -39,23 +39,64 @@ interface DeriveUnit {
 }
 interface DeriveResponse {
   ok: boolean;
-  data?: { artifact: { rendererId: string; format: string; units: DeriveUnit[]; warnings: string[] } };
+  data?: {
+    artifact: { rendererId: string; format: string; units: DeriveUnit[]; warnings: string[] };
+    artifactId?: string | null;
+    artifactCreatedAt?: string | null;
+    persisted?: boolean;
+  };
   error?: { code: string; message: string };
 }
+export interface TaskSummary {
+  id: string;
+  title: string | null;
+  intentPreview: string;
+  status: string;
+  updatedAt: string;
+}
+interface ArtifactRecord {
+  id: string | null;
+  rendererId: string;
+  platform: string;
+  units: DeriveUnit[];
+  createdAt: string;
+}
+/** GET /api/content/tasks/:id 的 data 形状（重开 / URL 自动打开共用）。 */
+interface TaskDetail {
+  task: { id: string; rawIntent: string; errorMessage: string | null };
+  structure: StructureDocument | null;
+  stability: GenData["stability"] | null;
+  mainContent: MainContent | null;
+  draftSections: { heading: string; text: string }[] | null;
+  artifacts: { id: string | null; rendererId: string; units: DeriveUnit[]; createdAt: string }[] | null;
+}
 
-const RENDERERS: { id: RendererId; label: string; glyph: string; needsVisual?: boolean }[] = [
+const TASK_STATUS_LABEL: Record<string, string> = {
+  draft: "草稿",
+  structuring: "生成中",
+  ready: "进行中",
+  published: "已发布",
+  archived: "已归档",
+  failed: "失败",
+};
+
+function formatTaskTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return d.toDateString() === now.toDateString() ? `${hh}:${mm}` : `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+// G0S-09：卡片提示词从主内容文本派生，不需要 visual 模态，不再门禁。
+// 选小红书时自动双出（文案 + 卡片提示词），卡片提示词也可单独生成。
+const RENDERERS: { id: RendererId; label: string; glyph: string }[] = [
   { id: "xiaohongshu", label: "小红书", glyph: "书" },
   { id: "x_thread", label: "X", glyph: "𝕏" },
-  { id: "image_prompt", label: "图片 Prompt", glyph: "▦", needsVisual: true },
+  { id: "image_prompt", label: "卡片提示词", glyph: "▦" },
 ];
 
-// I-16 输出语言 / 表达偏好预设（value 即传给 /api/content/main 的 language；自由文本，非枚举）。
-const OUTPUT_LOCALES: { value: string; label: string }[] = [
-  { value: "zh-Hans", label: "中文" },
-  { value: "English", label: "English" },
-  { value: "English for Instagram carousel", label: "English · Instagram" },
-  { value: "English for LinkedIn carousel", label: "English · LinkedIn" },
-];
 
 const ROLE_LABEL: Record<string, string> = {
   hook: "钩子",
@@ -69,6 +110,11 @@ const ROLE_LABEL: Record<string, string> = {
   card: "卡片",
   summary: "总结",
   layout_note: "版式说明",
+  title: "发布标题",
+  body: "正文",
+  tweet: "推文",
+  image: "卡片图提示词",
+  unit: "内容",
 };
 
 function displayDecisionLabel(key: string): string {
@@ -81,15 +127,15 @@ function displayRole(role: string): string {
 }
 
 function platformActionLabel(rendererId: RendererId): string {
-  if (rendererId === "xiaohongshu") return "生成小红书版本";
+  if (rendererId === "xiaohongshu") return "生成小红书版本（文案+卡片提示词）";
   if (rendererId === "x_thread") return "生成 X 版本";
-  return "生成图片提示词";
+  return "生成卡片提示词";
 }
 
 function platformProgressLabel(rendererId: RendererId): string {
-  if (rendererId === "xiaohongshu") return "正在生成小红书版本…";
+  if (rendererId === "xiaohongshu") return "正在生成小红书文案…";
   if (rendererId === "x_thread") return "正在生成 X 版本…";
-  return "正在生成图片提示词…";
+  return "正在生成卡片提示词…";
 }
 
 function frameExample(label: string, strategyLabel: string | null, direction: string): string {
@@ -109,7 +155,19 @@ function displayBrainSummary(value: string): string {
     .replace(/\bproven_patterns\s*[:：]/g, "有效写法：");
 }
 
-export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: string; userEmail?: string }) {
+export function Workspace({
+  initialIdea = "",
+  userEmail = "",
+  initialTasks = [],
+  initialTaskId = "",
+  embedded = false,
+}: {
+  initialIdea?: string;
+  userEmail?: string;
+  initialTasks?: TaskSummary[];
+  initialTaskId?: string;
+  embedded?: boolean;
+}) {
   const [idea, setIdea] = useState(initialIdea);
   const [gen, setGen] = useState<GenData | null>(null);
   const [genLoading, setGenLoading] = useState(false);
@@ -119,7 +177,6 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const [renderLoading, setRenderLoading] = useState<RendererId | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [target, setTarget] = useState<RendererId>("xiaohongshu");
-  const [outputLocale, setOutputLocale] = useState("");
 
   // 主内容（平台无关可读内容，中区舞台）：mainContent = 生成结果；draft = 用户可编辑副本。
   const [mainContent, setMainContent] = useState<MainContent | null>(null);
@@ -134,6 +191,141 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
 
   const [leftOpen, setLeftOpen] = useState(true);
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+
+  // G0S-08 持久化：最近内容列表（初始由 Server Component 提供）、重开、草稿自动保存、平台版本归档。
+  const [recentTasks, setRecentTasks] = useState<TaskSummary[]>(initialTasks);
+  const [openingTaskId, setOpeningTaskId] = useState<string | null>(null);
+  const [openError, setOpenError] = useState<string | null>(null);
+  const [artifacts, setArtifacts] = useState<ArtifactRecord[]>([]);
+  const [draftSaveState, setDraftSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [persistWarning, setPersistWarning] = useState<string | null>(null);
+  const draftSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 仅在用户动作（生成/新建）后刷新列表；初始数据来自服务端，避免 effect 内 setState。
+  const loadTasks = useCallback(async () => {
+    try {
+      const res = await fetch("/api/content/tasks");
+      const json = await res.json();
+      if (json.ok && json.data) setRecentTasks(json.data.tasks as TaskSummary[]);
+    } catch {
+      // 列表加载失败不打断创作，保留旧列表
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
+    };
+  }, []);
+
+  function cancelDraftSave() {
+    if (draftSaveTimer.current) {
+      clearTimeout(draftSaveTimer.current);
+      draftSaveTimer.current = null;
+    }
+  }
+
+  /** 草稿自动保存（1.2s 防抖）。role 从生成稿 sections 溯源补齐。 */
+  function scheduleDraftSave(nextDrafts: { heading: string; text: string }[]) {
+    if (!gen || !mainContent) return;
+    const taskId = gen.taskId;
+    const sections = mainContent.sections.map((s, i) => ({
+      role: s.role,
+      heading: nextDrafts[i]?.heading ?? s.heading,
+      text: nextDrafts[i]?.text ?? s.text,
+    }));
+    setDraftSaveState("saving");
+    cancelDraftSave();
+    draftSaveTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/content/tasks/${taskId}/draft`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ draftSections: sections }),
+        });
+        const json = await res.json();
+        setDraftSaveState(json.ok ? "saved" : "error");
+      } catch {
+        setDraftSaveState("error");
+      }
+    }, 1200);
+  }
+
+  /** 把任务详情载入各区状态（纯 setState，供重开与从 URL 自动打开共用）。 */
+  const applyTaskData = useCallback((d: TaskDetail) => {
+    setIdea(d.task.rawIntent ?? "");
+    setGenError(d.task.errorMessage ?? null);
+    setGen(
+      d.structure && d.stability
+        ? { taskId: d.task.id, structureId: d.structure.id, structure: d.structure, stability: d.stability }
+        : null,
+    );
+    const mc = d.mainContent ?? null;
+    setMainContent(mc);
+    setDraftSections(
+      d.draftSections
+        ? d.draftSections.map((s) => ({ heading: s.heading, text: s.text }))
+        : mc
+          ? mc.sections.map((s) => ({ heading: s.heading, text: s.text }))
+          : [],
+    );
+    setArtifacts(
+      (d.artifacts ?? []).map((a) => ({
+        id: a.id,
+        rendererId: a.rendererId,
+        platform: RENDERERS.find((r) => r.id === a.rendererId)?.label ?? a.rendererId,
+        units: a.units,
+        createdAt: a.createdAt,
+      })),
+    );
+    setRenderOut(null);
+    setRenderError(null);
+    setMainError(null);
+    setBrain(null);
+    setDraftSaveState("idle");
+    setPersistWarning(null);
+  }, []);
+
+  /** 重开历史任务（左栏点击）：恢复想法、结构、正文草稿、平台版本归档。 */
+  async function openTask(taskId: string) {
+    if (openingTaskId) return;
+    setOpeningTaskId(taskId);
+    setOpenError(null);
+    cancelDraftSave();
+    try {
+      const res = await fetch(`/api/content/tasks/${taskId}`);
+      const json = await res.json();
+      if (!json.ok || !json.data) {
+        setOpenError(json.error?.message ?? "任务读取失败");
+        return;
+      }
+      applyTaskData(json.data as TaskDetail);
+    } catch {
+      setOpenError("网络错误，请稍后重试");
+    } finally {
+      setOpeningTaskId(null);
+    }
+  }
+
+  // 从 /workspace?taskId=… 进入（如首页「最近内容」）时自动打开该任务。
+  // setState 只发生在 await 之后的异步回调里，不在 effect 同步体内。
+  useEffect(() => {
+    if (!initialTaskId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/content/tasks/${initialTaskId}`);
+        const json = await res.json();
+        if (cancelled || !json.ok || !json.data) return;
+        applyTaskData(json.data as TaskDetail);
+      } catch {
+        // 自动打开失败时静默：用户仍可从左栏手动打开
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialTaskId, applyTaskData]);
 
   async function setSlotStrategy(slotKey: string, strategyKey: string) {
     if (!gen) return;
@@ -186,11 +378,13 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     if (!gen) return;
     setMainLoading(true);
     setMainError(null);
+    cancelDraftSave();
+    setDraftSaveState("idle");
     try {
       const res = await fetch("/api/content/main", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ structureId: gen.structureId, language: outputLocale.trim() || undefined }),
+        body: JSON.stringify({ structureId: gen.structureId }),
       });
       const json = await res.json();
       if (!json.ok || !json.data) {
@@ -201,6 +395,8 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
       setMainContent(mc);
       setDraftSections(mc.sections.map((s) => ({ heading: s.heading, text: s.text })));
       if (json.data.accountBrain) setBrain(json.data.accountBrain);
+      setPersistWarning(json.data.persisted === false ? "本条未持久化（数据库迁移 0005 未应用），刷新后会丢失" : null);
+      void loadTasks();
     } catch {
       setMainError("网络错误，请稍后重试");
     } finally {
@@ -216,6 +412,11 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setDraftSections([]);
     setMainError(null);
     setBrain(null);
+    setArtifacts([]);
+    setOpenError(null);
+    cancelDraftSave();
+    setDraftSaveState("idle");
+    setPersistWarning(null);
     try {
       const res = await fetch("/api/structure/generate", {
         method: "POST",
@@ -229,6 +430,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
         return;
       }
       setGen(json.data);
+      void loadTasks();
     } catch {
       setGenError("网络错误，请稍后重试");
     } finally {
@@ -236,28 +438,54 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     }
   }
 
+  /** 单次派生：成功返回归档记录并写入 artifacts；失败写 renderError 返回 null。 */
+  async function deriveOnce(rendererId: RendererId, label: string): Promise<ArtifactRecord | null> {
+    if (!gen || !mainContent) return null;
+    const sections = mainContent.sections.map((s, i) => ({
+      role: s.role,
+      heading: draftSections[i]?.heading ?? s.heading,
+      text: draftSections[i]?.text ?? s.text,
+    }));
+    const res = await fetch("/api/content/derive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ structureId: gen.structureId, rendererId, sections }),
+    });
+    const json: DeriveResponse = await res.json();
+    if (!json.ok || !json.data) {
+      setRenderError(json.error?.message ? `${label}：${json.error.message}` : `${label}生成失败`);
+      return null;
+    }
+    const record: ArtifactRecord = {
+      id: json.data.artifactId ?? null,
+      rendererId,
+      platform: label,
+      units: json.data.artifact.units,
+      createdAt: json.data.artifactCreatedAt ?? new Date().toISOString(),
+    };
+    setArtifacts((prev) => [record, ...prev]);
+    if (json.data.persisted === false) {
+      setPersistWarning("平台版本未持久化（render_artifacts 写入失败），关闭后无法找回");
+    }
+    return record;
+  }
+
+  /** 派生入口（G0S-09）：小红书一键双出（文案 + 卡片提示词）；其余平台单出。 */
   async function deriveMain(rendererId: RendererId, label: string) {
     if (!gen || !mainContent) return;
     setRenderLoading(rendererId);
     setRenderError(null);
     try {
-      const sections = mainContent.sections.map((s, i) => ({
-        role: s.role,
-        heading: draftSections[i]?.heading ?? s.heading,
-        text: draftSections[i]?.text ?? s.text,
-      }));
-      const res = await fetch("/api/content/derive", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ structureId: gen.structureId, rendererId, sections, language: outputLocale.trim() || undefined }),
-      });
-      const json: DeriveResponse = await res.json();
-      if (!json.ok || !json.data) {
-        setRenderError(json.error?.message ?? "生成平台版本失败");
+      const first = await deriveOnce(rendererId, label);
+      if (first) {
+        setRenderOut({ platform: first.platform, rendererId, taskId: gen.taskId, units: first.units });
+      } else {
         setRenderOut(null);
-        return;
       }
-      setRenderOut({ platform: label, rendererId, taskId: gen.taskId, units: json.data.artifact.units });
+      if (rendererId === "xiaohongshu" && first) {
+        setRenderLoading("image_prompt");
+        await deriveOnce("image_prompt", "卡片提示词");
+      }
     } catch {
       setRenderError("网络错误，请稍后重试");
     } finally {
@@ -276,11 +504,33 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
     setDraftSections([]);
     setMainError(null);
     setBrain(null);
+    setArtifacts([]);
+    setOpenError(null);
+    cancelDraftSave();
+    setDraftSaveState("idle");
+    setPersistWarning(null);
   }
+
+  // 外壳（AppShell）的「新写一条」在 /workspace 视图上派发 forgenote:new-content 事件；
+  // embedded 时 Workspace 自身左栏隐藏，靠监听此事件复位到空状态（否则外壳按钮会是死按钮）。
+  // latest-ref 模式：effect 内更新 ref（不在 render 期间写），挂载一次订阅，避免依赖抖动。
+  const newContentRef = useRef(newContent);
+  useEffect(() => {
+    newContentRef.current = newContent;
+  });
+  useEffect(() => {
+    const handler = () => newContentRef.current();
+    window.addEventListener("forgenote:new-content", handler);
+    return () => window.removeEventListener("forgenote:new-content", handler);
+  }, []);
 
   async function copyRenderOut() {
     if (!renderOut) return;
-    const text = renderOut.units.map((u) => `${u.role}\n${u.text}`).join("\n\n");
+    // 复制为平台可直接粘贴的纯文本：只取正文，不带内部 role key（G0S-08 / 差距清单 A3）。
+    const text = renderOut.units
+      .map((u) => u.text.trim())
+      .filter(Boolean)
+      .join("\n\n");
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -300,30 +550,21 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
   const structure = gen?.structure;
   const outline = structure ? buildOutline(structure) : null;
   const stable = gen?.stability.stable ?? false;
-  const hasVisual = structure?.modalityStack.includes("visual") ?? false;
-  const title = idea.trim() ? idea.trim().slice(0, 40) : "新内容";
-  const doneSlots = structure ? structure.slots.filter((s) => s.strategyKey).length : 0;
-  const totalSlots = structure?.slots.length ?? 0;
+  const pendingCount = structure
+    ? structure.pendingDecisions.filter((d) => d.status !== "user_resolved" && d.status !== "accepted_default").length
+    : 0;
 
   return (
-    <div className="relative flex h-dvh flex-col bg-bg-app text-text-primary">
-      {/* ── 顶栏 ── */}
-      <header className="flex items-center gap-2 border-b border-border-subtle bg-bg-panel px-4 py-2.5">
-        <Link href="/first-run" title="回到首页" className="rounded-md p-1.5 text-text-secondary hover:bg-brand-soft hover:text-text-primary">
-          <Home className="size-4" aria-hidden />
-        </Link>
-        <button onClick={() => setLeftOpen((v) => !v)} title="收起 / 展开左栏" className="rounded-md p-1.5 text-text-secondary hover:bg-brand-soft hover:text-text-primary">
-          <PanelLeft className="size-4" aria-hidden />
-        </button>
-        <div className="ml-1 text-[13px] text-text-secondary">
-          {gen ? <>当前内容 · <b className="font-medium text-text-primary">{title}</b></> : "新写一条"}
-        </div>
-      </header>
-
-      {/* ── 三栏 ── */}
+    <div className={`relative flex flex-col bg-bg-app text-text-primary ${embedded ? "h-full min-h-dvh" : "h-dvh"}`}>
+      {!embedded && (
+        <header className="flex items-center gap-2 border-b border-border-subtle bg-bg-panel px-4 py-2.5">
+          <Link href="/workspace" title="回到写作视图" className="rounded-md p-1.5 text-text-secondary hover:bg-brand-soft hover:text-text-primary"><Home className="size-4" aria-hidden /></Link>
+          <button onClick={() => setLeftOpen((v) => !v)} title="收起 / 展开左栏" className="rounded-md p-1.5 text-text-secondary hover:bg-brand-soft hover:text-text-primary"><PanelLeft className="size-4" aria-hidden /></button>
+        </header>
+      )}
       <div className="flex min-h-0 flex-1">
         {/* 左栏 */}
-        {leftOpen && (
+        {!embedded && leftOpen && (
           <nav className="flex w-[252px] shrink-0 flex-col border-r border-border-subtle bg-bg-panel">
             <div className="flex-1 space-y-5 overflow-auto p-3">
               <button
@@ -331,57 +572,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 className="flex w-full items-center gap-2 rounded-[10px] border border-border-subtle bg-bg-card px-3.5 py-2.5 text-sm font-semibold text-text-primary shadow-[var(--shadow-card)] hover:bg-brand-soft"
               >
                 <Plus className="size-4 text-brand" aria-hidden /> 新写一条
-                <kbd className="ml-auto rounded border border-border-subtle px-1.5 text-[11px] text-text-muted">⌘N</kbd>
               </button>
-
-              <div>
-                <div className="mb-2 text-xs font-medium text-text-secondary">当前账号</div>
-                <div className="rounded-[var(--radius-lg)] border border-border-subtle bg-bg-card p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-text-primary text-[11px] font-medium text-text-inverse">
-                      {(userEmail[0] ?? "F").toUpperCase()}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate text-[13px] font-medium text-text-primary" title={userEmail}>
-                        {userEmail || "已登录"}
-                      </div>
-                      <Link href="/account" className="text-[11px] text-brand hover:underline">
-                        补充账号资料
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-2 text-xs font-medium text-text-secondary">当前内容</div>
-                {gen ? (
-                  <div className="rounded-[var(--radius-lg)] border border-border-subtle bg-bg-card p-3 shadow-[var(--shadow-card)]">
-                    <h4 className="text-sm leading-snug font-semibold text-text-primary">{title}</h4>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge>
-                        {getLabel(structure!.prototypeKey, "zh-Hans")}
-                      </Badge>
-                      {structure!.modalityStack.map((m) => (
-                        <Badge key={m}>
-                          {getLabel(m, "zh-Hans")}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="mt-2.5 flex justify-between text-[11px] text-text-secondary">
-                      <span>进度 {doneSlots}/{totalSlots}</span>
-                      <span>{stable ? "内容框架已确认" : "还可以调整"}</span>
-                    </div>
-                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-bg-panel">
-                      <div className="h-full bg-brand" style={{ width: totalSlots ? `${(doneSlots / totalSlots) * 100}%` : "0%" }} />
-                    </div>
-                  </div>
-                ) : (
-                  <p className="rounded-[var(--radius-lg)] border border-dashed border-border-subtle bg-bg-card px-3 py-4 text-xs leading-5 text-text-secondary">
-                    还没有内容。在中间输入一个想法开始。
-                  </p>
-                )}
-              </div>
 
               <div>
                 <div className="mb-2 text-xs font-medium text-text-secondary">本周可写选题</div>
@@ -395,26 +586,40 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
 
               <div>
                 <div className="mb-2 text-xs font-medium text-text-secondary">最近内容</div>
-                <div className="rounded-[var(--radius-lg)] border border-dashed border-border-subtle bg-bg-card px-3 py-4 text-xs leading-5 text-text-secondary">
-                  <Clock className="mb-2 size-4 text-text-muted" aria-hidden />
-                  本轮先保留入口，后续接最近编辑记录。
-                </div>
+                {openError && <p className="mb-2 text-[11px] leading-4 text-danger">{openError}</p>}
+                {recentTasks.length === 0 ? (
+                  <p className="rounded-[var(--radius-lg)] border border-dashed border-border-subtle bg-bg-card px-3 py-4 text-xs leading-5 text-text-secondary">
+                    还没有历史内容。生成第一条后会出现在这里。
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {recentTasks.slice(0, 8).map((t) => {
+                      const active = gen?.taskId === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => void openTask(t.id)}
+                          disabled={openingTaskId !== null}
+                          className={`w-full rounded-lg border px-2.5 py-2 text-left text-[12px] transition-colors disabled:opacity-60 ${active ? "border-brand bg-brand-soft" : "border-transparent hover:bg-brand-soft"}`}
+                        >
+                          <span className="block truncate font-medium text-text-primary">
+                            {openingTaskId === t.id ? "打开中…" : t.title?.trim() || t.intentPreview || "未命名内容"}
+                          </span>
+                          <span className="mt-0.5 flex justify-between text-[11px] text-text-muted">
+                            <span>{TASK_STATUS_LABEL[t.status] ?? t.status}</span>
+                            <span>{formatTaskTime(t.updatedAt)}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* 账号页脚 */}
-            <div className="flex items-center gap-2.5 border-t border-border-subtle px-3 py-2.5">
-              <span className="flex size-7 items-center justify-center rounded-full bg-text-primary text-[11px] font-medium text-text-inverse">
-                {(userEmail[0] ?? "D").toUpperCase()}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] text-text-secondary" title={userEmail}>
-                {userEmail || "已登录"}
-              </span>
-              <form action="/auth/signout" method="post">
-                <button type="submit" title="退出登录" className="rounded-md p-1.5 text-text-secondary hover:bg-brand-soft hover:text-text-primary">
-                  <LogOut className="size-4" aria-hidden />
-                </button>
-              </form>
+            {/* 账号页脚（唯一身份显示点，D2）：点头像展开账号菜单 */}
+            <div className="border-t border-border-subtle p-2">
+              <AccountMenu userEmail={userEmail} />
             </div>
           </nav>
         )}
@@ -423,25 +628,23 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-auto">
           <div className="flex-1 px-6 py-5">
             {!gen ? (
-              /* Stage 0：工作台冷启动，保持完整工作形态。 */
-              <div className="mx-auto max-w-[760px] pt-6">
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="text-[13px] font-medium text-text-primary">Stage 0</span>
-                  <Badge>等待输入</Badge>
-                  <span className="text-[12px] text-text-muted">底栏生成内容框架</span>
-                </div>
-                <div className="mb-1 text-[18px] font-semibold text-text-primary">内容想法</div>
-                <p className="mb-4 text-sm leading-6 text-text-secondary">
-                  写下这条内容的原始材料，右侧会跟随生成后的写作顺序。
-                </p>
+              /* Stage 0：想法输入，主操作紧跟输入框（DESIGN §4）。 */
+              <div className="mx-auto max-w-[760px] pt-[10vh]">
+                <h1 className="mb-3 font-heading text-[22px] font-semibold text-text-primary">今天想写哪条内容？</h1>
+                <p className="mb-4 text-sm leading-6 text-text-secondary">描述一个想法、选题，或卡住的地方。</p>
                 <Textarea
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
                   rows={10}
-                  placeholder="写一个内容想法、选题，或你卡住的地方。比如：上线前一晚，我把做了三周的功能砍掉了……"
-                  className="mt-6 min-h-[320px] resize-none text-[15px] leading-7"
+                  placeholder="写一个内容想法、选题，或正卡住的地方。比如：上线前一晚，把做了三周的功能砍掉了……"
+                  className="mt-2 min-h-[220px] resize-none text-[15px] leading-7"
                 />
-                {genError && <p className="mt-3 text-sm text-danger">{genError}</p>}
+                <div className="mt-4 flex items-center gap-3">
+                  <Button onClick={generate} disabled={idea.trim().length === 0 || genLoading}>
+                    {genLoading ? "正在生成内容框架…" : "开始创作"}
+                  </Button>
+                  {genError && <span className="text-sm text-danger">{genError}</span>}
+                </div>
               </div>
             ) : (
               /* 有内容框架：中区=可读内容（框架 → 可编辑正文）。 */
@@ -449,6 +652,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 <div className="mb-5 flex flex-wrap items-center gap-3">
                   <span className="text-[13px] font-medium text-text-primary">内容方向</span>
                   <Badge variant="active">{outline!.direction}</Badge>
+                  {mainContent && <span className="ml-auto text-[11px] text-text-muted">{draftSaveState === "saving" ? "保存中…" : draftSaveState === "saved" ? "草稿已保存" : draftSaveState === "error" ? "草稿保存失败，继续编辑可重试" : ""}</span>}
                 </div>
 
                 {!mainContent ? (
@@ -502,7 +706,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                           {mainContent.form === "cards" ? "内容卡片" : mainContent.form === "script" ? "脚本" : "正文"}
                         </div>
                         <p className="mt-1 text-sm leading-6 text-text-secondary">
-                          你可以直接修改正文。平台版本会基于你修改后的内容生成。
+                          正文可直接修改，平台版本基于修改后的内容生成。
                         </p>
                       </div>
                       <button onClick={genMain} disabled={mainLoading} className="ml-auto text-xs font-medium text-text-secondary hover:text-text-primary disabled:opacity-50">
@@ -510,6 +714,7 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                       </button>
                     </div>
                     {mainError && <p className="mb-2 text-sm text-danger">{mainError}</p>}
+                    {persistWarning && <p className="mb-2 rounded-[10px] bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">{persistWarning}</p>}
                     <div className="space-y-4">
                       {mainContent.sections.map((s, i) => (
                         <div
@@ -521,18 +726,75 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                           <div className="mb-2 text-[11px] font-medium text-text-secondary">来自：{displayRole(s.role)}</div>
                           <input
                             value={draftSections[i]?.heading ?? s.heading}
-                            onChange={(e) => setDraftSections((prev) => prev.map((d, di) => (di === i ? { ...d, heading: e.target.value } : d)))}
+                            onChange={(e) => {
+                              const next = draftSections.map((d, di) => (di === i ? { ...d, heading: e.target.value } : d));
+                              setDraftSections(next);
+                              scheduleDraftSave(next);
+                            }}
                             className="w-full bg-transparent text-[16px] font-semibold text-text-primary outline-none"
                           />
                           <textarea
                             value={draftSections[i]?.text ?? s.text}
-                            onChange={(e) => setDraftSections((prev) => prev.map((d, di) => (di === i ? { ...d, text: e.target.value } : d)))}
+                            onChange={(e) => {
+                              const next = draftSections.map((d, di) => (di === i ? { ...d, text: e.target.value } : d));
+                              setDraftSections(next);
+                              scheduleDraftSave(next);
+                            }}
                             rows={Math.max(2, Math.ceil((draftSections[i]?.text ?? s.text).length / 34))}
                             placeholder="（这一段还没有内容，可自己写）"
                             className="mt-2 w-full resize-none bg-transparent text-sm leading-7 text-text-primary outline-none placeholder:text-text-muted"
                           />
                         </div>
                       ))}
+                    </div>
+
+                    {/* 产出区（G0S-10）：平台选择 + 生成 + 版本记录，紧跟正文（原底栏取消） */}
+                    <div className="mt-8 border-t border-border-subtle pt-5">
+                      <div className="text-[15px] font-semibold text-text-primary">平台版本</div>
+                      <p className="mt-1 text-sm leading-6 text-text-secondary">选择平台，基于当前正文生成可发布版本。</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {RENDERERS.map((r) => {
+                          const on = target === r.id;
+                          return (
+                            <button
+                              key={r.id}
+                              onClick={() => setTarget(r.id)}
+                              className={`flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12.5px] ${on ? "border-brand bg-brand-soft text-text-primary" : "border-border-subtle bg-bg-card text-text-primary hover:bg-brand-soft"}`}
+                            >
+                              <span className="flex size-3.5 items-center justify-center rounded bg-text-primary text-[9px] font-bold text-text-inverse">{r.glyph}</span>
+                              {r.label}
+                            </button>
+                          );
+                        })}
+                        <Button
+                          onClick={() => deriveMain(target, RENDERERS.find((r) => r.id === target)!.label)}
+                          disabled={renderLoading !== null}
+                          size="sm"
+                          className="ml-auto"
+                        >
+                          {renderLoading ? platformProgressLabel(renderLoading) : platformActionLabel(target)}
+                        </Button>
+                      </div>
+                      {renderError && <p className="mt-2 text-sm text-danger">{renderError}</p>}
+                      {artifacts.length > 0 && (
+                        <div className="mt-4">
+                          <div className="mb-2 text-xs font-medium text-text-secondary">平台版本记录（{artifacts.length}）</div>
+                          <div className="space-y-1.5">
+                            {artifacts.map((a, i) => (
+                              <button
+                                key={a.id ?? `local-${i}`}
+                                onClick={() => setRenderOut({ platform: a.platform, rendererId: a.rendererId as RendererId, taskId: gen?.taskId ?? "", units: a.units })}
+                                className="flex w-full items-center gap-2 rounded-[10px] border border-border-subtle bg-bg-card px-3 py-2 text-left text-[12.5px] hover:bg-brand-soft"
+                                title="打开这个版本（可复制）"
+                              >
+                                <span className="font-medium text-text-primary">{a.platform}</span>
+                                {a.id === null && <span className="text-[10px] text-warning">未持久化</span>}
+                                <span className="ml-auto text-[11px] text-text-muted">{formatTaskTime(a.createdAt)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -541,57 +803,39 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
           </div>
         </main>
 
-        {/* 右栏 · 结构控制 */}
+        {/* 右栏 · 设置（DESIGN §4：只放影响生成结果的设置；状态 Badge 是全局唯一状态点） */}
         <aside className="flex w-[296px] shrink-0 flex-col overflow-auto border-l border-border-subtle bg-bg-panel p-4">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-text-primary">
             内容设置
             <Badge className="ml-auto" variant={gen ? (stable ? "success" : "warning") : "warning"}>
-              {gen ? (stable ? "内容框架已确认" : "还差一步") : "等待想法"}
+              {!gen ? "等待想法" : stable ? "内容框架已确认" : pendingCount > 0 ? `待确认 ${pendingCount} 项` : "还可调整"}
             </Badge>
           </div>
 
-          <div className="mb-1.5 text-xs font-medium text-text-secondary">当前状态</div>
-          <div className="mb-4 rounded-[10px] border border-border-subtle bg-bg-card px-3 py-2 text-[12.5px] leading-5 text-text-secondary">
-            {gen
-              ? stable
-                ? "可以继续生成正文和平台版本。"
-                : "还有内容环节需要确认或补充。"
-              : "还没有内容框架。先在中区输入想法。"}
+          <div className="mb-2 text-xs font-medium text-text-secondary">
+            写作顺序{mainContent ? "（正文已生成，只读）" : ""}
           </div>
-
-          <div className="mb-1.5 text-xs font-medium text-text-secondary">内容类型</div>
-          <div className="mb-4 rounded-[10px] border border-border-subtle bg-bg-card px-3 py-2 text-[12.5px]">
-            {structure ? (
-              <>
-                <span className="text-text-primary">{getLabel(structure.prototypeKey, "zh-Hans")}</span>
-                <span className="ml-1.5 text-text-secondary">· {structure.modalityStack.map((m) => getLabel(m, "zh-Hans")).join(" + ")}</span>
-              </>
-            ) : (
-              <span className="text-text-secondary">生成内容框架后显示</span>
-            )}
-          </div>
-
-          <div className="mb-2 text-xs font-medium text-text-secondary">写作顺序</div>
           {structure ? (
             <div className="space-y-1.5">
               {structure.slots.map((s: StructureSlot, i) => {
                 const opts = strategiesForSlot(s.key);
-                const open = editingSlot === s.key;
+                const editable = !mainContent;
+                const open = editable && editingSlot === s.key;
                 const hl = hoverSlot === s.key;
                 return (
                   <div key={i}>
                     <button
                       onMouseEnter={() => setHoverSlot(s.key)}
                       onMouseLeave={() => setHoverSlot(null)}
-                      onClick={() => setEditingSlot(open ? null : s.key)}
-                      className={`flex w-full items-center gap-2 rounded-[10px] border px-3 py-2 text-left text-[12.5px] transition-colors ${hl || open ? "border-brand bg-brand-soft" : "border-border-subtle bg-bg-card hover:bg-brand-soft"}`}
+                      onClick={() => editable && setEditingSlot(open ? null : s.key)}
+                      className={`flex w-full items-center gap-2 rounded-[10px] border px-3 py-2 text-left text-[12.5px] transition-colors ${hl || open ? "border-brand bg-brand-soft" : "border-border-subtle bg-bg-card"} ${editable ? "hover:bg-brand-soft" : "cursor-default opacity-80"}`}
                     >
                       <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-panel text-[10px] text-text-secondary">{i + 1}</span>
                       <span className="text-text-primary">{getLabel(s.key, "zh-Hans")}</span>
                       <span className="ml-auto truncate text-text-secondary">
                         {s.strategyKey ? getLabel(s.strategyKey, "zh-Hans") : <span className="text-brand">待补充</span>}
                       </span>
-                      <span className="text-text-muted">›</span>
+                      {editable && <span className="text-text-muted">›</span>}
                     </button>
                     {open && opts.length > 0 && (
                       <div className="mt-1.5 flex flex-wrap gap-1.5 pl-3">
@@ -625,10 +869,6 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
               ))}
             </div>
           )}
-
-            {gen && !stable && gen.stability.blockers.length > 0 && (
-              <p className="mt-3 rounded-[10px] bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">还需要确认 {gen.stability.blockers.length} 项。</p>
-            )}
 
             {structure && structure.pendingDecisions.length > 0 && (
               <>
@@ -667,26 +907,6 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
               </>
             )}
 
-            <div className="mb-2 mt-5 text-xs font-medium text-text-secondary">输出语言</div>
-            <div className="flex flex-wrap gap-1.5">
-              {OUTPUT_LOCALES.map((loc) => (
-                <button
-                  key={loc.value}
-                  onClick={() => setOutputLocale(outputLocale === loc.value ? "" : loc.value)}
-                  className={`rounded-md border px-2 py-0.5 text-[11px] ${outputLocale === loc.value ? "border-brand bg-brand-soft text-brand" : "border-border-subtle bg-bg-card text-text-secondary hover:bg-brand-soft"}`}
-                >
-                  {loc.label}
-                </button>
-              ))}
-            </div>
-            <input
-              value={outputLocale}
-              onChange={(e) => setOutputLocale(e.target.value.slice(0, 32))}
-              placeholder="也可自定义，如 English for X thread"
-              className="mt-2 w-full rounded-lg border border-border-strong bg-bg-card px-2.5 py-1.5 text-[12px] outline-none focus:border-brand focus:ring-3 focus:ring-brand-soft"
-            />
-            <p className="mt-1 text-[11px] text-text-secondary">留空 = 按默认语言。点底栏按钮时生效。</p>
-
             <div className="mb-2 mt-5 text-xs font-medium text-text-secondary">账号分析摘要</div>
             {brain && (brain.audience || brain.voice || brain.memoryCount > 0) ? (
               <div className="space-y-1.5 rounded-[10px] border border-border-subtle bg-bg-card px-3 py-2.5 text-[12px]">
@@ -703,60 +923,10 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 生成正文后显示本条用到的账号语气。还没分析账号？去 <Link href="/account" className="text-brand hover:underline">分析账号</Link>。
               </p>
             )}
+
         </aside>
       </div>
 
-      {/* ── 底栏 · 平台版本 ── */}
-      <Panel variant="bottom" className="flex items-center gap-3">
-        <Button disabled variant="secondary" size="sm" title={mainContent ? "保存这套写法待接线" : "保存内容框架待接线"}>
-          {mainContent ? "保存这套写法" : "保存内容框架"}
-        </Button>
-        <span className="text-xs text-text-secondary">平台版本</span>
-        <div className="flex items-center gap-2">
-          {RENDERERS.map((r) => {
-            const off = r.needsVisual && !hasVisual;
-            const on = target === r.id;
-            return (
-              <button
-                key={r.id}
-                disabled={off}
-                onClick={() => setTarget(r.id)}
-                title={off ? "需要图片提示词表达形式" : undefined}
-                className={`flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12.5px] ${on ? "border-brand bg-brand-soft text-text-primary" : "border-border-subtle bg-bg-card text-text-primary hover:bg-brand-soft"} disabled:opacity-40`}
-              >
-                <span className="flex size-3.5 items-center justify-center rounded bg-text-primary text-[9px] font-bold text-text-inverse">{r.glyph}</span>
-                {r.label}
-              </button>
-            );
-          })}
-        </div>
-        <div className="ml-auto flex items-center gap-3">
-          {genError && !gen && <span className="text-sm text-danger">{genError}</span>}
-          {renderError && <span className="text-sm text-danger">{renderError}</span>}
-          {!mainContent && gen && <span className="text-xs text-text-secondary">先生成正文，再生成平台版本</span>}
-          {!gen ? (
-            <Button
-              onClick={generate}
-              disabled={idea.trim().length === 0 || genLoading}
-              size="sm"
-            >
-              {genLoading ? "生成内容框架中…" : "生成内容框架"}
-            </Button>
-          ) : mainContent ? (
-            <Button
-              onClick={() => deriveMain(target, RENDERERS.find((r) => r.id === target)!.label)}
-              disabled={renderLoading !== null}
-              size="sm"
-            >
-              {renderLoading ? platformProgressLabel(renderLoading) : platformActionLabel(target)}
-            </Button>
-          ) : (
-            <Button onClick={genMain} disabled={mainLoading} size="sm">
-              {mainLoading ? "生成正文中…" : "生成正文"}
-            </Button>
-          )}
-        </div>
-      </Panel>
 
       {renderOut && (
         <div className="absolute inset-0 z-20 flex items-end justify-center bg-text-primary/20 p-6" onClick={() => setRenderOut(null)}>
@@ -770,6 +940,11 @@ export function Workspace({ initialIdea = "", userEmail = "" }: { initialIdea?: 
                 <X className="size-4" aria-hidden />
               </button>
             </div>
+            {renderOut.rendererId === "xiaohongshu" && artifacts.some((a) => a.rendererId === "image_prompt") && (
+              <p className="mb-3 rounded-[10px] bg-brand-soft px-3 py-2 text-xs text-text-secondary">
+                卡片提示词已同步生成，关闭后在「平台版本记录」打开。
+              </p>
+            )}
             <div className="space-y-3">
               {renderOut.units.map((u, i) => (
                 <div key={i}>

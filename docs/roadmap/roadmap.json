@@ -6,7 +6,7 @@
     "commits 证据由生成脚本从 git log 按票号自动采集，不在本文件手工维护。"
   ],
   "version": 1,
-  "updated": "2026-07-09",
+  "updated": "2026-07-12",
   "direction": {
     "title": "ForgeNote = 结构生成系统",
     "summary": "不是「AI 帮你写内容」，而是把创作者的账号大脑变成可复用的结构资产：账号接入 → 选题雷达 → 结构生成（稳定性判定）→ 多 renderer 渲染 → 发布回填学习。",
@@ -30,7 +30,7 @@
     {
       "horizon": "Gate 0 · 现在",
       "title": "Owner 自用闭环",
-      "detail": "小红书「独居生活指南」+（即将开的）英文 X 两个真实账号，跑通选题→回填→学习；M2 全部票收口。",
+      "detail": "小红书「独居生活指南」单账号（公众号切片 2 跟进），跑通选题→成稿→挂载→回填；英文 X 移出 Gate 0（D-13/D-14）。切片计划：docs/GATE0-SLICE-PLAN.md。",
       "status": "in_progress"
     },
     {
@@ -69,9 +69,10 @@
     },
     {
       "id": "GATE0",
-      "title": "Gate 0 · Owner 自用 4 周",
-      "status": "todo",
-      "note": "连续 4 周真实周更选题 + 发布闭环，不想回 ChatGPT 裸聊。证据：M2-14 验收包。"
+      "title": "Gate 0 · Owner 自用 4 周（独居生产台切片）",
+      "status": "in_progress",
+      "note": "连续 4 周真实周更选题 + 发布闭环，不想回 ChatGPT 裸聊。dogfood 账号：独居生活指南（小红书为主）。票 G0S-01~07；证据：M2-14 验收包 + docs/acceptance。",
+      "doc": "docs/GATE0-SLICE-PLAN.md"
     },
     {
       "id": "GATE1",
@@ -247,6 +248,108 @@
       "done": "根路由 / 变官网首页（替换 redirect /forge）+ /pricing + /blog /docs 骨架；v3.17 令牌；CTA 全指 /login；文案用 v3 定位（结构生成系统），不写未实现能力",
       "acceptance": "docs/acceptance/M2-16-landing.md",
       "note": "✅ Codex code_done：/、/pricing、/blog、/docs 已实现；SiteNav/SiteFooter/营销 CTA 均指 /login；Pricing 明确公测免费且无计费系统；Blog/Docs 为诚实占位。验证：lint/typecheck/build/doctor 通过，rg 未发现 /forge CTA 或 billing/auto-publish/team 等越界承诺。验收证据：docs/acceptance/M2-16-landing.md。未标 accepted：待 Owner Preview/Production 视觉与 CTA 点击验收。"
+    },
+    {
+      "id": "G0S-01",
+      "title": "Spike：真实独居选题走通 workspace 全流程，产出差距清单",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["M2-09"],
+      "done": "1 个真实选题从进入到导出走完；差距清单（能跑/坏了/缺失）落 docs/design/gate0-slice-gap.md；顺带推进 M2-04/M2-09 等票的 Owner 真实路径验收",
+      "note": "2026-07-12 代码层审计完成：引擎四项 check 全过，堵点在工作台 UI（零持久化/成品无归档/复制格式脏/卡片提示词被模态门禁）。差距清单已落 docs/design/gate0-slice-gap.md。剩余：Owner 登录真实路径走查。"
+    },
+    {
+      "id": "G0S-12",
+      "title": "UI/UX 一致性重整：UX 底稿 → 低保真 → 设计系统实装（四阶段闸门制）",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["G0S-10", "G0S-11"],
+      "done": "阶段 0 审计表 + 平行流产物冻结；阶段 1 UX-BASE（旅程/8 页 IA/5 条任务流）；阶段 2 全页线框 + 灰稿可点原型；阶段 3 tokens 定稿（圆角 16/20、暖阴影、字体裁决）+ 组件收敛（BrandMark 唯一 logo）+ 8 页逐页实装 + UIUX-M2 全量规格；AUDIT 分歧清零；四件套验证全绿",
+      "note": "2026-07-12 Owner 反馈「组件/logo/颜色/字体不统一，一边做一边改很乱」，拍板按标准流程重整。执行方式：Claude Code 出指令包（docs/design/g0s12-ui-consolidation/PHASE-0~3.md），Owner 逐阶段喂给 Cursor 执行，每阶段产出回 Claude Code 复核后 Owner 过闸。设计期间功能冻结。营销站不在本轮。\n阶段 0 完成：审计表 136 项分歧；平行流三文档冻结；/ux-prototype 移除。\n阶段 0 复核通过（2026-07-12，Claude Code）：抽查审计断言属实无编造、任务 B 三处冻结+删除已落地、独立 typecheck/build 全绿；Owner 过闸。遗留决策：login 页 Ember 插画（43 处专用色，独立体系）留/砍待阶段 3 迁移 login 时拍板。阶段 1 已放行。\n阶段 1 完成：UX-BASE 三节 + 3 个 IA 裁决项待 Owner。\n阶段 1 复核通过（2026-07-13，Claude Code）：抽查 radar→workspace?idea= 属实、路由清单对得上、profile 确为 M1 偏好数据，无编造、未污染冻结 CCOS 文档。Owner 三裁决（已盖章 UX-BASE §2.2）：IA-1 辅助页极简顶栏（workspace/first-run 用左栏，radar/account/gate0 用 BrandMark+返回+账号菜单顶栏，旧 TopNav 全退）；IA-2 gate0 左栏次级入口「周看板」；IA-3 solo 阶段隐藏 /profile（保留路由代码、仅移除导航入口），账号菜单收敛为账号分析/首页/退出。阶段 2 已放行。\n阶段 2 完成：8 页线框 + 灰稿原型。\n阶段 2 原型经 Owner 点击后触发架构修正（2026-07-13）：Owner 判定多页跳转繁琐，拍板改「单工作台外壳 + 壳内视图切换」——radar/account/gate0 变壳内视图（保留路由，Next.js 共享布局，方案 A，保住 ?taskId=/?idea= 深链），first-run 并入 workspace 空状态，profile 隐藏，旧 TopNav 全退，账号菜单收敛为账号分析/退出。已盖章 UX-BASE §2.3（超越 IA-1）。返工指令 PHASE-2-REVISED.md 交 Cursor。原型闸门起作用范例：布局问题在实装前被拦下。\n阶段 2 返工：单工作台外壳 + 4 视图线框 + 灰稿原型。\n阶段 2 返工复核通过 + 布局冻结（2026-07-13，Claude Code）：独立核对原型源码——常驻左栏切换主区不重载、去 /workspace logo、Home+收起按钮、收起后 fixed「展开」按钮、账号菜单仅账号分析/退出、无 profile 入口/无旧 TopNav、popstate+pushState 保深链、5 流程壳内走通。Owner 已点击签字。阶段 3 按单外壳架构返工（PHASE-3-REVISED.md）：先建共享布局壳 → 写作视图(含 first-run 空状态) → radar/account/gate0 视图 → login；profile 隐藏；Ember 插画留/砍在 login 步拍板；字体 A/B 在 Step1。\n阶段 3 完成：单工作台共享外壳、写作/选题/账号分析/周看板四视图、登录收敛、隐藏 profile；字体 A（衬线标题 + 无衬线正文），Ember 移除；待 Codex review。\n阶段 3 复核（2026-07-13，Claude Code，独立核对源码非采信）：架构正确——(product)/layout.tsx + AppShell 持久外壳（Home/收起+fixed展开/新写一条/最近内容深链/选题/辅助组周看板·账号分析/账号菜单，无 logo），embedded 时 Workspace 藏自身左栏顶栏无双栏，first-run 重定向 workspace，?idea=/?taskId= 保留，Ember 组件删净（登录页静态视觉，零 console 报错），typecheck/lint/build/doctor 全绿。**发现并修复 1 个阻断缺陷**：AppShell「新写一条」在 /workspace 派发 forgenote:new-content 事件但 Workspace 未监听=死按钮，已补 latest-ref 监听（lint 合规）。遗留 2 项次要清理（非阻断）：① TopNav 仍存活于隐藏页 /profile（4 视图已退，AUDIT 世代对销口径需注此例外）；② globals.css:188 残留 Ember 动画死 CSS。Owner 登录后走查 4 视图 + 新写一条同视图复位后可标 code_done。\n2 项遗留清理已处理（2026-07-13）：删除死组件 TopNav.tsx（唯一真实使用点 /profile 已移除，signout/server 仅注释）+ 删除 globals.css 的 Ember 死 CSS（fnHop/fnShake keyframes）；TopNav 至此全退，AUDIT 世代对销无例外。Owner 报「界面回到旧版（重复新写一条/邮箱/输出语言/平台版本底栏）」经诊断为 dev server 旧模块缓存——当前源码 grep 这些幽灵元素全为 0，非代码回退；已清 .next 硬重启，Owner 需浏览器硬刷新（Cmd+Shift+R）丢弃旧 bundle。清理后 typecheck/lint 全绿。"
+    },
+    {
+      "id": "G0S-11",
+      "title": "工作台/首页四处 bug：首页最近内容、顶栏重复新写一条、移除输出语言、头像进个人资料",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["G0S-10"],
+      "done": "① /first-run 左栏最近内容接真实任务列表（点击 → /workspace?taskId 自动打开）；② 工作台顶栏无内容时显示「工作台」不再复述「新写一条」；③ 移除右栏输出语言选择器（本版只做中文，API 不传 language）；④ first-run 与工作台底部头像块 = 账号菜单弹层（AccountMenu：账号分析/个人偏好/首页/退出登录，范围内 only，不含积分/升级/iOS）",
+      "note": "2026-07-12 Owner 真实使用第二轮反馈。④ 原为直链 /profile，Owner 指出应是账号菜单弹层（参考 Harvest/refero style），改为 AccountMenu 组件（点击外部/Esc 关闭；越界项按 AGENTS 边界剔除，待 Owner 拍板再加）。视觉参考存档：暖纸白同源，借鉴 16/20px 圆角与暖色阴影。/workspace 新增 ?taskId 自动打开（applyTaskData 抽出复用，mount effect 只在 await 后 setState）。验证 typecheck/lint/build/doctor 全过。待 Codex review + Owner 登录后视觉验收。"
+    },
+    {
+      "id": "G0S-10",
+      "title": "工作台动线重排：消除重复功能项，主操作跟随内容流，设计/文案规范升级",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["G0S-08", "G0S-09"],
+      "done": "DESIGN.md 升至 9 节 schema（含 killaislop 反模式清单）；UX-WRITING.md 增 Fenng 中文排版规则；工作台消除 7 处重复（双生成按钮/双身份/三状态/双结构信息/待确认重叠/双标题）+ 3 处死物（占位按钮/假快捷键/指路补丁文案）；底栏取消，主操作移入中区内容流，产出区（平台选择+生成+版本记录）并入正文之后；lint/typecheck/build/doctor 通过",
+      "note": "2026-07-12 Owner 反馈「重复功能选项多、动线不流畅」触发。三参考落地：open-design 9 节 schema、killaislop.com 反模式、Fenng/tech-doc-style-chinese 中文排版。执行 spec：docs/design/WORKSPACE-REDESIGN-G0S10.md。代码完成，验证通过；待 Codex review + Owner 视觉与动线验收。"
+    },
+    {
+      "id": "G0S-09",
+      "title": "小红书成品三件套：发布标题 + 正文 + 卡片提示词一键双出",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["G0S-08"],
+      "done": "小红书派生输出 title（发布标题 ≤20 字）+ body（正文+话题标签）两单元；卡片提示词解除 visual 模态门禁；选小红书一键双出（文案 + 卡片提示词），两产物均归档；check:derive 覆盖新约定",
+      "note": "2026-07-12 Owner 真实路径首轮反馈（只出正文、无标题、无卡片提示词）当场修复：derive prompt 强制单元结构、UI 双出、check:derive 加断言。验证：check:derive/typecheck/lint/build 通过。待 Codex review + Owner 复测。"
+    },
+    {
+      "id": "G0S-08",
+      "title": "工作台持久化：任务可保存、可重开、成品可归档",
+      "phase": "E · Gate 0 切片",
+      "status": "in_progress",
+      "deps": ["M2-02", "M2-09"],
+      "done": "刷新/离开后可从任务列表重开最近内容（结构 + 正文草稿 + 平台版本）；平台版本有归档列表而非一次性弹窗；复制格式对平台直接可用（不含原始 role key）",
+      "note": "2026-07-12 代码完成：迁移 0005（main_content_documents）+ 3 新 API（tasks 列表/详情/草稿保存）+ main/derive 落库 + 工作台最近内容列表/重开恢复/1.2s 防抖草稿自动保存/平台版本记录/复制格式修复。验证：typecheck/lint/build/doctor/check:main-content/check:derive 通过，新路由 401 行为已验。待：Codex review → code_done；Owner 在 Supabase SQL Editor 应用 0005 后真实路径验收 → accepted。"
+    },
+    {
+      "id": "G0S-02",
+      "title": "账号大脑喂入独居生活指南品牌资料",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["M2-05"],
+      "done": "品牌定位/栏目/叙事框架/禁忌进入 account_memory；生成结果可见品牌约束且 Owner 认可"
+    },
+    {
+      "id": "G0S-03",
+      "title": "手动选题入口（选题库/canvas 粘贴直达结构生成）",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["M2-07"],
+      "done": "粘贴一个选题 30 秒内进入结构生成，不依赖雷达推荐"
+    },
+    {
+      "id": "G0S-04",
+      "title": "资产挂载最小版（手册/清单/网盘链接字段）",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["M2-09"],
+      "done": "成品可挂手册/清单/网盘链接并在导出内容中带出"
+    },
+    {
+      "id": "G0S-05",
+      "title": "归档 + 表现回填接真实发布数据",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["M2-12", "G0S-01"],
+      "done": "≥1 条真实发布内容完成回填并写回账号记忆"
+    },
+    {
+      "id": "G0S-06",
+      "title": "公众号长文 renderer（切片 2）",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["G0S-01", "M2-08"],
+      "done": "同一主内容派生公众号长文（含手册长文介绍场景）+ golden test；切片 1 验收后启动"
+    },
+    {
+      "id": "G0S-07",
+      "title": "手册配套物料模板化（切片 3）",
+      "phase": "E · Gate 0 切片",
+      "status": "todo",
+      "deps": ["G0S-06"],
+      "done": "商品详情页 + 长文介绍可从手册内容生成；切片 2 后评估启动"
     }
   ]
 }

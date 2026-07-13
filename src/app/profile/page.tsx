@@ -6,7 +6,6 @@ import {
   type PreferenceItem,
 } from "@/components/profile/ProfilePreferences";
 import { Card } from "@/components/ui/card";
-import { TopNav } from "@/components/layout/TopNav";
 import { copy } from "@/lib/copy";
 import { getAuthenticatedContext } from "@/lib/supabase/server";
 
@@ -37,7 +36,6 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <TopNav />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <header className="mb-6 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
